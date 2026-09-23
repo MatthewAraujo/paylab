@@ -31,7 +31,7 @@ React front end, FakeBank and provider integration, webhooks, reconciliation, qu
 | [T9](tasks/T9.md) | Create Payment: validation, authorization and idempotency | T6, T7, T8 | done | [context](task-runs/T9-CONTEXT.md) | [summary](task-runs/T9-summary.md) |
 | [T10](tasks/T10.md) | Concurrency suite | T9 | done | [context](task-runs/T10-CONTEXT.md) | [summary](task-runs/T10-summary.md) |
 | [T11](tasks/T11.md) | History, Payment list and daily report with keyset pagination | T9 | done | [context](task-runs/T11-CONTEXT.md) | [summary](task-runs/T11-summary.md) |
-| [T12](tasks/T12.md) | Benchmark dataset and tooling | T4, T11 | planned | — | — |
+| [T12](tasks/T12.md) | Benchmark dataset and tooling | T4, T11 | done | [context](task-runs/T12-CONTEXT.md) | [summary](task-runs/T12-summary.md) |
 | [T13](tasks/T13.md) | Experiments: index design and pagination cost | T11, T12 | planned | — | — |
 | [T14](tasks/T14.md) | Experiments: concurrency strategy comparison | T10, T12 | planned | — | — |
 | [T15](tasks/T15.md) | Project handbook, CI and developer documentation | T9 | done | [context](task-runs/T15-CONTEXT.md) | [summary](task-runs/T15-summary.md) |

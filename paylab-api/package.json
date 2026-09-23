@@ -31,6 +31,12 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
+    "bench:up": "docker compose up -d --wait postgres-bench",
+    "bench:migrate": "ts-node -r tsconfig-paths/register bench/run.ts migrate",
+    "bench:seed": "ts-node -r tsconfig-paths/register bench/run.ts seed",
+    "bench:validate": "ts-node -r tsconfig-paths/register bench/run.ts validate",
+    "bench:targets": "ts-node -r tsconfig-paths/register bench/run.ts targets",
+    "bench:explain": "ts-node -r tsconfig-paths/register bench/run.ts explain",
     "merchant:provision": "ts-node -r tsconfig-paths/register scripts/provision-merchant.ts"
   },
   "dependencies": {

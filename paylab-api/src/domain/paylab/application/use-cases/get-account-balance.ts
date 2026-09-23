@@ -5,9 +5,14 @@ import { AccountsRepository } from '../repositories/accounts-repository'
 
 interface GetAccountBalanceUseCaseRequest {
 	accountId: string
+	/** When given, only that Merchant's own Wallet is readable (the HTTP path always passes it). */
+	merchantId?: string
 }
 
-type GetAccountBalanceUseCaseResponse = Either<ResourceNotFoundError, { balance: number }>
+type GetAccountBalanceUseCaseResponse = Either<
+	ResourceNotFoundError,
+	{ balance: number; currency: string }
+>
 
 /** The Balance is derived from the ledger on every call, never read from a stored value. */
 @Injectable()
@@ -16,6 +21,7 @@ export class GetAccountBalanceUseCase {
 
 	async execute({
 		accountId,
+		merchantId,
 	}: GetAccountBalanceUseCaseRequest): Promise<GetAccountBalanceUseCaseResponse> {
 		const account = await this.accountsRepository.findById(accountId)
 
@@ -23,6 +29,13 @@ export class GetAccountBalanceUseCase {
 			return left(new ResourceNotFoundError())
 		}
 
-		return right({ balance: await this.accountsRepository.getBalance(accountId) })
+		if (merchantId !== undefined && (!account.isWallet() || account.merchantId !== merchantId)) {
+			return left(new ResourceNotFoundError())
+		}
+
+		return right({
+			balance: await this.accountsRepository.getBalance(accountId),
+			currency: account.currency,
+		})
 	}
 }

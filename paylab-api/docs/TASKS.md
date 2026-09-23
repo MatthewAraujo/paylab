@@ -27,7 +27,7 @@ React front end, FakeBank and provider integration, webhooks, reconciliation, qu
 | [T5](tasks/T5.md) | Domain model: Amount, Accounts and the Payment state machine | T1 | done | [context](task-runs/T5-CONTEXT.md) | [summary](task-runs/T5-summary.md) |
 | [T6](tasks/T6.md) | Settlement: lock, funds check and atomic ledger write | T3, T4, T5 | done | [context](task-runs/T6-CONTEXT.md) | [summary](task-runs/T6-summary.md) |
 | [T7](tasks/T7.md) | Merchant provisioning script and API key authentication | T1, T3 | done | [context](task-runs/T7-CONTEXT.md) | [summary](task-runs/T7-summary.md) |
-| [T8](tasks/T8.md) | Accounts API: create Wallet, read Account, read Balance | T6, T7 | planned | — | — |
+| [T8](tasks/T8.md) | Accounts API: create Wallet, read Account, read Balance | T6, T7 | done | [context](task-runs/T8-CONTEXT.md) | [summary](task-runs/T8-summary.md) |
 | [T9](tasks/T9.md) | Create Payment: validation, authorization and idempotency | T6, T7, T8 | planned | — | — |
 | [T10](tasks/T10.md) | Concurrency suite | T9 | planned | — | — |
 | [T11](tasks/T11.md) | History, Payment list and daily report with keyset pagination | T9 | planned | — | — |

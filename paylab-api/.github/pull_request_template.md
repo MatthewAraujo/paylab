@@ -6,7 +6,9 @@
 - [ ] `pnpm lint`
 - [ ] `pnpm typecheck`
 - [ ] `pnpm test`
+- [ ] `pnpm test:integration`
 - [ ] `pnpm test:e2e`
+- [ ] `pnpm test:concurrency` (when Settlement, locking or the ledger changed)
 
 ## Deploy
 - [ ] No deploy or config impact

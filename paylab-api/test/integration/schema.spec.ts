@@ -1,48 +1,23 @@
 import { prisma } from '../support/database'
+import {
+	clearingAccountId,
+	createFundingLedgerTransaction,
+	createMerchant,
+	createWallet,
+	one,
+} from '../support/fixtures'
 
 // Direct SQL against the real schema: the constraints are the subject, so no
-// application code sits between the test and PostgreSQL.
+// application code sits between the test and PostgreSQL. Ledger rows are created
+// inside one database transaction (or as a valid funding transaction) because the
+// ledger triggers of T4 validate every Ledger Transaction at commit.
 
 // Prisma reports unique violations (SQLSTATE 23505) with the key columns, not the index name.
 const UNIQUE_VIOLATION_ON_CURRENCY = /23505.*Key \(currency\)=\(BRL\)/
 const UNIQUE_VIOLATION_ON_IDEMPOTENCY_KEY = /23505.*Key \(merchant_id, idempotency_key\)/
 const UNIQUE_VIOLATION_ON_LEDGER_TRANSACTION = /23505.*Key \(ledger_transaction_id\)/
 
-async function one<T>(query: string, ...params: unknown[]): Promise<T> {
-	const rows = await prisma.$queryRawUnsafe<T[]>(query, ...params)
-	return rows[0]
-}
-
-async function createMerchant(name = 'Acme') {
-	const { id } = await one<{ id: string }>(
-		'INSERT INTO merchants (name) VALUES ($1) RETURNING id',
-		name,
-	)
-	return id
-}
-
-async function createWallet(merchantId: string) {
-	const { id } = await one<{ id: string }>(
-		`INSERT INTO accounts (kind, merchant_id, currency)
-		 VALUES ('WALLET', $1::uuid, 'BRL') RETURNING id`,
-		merchantId,
-	)
-	return id
-}
-
-async function clearingAccountId() {
-	const { id } = await one<{ id: string }>(
-		`SELECT id FROM accounts WHERE kind = 'EXTERNAL_CLEARING' AND currency = 'BRL'`,
-	)
-	return id
-}
-
-async function createLedgerTransaction() {
-	const { id } = await one<{ id: string }>(
-		'INSERT INTO ledger_transactions DEFAULT VALUES RETURNING id',
-	)
-	return id
-}
+const MISSING_ID = '00000000-0000-0000-0000-000000000000'
 
 async function createPayment(
 	merchantId: string,
@@ -104,34 +79,41 @@ describe('Schema baseline (integration)', () => {
 
 	test('a Ledger Entry with a zero or negative amount is rejected', async () => {
 		const wallet = await createWallet(await createMerchant())
-		const transaction = await createLedgerTransaction()
 
 		for (const amount of [0, -1]) {
 			await expect(
-				prisma.$executeRawUnsafe(
-					`INSERT INTO ledger_entries (ledger_transaction_id, account_id, direction, amount)
-					 VALUES ($1::uuid, $2::uuid, 'CREDIT', $3)`,
-					transaction,
-					wallet,
-					amount,
-				),
+				prisma.$transaction(async (tx) => {
+					const [{ id }] = await tx.$queryRawUnsafe<{ id: string }[]>(
+						'INSERT INTO ledger_transactions DEFAULT VALUES RETURNING id',
+					)
+					await tx.$executeRawUnsafe(
+						`INSERT INTO ledger_entries (ledger_transaction_id, account_id, direction, amount)
+						 VALUES ($1::uuid, $2::uuid, 'CREDIT', $3)`,
+						id,
+						wallet,
+						amount,
+					)
+				}),
 			).rejects.toThrow(/ledger_entries_amount_positive_check/)
 		}
 	})
 
 	test('a Ledger Entry referencing a missing Ledger Transaction or Account is rejected', async () => {
 		const wallet = await createWallet(await createMerchant())
-		const transaction = await createLedgerTransaction()
-		const missing = '00000000-0000-0000-0000-000000000000'
 		const insert = `INSERT INTO ledger_entries (ledger_transaction_id, account_id, direction, amount)
 			VALUES ($1::uuid, $2::uuid, 'CREDIT', 100)`
 
-		await expect(prisma.$executeRawUnsafe(insert, missing, wallet)).rejects.toThrow(
+		await expect(prisma.$executeRawUnsafe(insert, MISSING_ID, wallet)).rejects.toThrow(
 			/ledger_entries_ledger_transaction_id_fkey/,
 		)
-		await expect(prisma.$executeRawUnsafe(insert, transaction, missing)).rejects.toThrow(
-			/ledger_entries_account_id_fkey/,
-		)
+		await expect(
+			prisma.$transaction(async (tx) => {
+				const [{ id }] = await tx.$queryRawUnsafe<{ id: string }[]>(
+					'INSERT INTO ledger_transactions DEFAULT VALUES RETURNING id',
+				)
+				await tx.$executeRawUnsafe(insert, id, MISSING_ID)
+			}),
+		).rejects.toThrow(/ledger_entries_account_id_fkey/)
 	})
 
 	test('two Payments with the same Merchant and Idempotency Key are rejected', async () => {
@@ -161,7 +143,7 @@ describe('Schema baseline (integration)', () => {
 		const merchantId = await createMerchant()
 		const wallet = await createWallet(merchantId)
 		const clearing = await clearingAccountId()
-		const transaction = await createLedgerTransaction()
+		const transaction = await createFundingLedgerTransaction(wallet, clearing)
 
 		await createPayment(merchantId, clearing, wallet, 'key-a', transaction)
 
@@ -172,13 +154,7 @@ describe('Schema baseline (integration)', () => {
 
 	test('foreign keys are restrictive: an Account with entries cannot be deleted', async () => {
 		const wallet = await createWallet(await createMerchant())
-		const transaction = await createLedgerTransaction()
-		await prisma.$executeRawUnsafe(
-			`INSERT INTO ledger_entries (ledger_transaction_id, account_id, direction, amount)
-			 VALUES ($1::uuid, $2::uuid, 'CREDIT', 100)`,
-			transaction,
-			wallet,
-		)
+		await createFundingLedgerTransaction(wallet, await clearingAccountId())
 
 		await expect(
 			prisma.$executeRawUnsafe('DELETE FROM accounts WHERE id = $1::uuid', wallet),

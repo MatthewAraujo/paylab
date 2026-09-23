@@ -1,3 +1,4 @@
+import { PaymentListItem } from '@/domain/paylab/application/repositories/read-queries-repository'
 import { Payment } from '@/domain/paylab/enterprise/entities/payment'
 
 export interface PaymentView {
@@ -15,6 +16,14 @@ export interface PaymentView {
 }
 
 export class PaymentPresenter {
+	static listItemToHTTP(item: PaymentListItem): PaymentView {
+		return {
+			...item,
+			createdAt: item.createdAt.toISOString(),
+			updatedAt: item.updatedAt.toISOString(),
+		}
+	}
+
 	static toHTTP(payment: Payment): PaymentView {
 		return {
 			id: payment.id.toString(),

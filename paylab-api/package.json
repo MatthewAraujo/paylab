@@ -30,7 +30,8 @@
     "test:e2e:watch": "vitest --config ./vitest.config.e2e.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:migrate:deploy": "prisma migrate deploy"
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "merchant:provision": "ts-node -r tsconfig-paths/register scripts/provision-merchant.ts"
   },
   "dependencies": {
     "@biomejs/biome": "^1.9.4",

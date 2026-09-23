@@ -7,4 +7,4 @@
 | T15 | 1 | C | done |
 | T12 | 2 | - | done |
 | T13 | 3 | - | done |
-| T14 | 3 | - | planned (sequential, after T13) |
+| T14 | 3 | - | done |

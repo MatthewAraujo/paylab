@@ -40,6 +40,10 @@ Domain language and accumulated decisions live in [CONTEXT.md](CONTEXT.md) and [
 | `pnpm prisma:migrate` | Create/apply a migration in development |
 | `pnpm prisma:migrate:deploy` | Apply existing migrations |
 | `pnpm merchant:provision "<name>"` | Create a Merchant and print its API key once |
+| `pnpm bench:up` / `bench:migrate` / `bench:seed` / `bench:validate` | Separate benchmark database (port 5433): start, migrate, load the skewed dataset, check it |
+| `pnpm bench:targets` / `bench:explain` | Pick hot and cold ids; capture `EXPLAIN (ANALYZE, BUFFERS)` plans |
+
+Benchmark guide: [docs/benchmark.md](docs/benchmark.md). Results: [docs/experiments/T13-results.md](docs/experiments/T13-results.md) and [docs/experiments/T14-results.md](docs/experiments/T14-results.md).
 
 ## Local setup
 

@@ -1,7 +1,0 @@
-export enum CRMInteractionType {
-	NOTE = 'NOTE',
-	EMAIL = 'EMAIL',
-	PHONE_CALL = 'PHONE_CALL',
-	CHAT = 'CHAT',
-	SUPPORT_TICKET = 'SUPPORT_TICKET',
-}

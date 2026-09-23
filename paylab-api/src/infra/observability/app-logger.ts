@@ -155,8 +155,6 @@ export class AppLogger implements LoggerService {
 			method: requestContext?.method,
 			route: requestContext?.route,
 			path: requestContext?.path,
-			storeId: requestContext?.storeId,
-			userId: requestContext?.userId,
 			...metadata,
 		})
 		mergedMetadata.context = undefined

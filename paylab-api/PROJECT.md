@@ -4,7 +4,7 @@ Backend of PayLab, a fictional payment processing and double-entry ledger platfo
 
 ## Current State
 
-Bootstrap only. The code in this repository is still a copy of the reference architecture (`../petagro-api`, gitignored, read-only) and has NOT been pruned yet. Do not treat any Quintal Agro Pet code, Better Auth code or reference-project doc as PayLab knowledge. T1 removes it.
+Technical spine only (T1 done). The base was pruned from the reference architecture (`../petagro-api`, gitignored, read-only) to Nest bootstrap, env validation, structured logging, security headers, the error-translation mechanism, Zod pipes and a `GET /health` endpoint. There is no database code, schema or business logic yet; the app boots without PostgreSQL.
 
 This file is a stub and is rewritten in T15.
 

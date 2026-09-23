@@ -11,7 +11,7 @@ function makeExecutionContext(request: Record<string, unknown>, response: Record
 			getRequest: () => request,
 			getResponse: () => response,
 		}),
-		getClass: () => ({ name: 'CatalogProductsController' }),
+		getClass: () => ({ name: 'PaymentsController' }),
 		getHandler: () => ({ name: 'create' }),
 	} as unknown as ExecutionContext
 }
@@ -24,7 +24,7 @@ describe('HttpLoggingInterceptor', () => {
 			{
 				enabled: true,
 				level: 'debug',
-				appName: 'quintal-agro-pet',
+				appName: 'paylab-api',
 				environment: 'test',
 				colors: false,
 			},
@@ -41,18 +41,14 @@ describe('HttpLoggingInterceptor', () => {
 			{
 				headers: {},
 				method: 'POST',
-				originalUrl: '/api/v1/admin/catalog/products',
-				route: { path: '/api/v1/admin/catalog/products' },
+				originalUrl: '/api/v1/payments',
+				route: { path: '/api/v1/payments' },
 				body: {
-					name: 'Racao Premium',
-					slug: 'racao-premium',
+					amount: 1000,
+					currency: 'BRL',
 				},
 				query: {},
 				params: {},
-				user: {
-					id: 'user-1',
-				},
-				accessibleStores: ['store-1'],
 			},
 			{
 				statusCode: 201,
@@ -74,24 +70,17 @@ describe('HttpLoggingInterceptor', () => {
 		})
 
 		expect(responseHeaders['x-request-id']).toBeTruthy()
-		expect(lines).toHaveLength(4)
+		expect(lines).toHaveLength(3)
 		expect(lines[0]).toContain('[HttpLoggingInterceptor] http.request.started')
 		expect(lines[1]).toContain('[HttpLoggingInterceptor] http.request.payload')
-		expect(lines[1]).toContain("name: 'Racao Premium'")
-		expect(lines[1]).toContain("slug: 'racao-premium'")
+		expect(lines[1]).toContain('amount: 1000')
+		expect(lines[1]).toContain("currency: 'BRL'")
 		expect(lines[2]).toContain('[HttpLoggingInterceptor] http.request.completed')
 		expect(lines[2]).toContain("method: 'POST'")
-		expect(lines[2]).toContain("route: '/api/v1/admin/catalog/products'")
-		expect(lines[2]).toContain("path: '/api/v1/admin/catalog/products'")
-		expect(lines[2]).toContain("storeId: 'store-1'")
-		expect(lines[2]).toContain("userId: 'user-1'")
+		expect(lines[2]).toContain("route: '/api/v1/payments'")
+		expect(lines[2]).toContain("path: '/api/v1/payments'")
 		expect(lines[2]).toContain('statusCode: 201')
 		expect(lines[2]).toContain(responseHeaders['x-request-id'] ?? '')
-		// A successful admin mutation also emits a dedicated security-audit line.
-		expect(lines[3]).toContain('[SecurityAudit] security.admin_action')
-		expect(lines[3]).toContain("method: 'POST'")
-		expect(lines[3]).toContain("actorUserId: 'user-1'")
-		expect(lines[3]).toContain('statusCode: 201')
 	})
 
 	test('emits a security.forbidden event when a request is rejected with 403', async () => {
@@ -101,7 +90,7 @@ describe('HttpLoggingInterceptor', () => {
 			{
 				enabled: true,
 				level: 'debug',
-				appName: 'quintal-agro-pet',
+				appName: 'paylab-api',
 				environment: 'test',
 				colors: false,
 			},
@@ -117,11 +106,10 @@ describe('HttpLoggingInterceptor', () => {
 			{
 				headers: {},
 				method: 'GET',
-				originalUrl: '/api/v1/admin/stores/other/orders',
-				route: { path: '/api/v1/admin/stores/:storeId/orders' },
+				originalUrl: '/api/v1/accounts/other',
+				route: { path: '/api/v1/accounts/:accountId' },
 				query: {},
 				params: {},
-				user: { id: 'user-1' },
 			},
 			{ statusCode: 200, setHeader: () => undefined },
 		)
@@ -141,7 +129,7 @@ describe('HttpLoggingInterceptor', () => {
 		expect(securityLine).toBeTruthy()
 		expect(securityLine).toContain('[SecurityAudit] security.forbidden')
 		expect(securityLine).toContain('statusCode: 403')
-		expect(securityLine).toContain("actorUserId: 'user-1'")
+		expect(securityLine).toContain("route: '/api/v1/accounts/:accountId'")
 	})
 
 	test('logs failed HTTP requests with status and error metadata', async () => {
@@ -151,7 +139,7 @@ describe('HttpLoggingInterceptor', () => {
 			{
 				enabled: true,
 				level: 'debug',
-				appName: 'quintal-agro-pet',
+				appName: 'paylab-api',
 				environment: 'test',
 				colors: false,
 			},
@@ -167,10 +155,10 @@ describe('HttpLoggingInterceptor', () => {
 			{
 				headers: {},
 				method: 'POST',
-				originalUrl: '/api/v1/admin/catalog/products',
-				route: { path: '/api/v1/admin/catalog/products' },
+				originalUrl: '/api/v1/payments',
+				route: { path: '/api/v1/payments' },
 				body: {
-					name: '',
+					amount: -1,
 				},
 				query: {},
 				params: {},
@@ -197,8 +185,8 @@ describe('HttpLoggingInterceptor', () => {
 		expect(lines[1]).toContain('[HttpLoggingInterceptor] http.request.payload')
 		expect(lines[2]).toContain('[HttpLoggingInterceptor] http.request.failed')
 		expect(lines[2]).toContain("method: 'POST'")
-		expect(lines[2]).toContain("route: '/api/v1/admin/catalog/products'")
-		expect(lines[2]).toContain("path: '/api/v1/admin/catalog/products'")
+		expect(lines[2]).toContain("route: '/api/v1/payments'")
+		expect(lines[2]).toContain("path: '/api/v1/payments'")
 		expect(lines[2]).toContain('statusCode: 500')
 		expect(lines[2]).toContain("errorName: 'Error'")
 		expect(lines[2]).toContain("errorMessage: 'boom'")

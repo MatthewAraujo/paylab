@@ -1,23 +1,16 @@
 import { buildEnv } from '@/infra/env/env'
 
-describe('buildEnv', () => {
-	test('accepts the Quintal Agro Pet baseline environment with defaults', () => {
-		const env = buildEnv({
-			DATABASE_URL: 'postgresql://docker:docker@localhost:5432/quintal_agro_pet',
-		})
+const DATABASE_URL = 'postgresql://paylab:paylab@localhost:5432/paylab'
 
-		expect(env).toMatchObject({
-			APP_NAME: 'quintal-agro-pet',
+describe('buildEnv', () => {
+	test('accepts the PayLab baseline environment with defaults', () => {
+		const env = buildEnv({ DATABASE_URL })
+
+		expect(env).toEqual({
+			APP_NAME: 'paylab-api',
 			LOG_ENABLED: false,
 			LOG_LEVEL: 'basic',
-			DATABASE_URL: 'postgresql://docker:docker@localhost:5432/quintal_agro_pet',
-			REDIS_HOST: '127.0.0.1',
-			REDIS_PORT: 6379,
-			REDIS_DB: 0,
-			CLOUDFLARE_ACCOUNT_ID: '',
-			AWS_ACCESS_KEY_ID: '',
-			AWS_SECRET_ACCESS_KEY: '',
-			AWS_BUCKET_NAME: '',
+			DATABASE_URL,
 			NODE_ENV: 'development',
 			PORT: 3333,
 		})
@@ -32,15 +25,12 @@ describe('buildEnv', () => {
 	})
 
 	test('accepts structured logging configuration', () => {
-		const env = buildEnv({
-			DATABASE_URL: 'postgresql://docker:docker@localhost:5432/quintal_agro_pet',
-			LOG_ENABLED: 'true',
-			LOG_LEVEL: 'debug',
-		})
+		const env = buildEnv({ DATABASE_URL, LOG_ENABLED: 'true', LOG_LEVEL: 'debug' })
 
-		expect(env).toMatchObject({
-			LOG_ENABLED: true,
-			LOG_LEVEL: 'debug',
-		})
+		expect(env).toMatchObject({ LOG_ENABLED: true, LOG_LEVEL: 'debug' })
+	})
+
+	test('rejects an unknown log level', () => {
+		expect(() => buildEnv({ DATABASE_URL, LOG_LEVEL: 'verbose' })).toThrow()
 	})
 })

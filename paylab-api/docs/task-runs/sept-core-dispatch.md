@@ -5,4 +5,4 @@
 | T2 | A | in_progress |
 | T3 | A | planned (after T2) |
 | T4 | A | planned (after T3) |
-| T5 | B | in_progress |
+| T5 | B | done |

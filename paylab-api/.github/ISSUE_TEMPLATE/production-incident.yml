@@ -1,0 +1,55 @@
+name: Production incident
+description: Record a production incident, mitigation, and rollback plan.
+title: "incident: "
+labels:
+  - incident
+  - hotfix
+  - risk:high
+body:
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Sev1
+        - Sev2
+        - Sev3
+    validations:
+      required: true
+  - type: input
+    id: started_at
+    attributes:
+      label: Incident start time
+      description: Use ISO 8601 when possible.
+      placeholder: 2026-08-25T18:45:00-03:00
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: User impact
+      description: What broke, who was affected, and what is the blast radius?
+    validations:
+      required: true
+  - type: textarea
+    id: mitigation
+    attributes:
+      label: Mitigation taken
+      description: Include rollback, feature flag, restart, or manual correction steps.
+    validations:
+      required: true
+  - type: textarea
+    id: rollback
+    attributes:
+      label: Rollback plan
+      description: What is the exact rollback path if the current fix does not hold?
+    validations:
+      required: true
+  - type: textarea
+    id: root_cause
+    attributes:
+      label: Suspected root cause
+  - type: textarea
+    id: follow_up
+    attributes:
+      label: Follow-up actions

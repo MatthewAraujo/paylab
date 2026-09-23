@@ -1,0 +1,52 @@
+name: Bug report
+description: Report a reproducible backend or integration defect.
+title: "bug: "
+labels:
+  - bug
+  - needs-tests
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the bug in one paragraph.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include endpoint, payload, environment, and authentication context.
+      placeholder: |
+        1. POST /api/...
+        2. Payload ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Affected environment
+      options:
+        - Production
+        - Staging
+        - Local development
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Logs, traces, SQL errors, screenshots, or links.

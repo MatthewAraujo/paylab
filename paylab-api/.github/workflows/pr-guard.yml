@@ -1,0 +1,43 @@
+name: PR Guard
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              if (process.env.ACT === "true") {
+                core.notice("No pull_request payload was provided under act; skipping PR Guard. Use `gh act pull_request -e <event.json>` for full validation.");
+                return;
+              }
+              throw new Error("pull_request payload is missing.");
+            }
+
+            const title = pr.title || "";
+            const body = pr.body || "";
+            const errors = [];
+
+            const titlePattern = /^(feat|fix|chore|docs|refactor|test|ci|hotfix)(\([^)]+\))?: .+/;
+            if (!titlePattern.test(title)) {
+              errors.push("PR title must follow `type(scope): summary` or `type: summary`.");
+            }
+
+            for (const section of ["## Summary", "## Validation", "## Deploy", "## Rollback"]) {
+              if (!body.includes(section)) {
+                errors.push(`PR body is missing the required section: ${section}`);
+              }
+            }
+
+            if (errors.length > 0) {
+              throw new Error(errors.join("\n"));
+            }

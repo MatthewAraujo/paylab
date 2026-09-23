@@ -1,0 +1,74 @@
+name: Dependency Review
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate dependency changes
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ -n "${BASE_SHA}" ] && [ -n "${HEAD_SHA}" ]; then
+            diff_range="${BASE_SHA}...${HEAD_SHA}"
+          elif [ -n "${BASE_REF}" ] && git rev-parse --verify "origin/${BASE_REF}" >/dev/null 2>&1; then
+            diff_range="origin/${BASE_REF}...HEAD"
+          elif [ -n "${BASE_REF}" ] && git rev-parse --verify "${BASE_REF}" >/dev/null 2>&1; then
+            diff_range="${BASE_REF}...HEAD"
+          elif [ "${ACT:-false}" = "true" ] && git rev-parse --verify "origin/main" >/dev/null 2>&1; then
+            diff_range="origin/main...HEAD"
+          elif [ "${ACT:-false}" = "true" ] && git rev-parse --verify "main" >/dev/null 2>&1; then
+            diff_range="main...HEAD"
+          else
+            if [ -n "${BASE_REF}" ]; then
+              git fetch origin "${BASE_REF}" --depth=1
+              diff_range="origin/${BASE_REF}...HEAD"
+            else
+              echo "Unable to determine pull request base for dependency review."
+              exit 1
+            fi
+          fi
+
+          changed_files="$(git diff --name-only "${diff_range}")"
+
+          base_ref="${diff_range%%...*}"
+          head_ref="${diff_range##*...}"
+
+          deps_changed=false
+          lockfile_changed=false
+
+          if printf '%s\n' "${changed_files}" | grep -Eq '(^|/)pnpm-workspace\.yaml$'; then
+            deps_changed=true
+          fi
+
+          if printf '%s\n' "${changed_files}" | grep -Eq '(^|/)pnpm-lock\.yaml$'; then
+            lockfile_changed=true
+          fi
+
+          # Only require a lockfile update when the actual dependency fields
+          # changed — unrelated package.json edits (e.g. scripts, config
+          # blocks like the old `prisma` key, `engines`) don't affect what
+          # pnpm resolves, so the lockfile has nothing to update.
+          for pkg_file in $(printf '%s\n' "${changed_files}" | grep -E '(^|/)package\.json$' || true); do
+            base_deps="$(git show "${base_ref}:${pkg_file}" 2>/dev/null | jq -S '{dependencies, devDependencies, peerDependencies, optionalDependencies}' 2>/dev/null || echo '{}')"
+            head_deps="$(git show "${head_ref}:${pkg_file}" 2>/dev/null | jq -S '{dependencies, devDependencies, peerDependencies, optionalDependencies}' 2>/dev/null || echo '{}')"
+            if [ "${base_deps}" != "${head_deps}" ]; then
+              deps_changed=true
+            fi
+          done
+
+          if [ "${deps_changed}" = true ] && [ "${lockfile_changed}" = false ]; then
+            echo "package.json dependencies (or pnpm-workspace.yaml) changed without updating pnpm-lock.yaml."
+            exit 1
+          fi

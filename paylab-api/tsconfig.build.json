@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/infra/app.factory.ts",
+    "src/infra/app.module.ts",
+    "src/infra/main.ts",
+    "src/infra/env/**/*.ts",
+    "src/infra/http/http.module.ts",
+    "src/infra/http/controllers/health.controller.ts"
+  ],
+  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
+}

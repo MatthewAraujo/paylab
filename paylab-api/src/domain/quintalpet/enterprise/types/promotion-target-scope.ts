@@ -1,5 +1,0 @@
-export enum PromotionTargetScope {
-	ELIGIBLE_ITEMS = 'ELIGIBLE_ITEMS',
-	ORDER_SUBTOTAL = 'ORDER_SUBTOTAL',
-	SHIPPING = 'SHIPPING',
-}

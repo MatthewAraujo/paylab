@@ -20,7 +20,7 @@ React front end, FakeBank and provider integration, webhooks, reconciliation, qu
 
 | Task | Title | Depends on | Status | Context | Summary |
 | --- | --- | --- | --- | --- | --- |
-| [T1](tasks/T1.md) | Prune the copied base down to the technical spine | — | ready | — | — |
+| [T1](tasks/T1.md) | Prune the copied base down to the technical spine | — | done | [context](task-runs/T1-CONTEXT.md) | [summary](task-runs/T1-summary.md) |
 | [T2](tasks/T2.md) | Test infrastructure: Testcontainers and suite layout | T1 | planned | — | — |
 | [T3](tasks/T3.md) | Schema baseline: accounts, payments and the ledger | T2 | planned | — | — |
 | [T4](tasks/T4.md) | Ledger integrity triggers and the global invariant check | T3 | planned | — | — |

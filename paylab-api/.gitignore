@@ -1,11 +1,8 @@
 node_modules
 dist
 .env
-.env.production
 .env.*
 !.env.example
-!.env.production.example
-!.env.example.production
 data
 coverage
 *.tsbuildinfo

@@ -6,8 +6,6 @@ export interface AppRequestContext {
 	method?: string
 	route?: string
 	path?: string
-	storeId?: string
-	userId?: string
 }
 
 @Injectable()

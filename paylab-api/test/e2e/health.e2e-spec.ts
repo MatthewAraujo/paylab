@@ -26,7 +26,7 @@ describe('Health (E2E)', () => {
 		expect(response.statusCode).toBe(200)
 		expect(response.body).toEqual({
 			status: 'ok',
-			app: 'quintal-agro-pet',
+			app: 'paylab-api',
 			environment: 'test',
 		})
 	})

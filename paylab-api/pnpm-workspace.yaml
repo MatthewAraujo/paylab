@@ -9,6 +9,3 @@ allowBuilds:
   '@swc/core': true
   esbuild: true
   prisma: true
-minimumReleaseAgeExclude:
-  - '@nestjs/platform-socket.io@11.2.3'
-  - '@nestjs/websockets@11.2.3'

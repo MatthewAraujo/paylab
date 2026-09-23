@@ -19,8 +19,8 @@ describe('getFrontendOrigin', () => {
 	})
 
 	test('trims whitespace and trailing slashes from FRONTEND_URL', () => {
-		process.env.FRONTEND_URL = ' https://quintal-agropet.com/// '
+		process.env.FRONTEND_URL = ' https://paylab.example/// '
 
-		expect(getFrontendOrigin()).toBe('https://quintal-agropet.com')
+		expect(getFrontendOrigin()).toBe('https://paylab.example')
 	})
 })

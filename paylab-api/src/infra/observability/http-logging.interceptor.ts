@@ -33,8 +33,6 @@ export class HttpLoggingInterceptor implements NestInterceptor {
 			body?: unknown
 			query?: unknown
 			params?: unknown
-			user?: { id?: string }
-			accessibleStores?: string[]
 		}>()
 		const response = http.getResponse<{
 			statusCode: number
@@ -56,12 +54,7 @@ export class HttpLoggingInterceptor implements NestInterceptor {
 			method: request.method,
 			route,
 			path,
-			storeId: request.accessibleStores?.[0],
-			userId: request.user?.id,
 		}
-
-		const isAdminRoute = this.isAdminRoute(path)
-		const isMutation = !['GET', 'HEAD', 'OPTIONS'].includes(request.method.toUpperCase())
 
 		return new Observable((subscriber) =>
 			this.requestContext.run(requestContext, () => {
@@ -86,17 +79,6 @@ export class HttpLoggingInterceptor implements NestInterceptor {
 								statusCode: response.statusCode,
 								durationMs: Date.now() - startedAt,
 							})
-
-							if (isAdminRoute && isMutation) {
-								this.logger.info('security.admin_action', {
-									context: 'SecurityAudit',
-									method: request.method,
-									route,
-									statusCode: response.statusCode,
-									actorUserId: request.user?.id,
-									storeId: request.accessibleStores?.[0],
-								})
-							}
 						}),
 						catchError((error: unknown) => {
 							const statusCode = this.resolveStatusCode(error, response.statusCode)
@@ -113,8 +95,6 @@ export class HttpLoggingInterceptor implements NestInterceptor {
 							this.logSecurityEvent(statusCode, {
 								method: request.method,
 								route,
-								adminRoute: isAdminRoute,
-								actorUserId: request.user?.id,
 							})
 
 							return throwError(() => error)
@@ -125,19 +105,12 @@ export class HttpLoggingInterceptor implements NestInterceptor {
 		)
 	}
 
-	private isAdminRoute(pathname: string): boolean {
-		return pathname.startsWith('/api/v1/admin') || pathname.startsWith('/admin/')
-	}
-
 	/**
 	 * Dedicated, greppable security-signal log for the auth-relevant status
 	 * codes. Kept separate from `http.request.failed` so alerting can key off
 	 * `security.*` events without parsing every 4xx.
 	 */
-	private logSecurityEvent(
-		statusCode: number,
-		details: { method: string; route: string; adminRoute: boolean; actorUserId?: string },
-	) {
+	private logSecurityEvent(statusCode: number, details: { method: string; route: string }) {
 		const event =
 			statusCode === 401
 				? 'security.unauthenticated'
@@ -156,8 +129,6 @@ export class HttpLoggingInterceptor implements NestInterceptor {
 			statusCode,
 			method: details.method,
 			route: details.route,
-			adminRoute: details.adminRoute,
-			actorUserId: details.actorUserId,
 		})
 	}
 

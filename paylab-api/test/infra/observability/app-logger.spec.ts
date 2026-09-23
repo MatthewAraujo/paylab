@@ -7,7 +7,7 @@ describe('AppLogger', () => {
 			{
 				enabled: false,
 				level: 'debug',
-				appName: 'quintal-agro-pet',
+				appName: 'paylab-api',
 				environment: 'test',
 				colors: false,
 			},
@@ -34,7 +34,7 @@ describe('AppLogger', () => {
 			{
 				enabled: true,
 				level: 'basic',
-				appName: 'quintal-agro-pet',
+				appName: 'paylab-api',
 				environment: 'test',
 				colors: false,
 			},
@@ -48,9 +48,7 @@ describe('AppLogger', () => {
 			},
 		)
 
-		logger.debugEvent('catalog.product.publish.started', {
-			storeId: 'store-1',
-		})
+		logger.debugEvent('payment.settlement.started', {})
 
 		expect(lines).toHaveLength(0)
 	})
@@ -61,17 +59,15 @@ describe('AppLogger', () => {
 			{
 				enabled: true,
 				level: 'debug',
-				appName: 'quintal-agro-pet',
+				appName: 'paylab-api',
 				environment: 'test',
 				colors: false,
 			},
 			() => ({
 				requestId: 'request-1',
 				method: 'POST',
-				route: '/api/v1/admin/catalog/products',
-				path: '/api/v1/admin/catalog/products',
-				storeId: 'store-1',
-				userId: 'user-1',
+				route: '/api/v1/payments',
+				path: '/api/v1/payments',
 			}),
 			{
 				info: (line) => lines.push(line),
@@ -92,10 +88,8 @@ describe('AppLogger', () => {
 		expect(lines[0]).toContain('[HttpLoggingInterceptor] http.request.completed')
 		expect(lines[0]).toContain("requestId: 'request-1'")
 		expect(lines[0]).toContain("method: 'POST'")
-		expect(lines[0]).toContain("route: '/api/v1/admin/catalog/products'")
-		expect(lines[0]).toContain("path: '/api/v1/admin/catalog/products'")
-		expect(lines[0]).toContain("storeId: 'store-1'")
-		expect(lines[0]).toContain("userId: 'user-1'")
+		expect(lines[0]).toContain("route: '/api/v1/payments'")
+		expect(lines[0]).toContain("path: '/api/v1/payments'")
 		expect(lines[0]).toContain('statusCode: 201')
 		expect(lines[0]).toContain('durationMs: 42')
 	})
@@ -106,7 +100,7 @@ describe('AppLogger', () => {
 			{
 				enabled: true,
 				level: 'debug',
-				appName: 'quintal-agro-pet',
+				appName: 'paylab-api',
 				environment: 'test',
 				colors: false,
 			},

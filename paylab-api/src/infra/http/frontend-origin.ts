@@ -6,7 +6,7 @@ function stripTrailingSlash(value: string): string {
 
 /**
  * The primary frontend origin. Used wherever a single canonical origin is
- * required (Better Auth `trustedOrigins`, email link building). Falls back to
+ * required. Falls back to
  * localhost only outside production — {@link getAllowedOrigins} is the one that
  * fails closed for CORS.
  */

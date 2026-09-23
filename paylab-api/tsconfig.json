@@ -21,32 +21,7 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "types": ["vitest/globals", "multer"]
+    "types": ["vitest/globals"]
   },
-  "include": [
-    "src/core/**/*.ts",
-    "src/domain/mensalize/application/cryptography/**/*.ts",
-    "src/domain/mensalize/enterprise/entities/**/*.ts",
-    "src/infra/app.factory.ts",
-    "src/infra/app.module.ts",
-    "src/infra/main.ts",
-    "src/infra/auth/**/*.ts",
-    "src/infra/cryptography/**/*.ts",
-    "src/infra/env/**/*.ts",
-    "src/infra/database/database.module.ts",
-    "src/infra/database/prisma/prisma.service.ts",
-    "src/infra/database/prisma/repositories/**/*.ts",
-    "src/infra/database/prisma/mappers/prisma-audit-log-mapper.ts",
-    "src/infra/database/prisma/mappers/prisma-organization-mapper.ts",
-    "src/infra/database/prisma/mappers/prisma-member-mapper.ts",
-    "src/infra/database/prisma/mappers/prisma-user-mapper.ts",
-    "src/infra/http/http.module.ts",
-    "src/infra/http/pipes/**/*.ts",
-    "src/infra/http/controllers/health.controller.ts",
-    "src/infra/http/controllers/create-account.controller.ts",
-    "src/infra/http/controllers/authenticate.controller.ts",
-    "src/infra/http/controllers/get-organization-by-id.controller.ts",
-    "src/shared/**/*.ts",
-    "test/**/*.ts"
-  ]
+  "include": ["src/**/*.ts", "test/**/*.ts"]
 }

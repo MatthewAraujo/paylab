@@ -1,0 +1,7 @@
+PASS nokey  S1 retries=0 (serialization=0, version=0)  S2 retries=0  S3 retries=0 deadlocks=0  S4 retries=0
+FAIL forupdate  S1 retries=0 (serialization=0, version=0)  S2 retries=0  S3 retries=3413 deadlocks=3413  S4 retries=0
+   - S3: 3413 deadlocks
+PASS serializable  S1 retries=409 (serialization=409, version=0)  S2 retries=1161  S3 retries=2703 deadlocks=0  S4 retries=2528
+PASS optimistic  S1 retries=223 (serialization=0, version=223)  S2 retries=1312  S3 retries=1200 deadlocks=0  S4 retries=1810
+PASS advisory  S1 retries=0 (serialization=0, version=0)  S2 retries=0  S3 retries=0 deadlocks=0  S4 retries=0
+elapsed 15m46s; machine/db: see T14-results.md

@@ -1,0 +1,18 @@
+-- V3 payments composite: CREATE INDEX exp_pay_merchant_time ON payments (merchant_id, created_at DESC, id DESC)
+exp_pay_merchant_time 56 MB
+| list first page (hot merchant) | 0.174 | ->  Index Scan using exp_pay_merchant_time on payments |
+| list next page, deep (hot merchant) | 0.299 | ->  Index Scan using exp_pay_merchant_time on payments |
+| list status=CREATED (hot merchant) | 5.031 | ->  Index Scan using exp_pay_merchant_time on payments |
+| list status=FAILED (hot merchant) | 1.118 | ->  Index Scan using exp_pay_merchant_time on payments |
+| list account filter (hot merchant) | 0.820 | ->  Index Scan using exp_pay_merchant_time on payments |
+| list period 30d (hot merchant) | 0.247 | ->  Index Scan using exp_pay_merchant_time on payments |
+| list first page (cold merchant) | 0.257 | ->  Index Scan using exp_pay_merchant_time on payments |
+| list next page, deep (cold merchant) | 0.323 | ->  Index Scan using exp_pay_merchant_time on payments |
+| list status=CREATED (cold merchant) | 15.429 | ->  Index Scan using exp_pay_merchant_time on payments |
+| list status=FAILED (cold merchant) | 3.266 | ->  Index Scan using exp_pay_merchant_time on payments |
+| list account filter (cold merchant) | 44.735 | ->  Bitmap Heap Scan on payments |
+| list period 30d (cold merchant) | 0.316 | ->  Index Scan using exp_pay_merchant_time on payments |
+| report 30d (hot merchant) | 60.672 | GroupAggregate |
+| report 90d (hot merchant) | 184.351 | GroupAggregate |
+| report 30d (cold merchant) | 20.400 | ->  HashAggregate |
+| report 90d (cold merchant) | 62.591 | GroupAggregate |

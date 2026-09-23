@@ -1,0 +1,9 @@
+### D0 depth no index
+
+| depth (rows skipped) | keyset ms | offset ms | keyset node | offset node |
+| ---: | ---: | ---: | --- | --- |
+| 0 | 57.732 | 58.024 | Parallel Seq Scan on ledger_entries | Parallel Seq Scan on ledger_entries |
+| 1000 | 61.121 | 61.521 | Parallel Seq Scan on ledger_entries | Parallel Seq Scan on ledger_entries |
+| 10000 | 61.105 | 65.182 | Parallel Seq Scan on ledger_entries | Parallel Seq Scan on ledger_entries |
+| 50000 | 58.664 | 68.550 | Parallel Seq Scan on ledger_entries | Parallel Seq Scan on ledger_entries |
+| 90000 | 56.715 | 74.334 | Parallel Seq Scan on ledger_entries | Parallel Seq Scan on ledger_entries |

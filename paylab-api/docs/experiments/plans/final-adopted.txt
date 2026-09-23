@@ -1,0 +1,310 @@
+===== history first page (hot wallet)
+Limit  (cost=0.43..22.64 rows=21 width=52) (actual time=0.040..0.062 rows=21 loops=1)
+  Buffers: shared hit=17
+  ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries  (cost=0.43..99040.34 rows=93641 width=52) (actual time=0.039..0.060 rows=21 loops=1)
+        Index Cond: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+        Buffers: shared hit=17
+Planning:
+  Buffers: shared hit=161
+Planning Time: 1.043 ms
+Execution Time: 0.114 ms
+
+===== history next page, mid (hot wallet)
+Limit  (cost=0.43..44.68 rows=21 width=52) (actual time=0.053..0.074 rows=21 loops=1)
+  Buffers: shared hit=18
+  ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries  (cost=0.43..94083.59 rows=44650 width=52) (actual time=0.052..0.072 rows=21 loops=1)
+        Index Cond: ((account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid) AND (ROW(created_at, id) < ROW('2026-07-13 21:52:30.144+00'::timestamp with time zone, '64e2174a-abf4-eff5-7d21-98718e1120af'::uuid)))
+        Buffers: shared hit=18
+Planning:
+  Buffers: shared hit=160
+Planning Time: 1.028 ms
+Execution Time: 0.146 ms
+
+===== balance (hot wallet)
+Aggregate  (cost=5865.45..5865.47 rows=1 width=8) (actual time=12.984..12.984 rows=1 loops=1)
+  Buffers: shared hit=897
+  ->  Index Only Scan using ledger_entries_account_created_id_idx on ledger_entries  (cost=0.43..5163.14 rows=93641 width=12) (actual time=0.048..8.345 rows=95496 loops=1)
+        Index Cond: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+        Heap Fetches: 0
+        Buffers: shared hit=897
+Planning:
+  Buffers: shared hit=158
+Planning Time: 1.022 ms
+Execution Time: 13.025 ms
+
+===== history first page (cold wallet)
+Limit  (cost=0.43..83.96 rows=21 width=52) (actual time=0.042..0.152 rows=21 loops=1)
+  Buffers: shared hit=23
+  ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries  (cost=0.43..3811.14 rows=958 width=52) (actual time=0.041..0.149 rows=21 loops=1)
+        Index Cond: (account_id = '798db295-6cb2-1ab7-5b74-e881e54632b2'::uuid)
+        Buffers: shared hit=23
+Planning:
+  Buffers: shared hit=161
+Planning Time: 1.083 ms
+Execution Time: 0.195 ms
+
+===== history next page, mid (cold wallet)
+Limit  (cost=0.43..84.80 rows=21 width=52) (actual time=0.046..0.163 rows=21 loops=1)
+  Buffers: shared hit=24
+  ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries  (cost=0.43..2125.87 rows=529 width=52) (actual time=0.046..0.160 rows=21 loops=1)
+        Index Cond: ((account_id = '798db295-6cb2-1ab7-5b74-e881e54632b2'::uuid) AND (ROW(created_at, id) < ROW('2026-07-20 17:15:11.232+00'::timestamp with time zone, '17a2fe54-72da-25bb-12b1-58b2cedac2ee'::uuid)))
+        Buffers: shared hit=24
+Planning:
+  Buffers: shared hit=160
+Planning Time: 1.155 ms
+Execution Time: 0.244 ms
+
+===== balance (cold wallet)
+Aggregate  (cost=64.38..64.39 rows=1 width=8) (actual time=0.201..0.201 rows=1 loops=1)
+  Buffers: shared hit=12
+  ->  Index Only Scan using ledger_entries_account_created_id_idx on ledger_entries  (cost=0.43..57.19 rows=958 width=12) (actual time=0.057..0.149 rows=873 loops=1)
+        Index Cond: (account_id = '798db295-6cb2-1ab7-5b74-e881e54632b2'::uuid)
+        Heap Fetches: 0
+        Buffers: shared hit=12
+Planning:
+  Buffers: shared hit=158
+Planning Time: 1.007 ms
+Execution Time: 0.250 ms
+
+===== list first page (hot merchant)
+Limit  (cost=0.42..42.46 rows=21 width=115) (actual time=0.034..0.059 rows=21 loops=1)
+  Buffers: shared hit=12
+  ->  Index Scan using payments_merchant_created_id_idx on payments  (cost=0.42..117469.43 rows=58692 width=115) (actual time=0.033..0.056 rows=21 loops=1)
+        Index Cond: (merchant_id = 'b2a97f55-6bc8-550a-f91f-be03bd74f45f'::uuid)
+        Buffers: shared hit=12
+Planning:
+  Buffers: shared hit=209
+Planning Time: 1.267 ms
+Execution Time: 0.105 ms
+
+===== list next page, deep (hot merchant)
+Limit  (cost=0.42..57.21 rows=21 width=115) (actual time=0.043..0.060 rows=21 loops=1)
+  Buffers: shared hit=11
+  ->  Index Scan using payments_merchant_created_id_idx on payments  (cost=0.42..78881.39 rows=29169 width=115) (actual time=0.042..0.058 rows=21 loops=1)
+        Index Cond: ((merchant_id = 'b2a97f55-6bc8-550a-f91f-be03bd74f45f'::uuid) AND (ROW(created_at, id) < ROW('2026-07-15 20:32:53.952+00'::timestamp with time zone, '7df55655-e136-3142-c3b9-af42aa226b26'::uuid)))
+        Buffers: shared hit=11
+Planning:
+  Buffers: shared hit=208
+Planning Time: 1.443 ms
+Execution Time: 0.135 ms
+
+===== list status=CREATED (hot merchant)
+Limit  (cost=0.42..8098.56 rows=21 width=115) (actual time=0.046..2.559 rows=21 loops=1)
+  Buffers: shared hit=1882
+  ->  Index Scan using payments_merchant_created_id_idx on payments  (cost=0.42..117616.16 rows=305 width=115) (actual time=0.045..2.556 rows=21 loops=1)
+        Index Cond: (merchant_id = 'b2a97f55-6bc8-550a-f91f-be03bd74f45f'::uuid)
+        Filter: (status = 'CREATED'::payment_status)
+        Rows Removed by Filter: 4338
+        Buffers: shared hit=1882
+Planning:
+  Buffers: shared hit=212
+Planning Time: 1.317 ms
+Execution Time: 2.591 ms
+
+===== list status=FAILED (hot merchant)
+Limit  (cost=0.42..1409.40 rows=21 width=115) (actual time=0.095..0.507 rows=21 loops=1)
+  Buffers: shared hit=303
+  ->  Index Scan using payments_merchant_created_id_idx on payments  (cost=0.42..117616.16 rows=1753 width=115) (actual time=0.094..0.504 rows=21 loops=1)
+        Index Cond: (merchant_id = 'b2a97f55-6bc8-550a-f91f-be03bd74f45f'::uuid)
+        Filter: (status = 'FAILED'::payment_status)
+        Rows Removed by Filter: 683
+        Buffers: shared hit=303
+Planning:
+  Buffers: shared hit=212
+Planning Time: 1.421 ms
+Execution Time: 0.551 ms
+
+===== list account filter (hot merchant)
+Limit  (cost=0.42..433.68 rows=21 width=115) (actual time=0.034..0.062 rows=21 loops=1)
+  Buffers: shared hit=14
+  ->  Index Scan using payments_merchant_created_id_idx on payments  (cost=0.42..117762.89 rows=5708 width=115) (actual time=0.033..0.060 rows=21 loops=1)
+        Index Cond: (merchant_id = 'b2a97f55-6bc8-550a-f91f-be03bd74f45f'::uuid)
+        Filter: ((source_account_id = '1191324a-9610-74fc-436a-2f92e2cbb212'::uuid) OR (destination_account_id = '1191324a-9610-74fc-436a-2f92e2cbb212'::uuid))
+        Rows Removed by Filter: 4
+        Buffers: shared hit=14
+Planning:
+  Buffers: shared hit=209
+Planning Time: 1.365 ms
+Execution Time: 0.117 ms
+
+===== list period 30d (hot merchant)
+Limit  (cost=0.42..64.16 rows=21 width=115) (actual time=0.046..0.084 rows=21 loops=1)
+  Buffers: shared hit=17
+  ->  Index Scan using payments_merchant_created_id_idx on payments  (cost=0.42..59610.08 rows=19641 width=115) (actual time=0.045..0.082 rows=21 loops=1)
+        Index Cond: ((merchant_id = 'b2a97f55-6bc8-550a-f91f-be03bd74f45f'::uuid) AND (created_at >= '2026-07-01 00:00:00+00'::timestamp with time zone) AND (created_at < '2026-07-31 00:00:00+00'::timestamp with time zone))
+        Buffers: shared hit=17
+Planning:
+  Buffers: shared hit=217
+Planning Time: 1.543 ms
+Execution Time: 0.128 ms
+
+===== report 30d (hot merchant)
+GroupAggregate  (cost=2681.11..3315.62 rows=19450 width=52) (actual time=12.430..14.672 rows=120 loops=1)
+  Group Key: (to_char((created_at AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD'::text)), status
+  Buffers: shared hit=199
+  ->  Sort  (cost=2681.11..2730.21 rows=19641 width=44) (actual time=12.418..12.995 rows=19975 loops=1)
+        Sort Key: (to_char((created_at AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD'::text)), status
+        Sort Method: quicksort  Memory: 1705kB
+        Buffers: shared hit=199
+        ->  Index Only Scan using payments_merchant_created_id_idx on payments  (cost=0.42..1280.55 rows=19641 width=44) (actual time=0.076..7.334 rows=19975 loops=1)
+              Index Cond: ((merchant_id = 'b2a97f55-6bc8-550a-f91f-be03bd74f45f'::uuid) AND (created_at >= '2026-07-01 00:00:00+00'::timestamp with time zone) AND (created_at < '2026-07-31 00:00:00+00'::timestamp with time zone))
+              Heap Fetches: 0
+              Buffers: shared hit=191
+Planning:
+  Buffers: shared hit=198
+Planning Time: 1.190 ms
+Execution Time: 14.894 ms
+
+===== report 90d (hot merchant)
+Sort  (cost=10052.79..10195.22 rows=56974 width=52) (actual time=30.693..30.705 rows=359 loops=1)
+  Sort Key: (to_char((created_at AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD'::text)), status
+  Sort Method: quicksort  Memory: 44kB
+  Buffers: shared hit=574
+  ->  HashAggregate  (cost=4412.93..5552.41 rows=56974 width=52) (actual time=30.283..30.444 rows=359 loops=1)
+        Group Key: to_char((created_at AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD'::text), status
+        Batches: 1  Memory Usage: 1617kB
+        Buffers: shared hit=566
+        ->  Index Only Scan using payments_merchant_created_id_idx on payments  (cost=0.42..3826.13 rows=58680 width=44) (actual time=0.075..22.369 rows=60209 loops=1)
+              Index Cond: ((merchant_id = 'b2a97f55-6bc8-550a-f91f-be03bd74f45f'::uuid) AND (created_at >= '2026-05-31 00:00:00+00'::timestamp with time zone) AND (created_at < '2026-08-30 00:00:00+00'::timestamp with time zone))
+              Heap Fetches: 0
+              Buffers: shared hit=566
+Planning:
+  Buffers: shared hit=198
+Planning Time: 1.247 ms
+Execution Time: 31.786 ms
+
+===== list first page (cold merchant)
+Limit  (cost=0.42..72.53 rows=21 width=115) (actual time=0.044..0.094 rows=21 loops=1)
+  Buffers: shared hit=18
+  ->  Index Scan using payments_merchant_created_id_idx on payments  (cost=0.42..35972.93 rows=10477 width=115) (actual time=0.043..0.091 rows=21 loops=1)
+        Index Cond: (merchant_id = 'ee7afece-792d-aee9-aefc-91f92bac16bf'::uuid)
+        Buffers: shared hit=18
+Planning:
+  Buffers: shared hit=209
+Planning Time: 1.484 ms
+Execution Time: 0.152 ms
+
+===== list next page, deep (cold merchant)
+Limit  (cost=0.42..76.08 rows=21 width=115) (actual time=0.041..0.110 rows=21 loops=1)
+  Buffers: shared hit=18
+  ->  Index Scan using payments_merchant_created_id_idx on payments  (cost=0.42..26286.72 rows=7296 width=115) (actual time=0.040..0.108 rows=21 loops=1)
+        Index Cond: ((merchant_id = 'ee7afece-792d-aee9-aefc-91f92bac16bf'::uuid) AND (ROW(created_at, id) < ROW('2026-08-02 18:44:02.112+00'::timestamp with time zone, '569bb3a8-8339-89e2-da96-fb77f413ca65'::uuid)))
+        Buffers: shared hit=18
+Planning:
+  Buffers: shared hit=208
+Planning Time: 1.308 ms
+Execution Time: 0.190 ms
+
+===== list status=CREATED (cold merchant)
+Limit  (cost=0.42..13999.92 rows=21 width=115) (actual time=0.425..6.524 rows=21 loops=1)
+  Buffers: shared hit=3038
+  ->  Index Scan using payments_merchant_created_id_idx on payments  (cost=0.42..35999.12 rows=54 width=115) (actual time=0.424..6.521 rows=21 loops=1)
+        Index Cond: (merchant_id = 'ee7afece-792d-aee9-aefc-91f92bac16bf'::uuid)
+        Filter: (status = 'CREATED'::payment_status)
+        Rows Removed by Filter: 3543
+        Buffers: shared hit=3038
+Planning:
+  Buffers: shared hit=212
+Planning Time: 1.309 ms
+Execution Time: 6.554 ms
+
+===== list status=FAILED (cold merchant)
+Limit  (cost=0.42..2415.67 rows=21 width=115) (actual time=0.144..1.456 rows=21 loops=1)
+  Buffers: shared hit=690
+  ->  Index Scan using payments_merchant_created_id_idx on payments  (cost=0.42..35999.12 rows=313 width=115) (actual time=0.143..1.453 rows=21 loops=1)
+        Index Cond: (merchant_id = 'ee7afece-792d-aee9-aefc-91f92bac16bf'::uuid)
+        Filter: (status = 'FAILED'::payment_status)
+        Rows Removed by Filter: 765
+        Buffers: shared hit=690
+Planning:
+  Buffers: shared hit=212
+Planning Time: 1.316 ms
+Execution Time: 1.487 ms
+
+===== list account filter (cold merchant)
+Limit  (cost=21291.50..21291.53 rows=10 width=115) (actual time=21.854..21.857 rows=21 loops=1)
+  Buffers: shared hit=8435
+  ->  Sort  (cost=21291.50..21291.53 rows=10 width=115) (actual time=21.853..21.854 rows=21 loops=1)
+        Sort Key: created_at DESC, id DESC
+        Sort Method: top-N heapsort  Memory: 30kB
+        Buffers: shared hit=8435
+        ->  Bitmap Heap Scan on payments  (cost=475.00..21291.33 rows=10 width=115) (actual time=2.524..21.652 rows=537 loops=1)
+              Recheck Cond: (merchant_id = 'ee7afece-792d-aee9-aefc-91f92bac16bf'::uuid)
+              Filter: ((source_account_id = '3fca1261-7017-6a05-bba8-725532f29486'::uuid) OR (destination_account_id = '3fca1261-7017-6a05-bba8-725532f29486'::uuid))
+              Rows Removed by Filter: 9347
+              Heap Blocks: exact=8333
+              Buffers: shared hit=8429
+              ->  Bitmap Index Scan on payments_merchant_created_id_idx  (cost=0.00..475.00 rows=10477 width=0) (actual time=1.642..1.642 rows=9884 loops=1)
+                    Index Cond: (merchant_id = 'ee7afece-792d-aee9-aefc-91f92bac16bf'::uuid)
+                    Buffers: shared hit=96
+Planning:
+  Buffers: shared hit=209
+Planning Time: 1.358 ms
+Execution Time: 22.010 ms
+
+===== list account filter, rare match (cold merchant)
+Limit  (cost=21291.50..21291.53 rows=10 width=115) (actual time=21.426..21.429 rows=4 loops=1)
+  Buffers: shared hit=8435
+  ->  Sort  (cost=21291.50..21291.53 rows=10 width=115) (actual time=21.424..21.426 rows=4 loops=1)
+        Sort Key: created_at DESC, id DESC
+        Sort Method: quicksort  Memory: 25kB
+        Buffers: shared hit=8435
+        ->  Bitmap Heap Scan on payments  (cost=475.00..21291.33 rows=10 width=115) (actual time=6.469..21.373 rows=4 loops=1)
+              Recheck Cond: (merchant_id = 'ee7afece-792d-aee9-aefc-91f92bac16bf'::uuid)
+              Filter: ((source_account_id = 'fd7533bd-ded9-46cb-ae98-71065c41d1d1'::uuid) OR (destination_account_id = 'fd7533bd-ded9-46cb-ae98-71065c41d1d1'::uuid))
+              Rows Removed by Filter: 9880
+              Heap Blocks: exact=8333
+              Buffers: shared hit=8429
+              ->  Bitmap Index Scan on payments_merchant_created_id_idx  (cost=0.00..475.00 rows=10477 width=0) (actual time=1.530..1.530 rows=9884 loops=1)
+                    Index Cond: (merchant_id = 'ee7afece-792d-aee9-aefc-91f92bac16bf'::uuid)
+                    Buffers: shared hit=96
+Planning:
+  Buffers: shared hit=209
+Planning Time: 1.257 ms
+Execution Time: 21.578 ms
+
+===== list period 30d (cold merchant)
+Limit  (cost=0.42..80.79 rows=21 width=115) (actual time=0.047..0.111 rows=21 loops=1)
+  Buffers: shared hit=23
+  ->  Index Scan using payments_merchant_created_id_idx on payments  (cost=0.42..13417.29 rows=3506 width=115) (actual time=0.046..0.108 rows=21 loops=1)
+        Index Cond: ((merchant_id = 'ee7afece-792d-aee9-aefc-91f92bac16bf'::uuid) AND (created_at >= '2026-07-01 00:00:00+00'::timestamp with time zone) AND (created_at < '2026-07-31 00:00:00+00'::timestamp with time zone))
+        Buffers: shared hit=23
+Planning:
+  Buffers: shared hit=217
+Planning Time: 1.369 ms
+Execution Time: 0.156 ms
+
+===== report 30d (cold merchant)
+GroupAggregate  (cost=435.27..549.09 rows=3500 width=52) (actual time=2.297..2.779 rows=95 loops=1)
+  Group Key: (to_char((created_at AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD'::text)), status
+  Buffers: shared hit=43
+  ->  Sort  (cost=435.27..444.03 rows=3506 width=44) (actual time=2.285..2.398 rows=3311 loops=1)
+        Sort Key: (to_char((created_at AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD'::text)), status
+        Sort Method: quicksort  Memory: 252kB
+        Buffers: shared hit=43
+        ->  Index Only Scan using payments_merchant_created_id_idx on payments  (cost=0.42..228.84 rows=3506 width=44) (actual time=0.077..1.329 rows=3311 loops=1)
+              Index Cond: ((merchant_id = 'ee7afece-792d-aee9-aefc-91f92bac16bf'::uuid) AND (created_at >= '2026-07-01 00:00:00+00'::timestamp with time zone) AND (created_at < '2026-07-31 00:00:00+00'::timestamp with time zone))
+              Heap Fetches: 0
+              Buffers: shared hit=35
+Planning:
+  Buffers: shared hit=198
+Planning Time: 1.165 ms
+Execution Time: 2.932 ms
+
+===== report 90d (cold merchant)
+GroupAggregate  (cost=1383.94..1723.30 rows=10421 width=52) (actual time=6.880..8.037 rows=285 loops=1)
+  Group Key: (to_char((created_at AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD'::text)), status
+  Buffers: shared hit=105
+  ->  Sort  (cost=1383.94..1410.13 rows=10475 width=44) (actual time=6.864..7.140 rows=9884 loops=1)
+        Sort Key: (to_char((created_at AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD'::text)), status
+        Sort Method: quicksort  Memory: 848kB
+        Buffers: shared hit=105
+        ->  Index Only Scan using payments_merchant_created_id_idx on payments  (cost=0.42..684.49 rows=10475 width=44) (actual time=0.070..3.719 rows=9884 loops=1)
+              Index Cond: ((merchant_id = 'ee7afece-792d-aee9-aefc-91f92bac16bf'::uuid) AND (created_at >= '2026-05-31 00:00:00+00'::timestamp with time zone) AND (created_at < '2026-08-30 00:00:00+00'::timestamp with time zone))
+              Heap Fetches: 0
+              Buffers: shared hit=97
+Planning:
+  Buffers: shared hit=198
+Planning Time: 1.872 ms
+Execution Time: 8.206 ms
+

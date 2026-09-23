@@ -1,0 +1,16 @@
+-- Settlement-shaped transaction (experiment only): lock the source Wallet like ADR 0002,
+-- compute its Balance, then write the Payment (CREATED, then SUCCEEDED as the lifecycle does), Ledger Transaction and two entries; the deferred
+-- integrity triggers run at COMMIT. Wallet choice is Zipf-skewed (rank 1 is the hottest).
+\set s random_zipfian(1, 1000, 1.15)
+\set d random_zipfian(1, 1000, 1.15)
+BEGIN;
+SELECT id AS sid, merchant_id AS mid FROM bw WHERE n = :s \gset
+SELECT id AS did FROM bw WHERE n = :d \gset
+SELECT gen_random_uuid() AS txid, gen_random_uuid() AS pid \gset
+SELECT 1 FROM accounts WHERE id = ':sid' FOR NO KEY UPDATE;
+SELECT coalesce(sum(CASE direction WHEN 'CREDIT' THEN amount ELSE -amount END), 0)::bigint FROM ledger_entries WHERE account_id = ':sid'::uuid;
+INSERT INTO ledger_transactions (id) VALUES (':txid');
+INSERT INTO ledger_entries (ledger_transaction_id, account_id, direction, amount) VALUES (':txid', ':sid', 'DEBIT', 100), (':txid', ':did', 'CREDIT', 100);
+INSERT INTO payments (id, merchant_id, source_account_id, destination_account_id, amount, currency, status, idempotency_key, request_fingerprint) VALUES (':pid', ':mid', ':sid', ':did', 100, 'BRL', 'CREATED', ':txid', 'fp');
+UPDATE payments SET status = 'SUCCEEDED', ledger_transaction_id = ':txid', updated_at = now() WHERE id = ':pid';
+COMMIT;

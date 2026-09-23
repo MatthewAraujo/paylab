@@ -7,6 +7,6 @@ export default defineConfig({
 	test: {
 		...databaseTestConfig,
 		include: ['test/e2e/**/*.e2e-spec.ts'],
-		setupFiles: ['./test/support/setup-env.ts'],
+		setupFiles: ['./test/support/setup-env.ts', './test/support/setup-database.ts'],
 	},
 })

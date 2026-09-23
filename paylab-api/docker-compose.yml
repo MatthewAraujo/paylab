@@ -24,6 +24,47 @@ services:
     networks:
       - paylab_net
 
+  # Separate database for the benchmarks (T12): own container, port and volume, so it
+  # never shares data with development or test databases. Sized for the ~2 million
+  # entry dataset; durability settings stay at PostgreSQL defaults on purpose, because
+  # the concurrency and write-cost experiments depend on them.
+  postgres-bench:
+    image: postgres:16-alpine
+    container_name: paylab-postgres-bench
+    command:
+      - postgres
+      - -c
+      - shared_buffers=1GB
+      - -c
+      - work_mem=32MB
+      - -c
+      - max_wal_size=4GB
+      - -c
+      - effective_cache_size=3GB
+
+    environment:
+      POSTGRES_USER: paylab
+      POSTGRES_PASSWORD: paylab
+      POSTGRES_DB: paylab_bench
+      PGDATA: /data/postgres
+
+    ports:
+      - "5433:5432"
+
+    shm_size: 1gb
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paylab -d paylab_bench"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    volumes:
+      - ./data/pg-bench:/data/postgres
+
+    networks:
+      - paylab_net
+
 networks:
   paylab_net:
     driver: bridge

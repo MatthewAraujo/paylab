@@ -25,38 +25,38 @@ React front end, FakeBank and provider integration, webhooks, reconciliation, qu
 | [T3](tasks/T3.md) | Schema baseline: accounts, payments and the ledger | T2 | done | [context](task-runs/T3-CONTEXT.md) | [summary](task-runs/T3-summary.md) |
 | [T4](tasks/T4.md) | Ledger integrity triggers and the global invariant check | T3 | done | [context](task-runs/T4-CONTEXT.md) | [summary](task-runs/T4-summary.md) |
 | [T5](tasks/T5.md) | Domain model: Amount, Accounts and the Payment state machine | T1 | done | [context](task-runs/T5-CONTEXT.md) | [summary](task-runs/T5-summary.md) |
-| [T6](tasks/T6.md) | Settlement: lock, funds check and atomic ledger write | T3, T4, T5 | planned | — | — |
-| [T7](tasks/T7.md) | Merchant provisioning script and API key authentication | T1, T3 | planned | — | — |
-| [T8](tasks/T8.md) | Accounts API: create Wallet, read Account, read Balance | T6, T7 | planned | — | — |
-| [T9](tasks/T9.md) | Create Payment: validation, authorization and idempotency | T6, T7, T8 | planned | — | — |
-| [T10](tasks/T10.md) | Concurrency suite | T9 | planned | — | — |
-| [T11](tasks/T11.md) | History, Payment list and daily report with keyset pagination | T9 | planned | — | — |
-| [T12](tasks/T12.md) | Benchmark dataset and tooling | T4, T11 | planned | — | — |
-| [T13](tasks/T13.md) | Experiments: index design and pagination cost | T11, T12 | planned | — | — |
-| [T14](tasks/T14.md) | Experiments: concurrency strategy comparison | T10, T12 | planned | — | — |
-| [T15](tasks/T15.md) | Project handbook, CI and developer documentation | T9 | planned | — | — |
+| [T6](tasks/T6.md) | Settlement: lock, funds check and atomic ledger write | T3, T4, T5 | done | [context](task-runs/T6-CONTEXT.md) | [summary](task-runs/T6-summary.md) |
+| [T7](tasks/T7.md) | Merchant provisioning script and API key authentication | T1, T3 | done | [context](task-runs/T7-CONTEXT.md) | [summary](task-runs/T7-summary.md) |
+| [T8](tasks/T8.md) | Accounts API: create Wallet, read Account, read Balance | T6, T7 | done | [context](task-runs/T8-CONTEXT.md) | [summary](task-runs/T8-summary.md) |
+| [T9](tasks/T9.md) | Create Payment: validation, authorization and idempotency | T6, T7, T8 | done | [context](task-runs/T9-CONTEXT.md) | [summary](task-runs/T9-summary.md) |
+| [T10](tasks/T10.md) | Concurrency suite | T9 | done | [context](task-runs/T10-CONTEXT.md) | [summary](task-runs/T10-summary.md) |
+| [T11](tasks/T11.md) | History, Payment list and daily report with keyset pagination | T9 | done | [context](task-runs/T11-CONTEXT.md) | [summary](task-runs/T11-summary.md) |
+| [T12](tasks/T12.md) | Benchmark dataset and tooling | T4, T11 | done | [context](task-runs/T12-CONTEXT.md) | [summary](task-runs/T12-summary.md) |
+| [T13](tasks/T13.md) | Experiments: index design and pagination cost | T11, T12 | done | [context](task-runs/T13-CONTEXT.md) | [summary](task-runs/T13-summary.md) |
+| [T14](tasks/T14.md) | Experiments: concurrency strategy comparison | T10, T12 | done | [context](task-runs/T14-CONTEXT.md) | [summary](task-runs/T14-summary.md) |
+| [T15](tasks/T15.md) | Project handbook, CI and developer documentation | T9 | done | [context](task-runs/T15-CONTEXT.md) | [summary](task-runs/T15-summary.md) |
 
 ## Acceptance Criteria Mapping
 
 | Acceptance Criterion | Task(s) | Test(s) | Status |
 | --- | --- | --- | --- |
-| US-1..4 Provisioning, hashed key shown once, clearing Account | T3, T7 | integration, script | planned |
-| US-5..8 API key authentication and Merchant scoping | T7, T8, T9 | e2e | planned |
-| US-9..15 Wallets, Balance, BRL | T3, T5, T8 | integration, e2e | planned |
-| US-16..28 Payment creation, validation, authorization, error model | T5, T9 | unit, e2e | planned |
-| US-29..36 Idempotency and crash resume | T3, T9, T10 | integration, e2e, concurrency | planned |
-| US-37..46 Settlement, outcomes, lifecycle, one Ledger Transaction per settled Payment | T5, T6, T9 | unit, integration, e2e | planned |
-| US-47..52 Concurrency safety | T6, T10 | integration, concurrency | planned |
-| US-53..61 Ledger integrity in the database | T3, T4 | integration (SQL) | planned |
-| US-62..70 History, Payment list, daily report | T11 | integration, e2e | planned |
-| US-71..75 Benchmark dataset and plan capture | T12 | validation scripts | planned |
-| US-76..78 Index, pagination and Balance experiments | T13 | experiment, plan regression test | planned |
-| US-79 Concurrency strategy comparison | T14 | experiment | planned |
-| US-80 Local run and inherited logging | T1, T2, T15 | e2e health, docs check | planned |
-| US-81 Migrations build the full schema | T2, T3, T4 | integration | planned |
-| US-82 Global invariant check everywhere | T4 (and every DB test) | integration, concurrency | planned |
-| US-83 Structured errors and logging inherited | T1, T9 | e2e | planned |
-| US-84 CI gate | T2, T15 | CI run | planned |
+| US-1..4 Provisioning, hashed key shown once, clearing Account | T3, T7 | integration, script | done |
+| US-5..8 API key authentication and Merchant scoping | T7, T8, T9 | e2e | done |
+| US-9..15 Wallets, Balance, BRL | T3, T5, T8 | integration, e2e | done |
+| US-16..28 Payment creation, validation, authorization, error model | T5, T9 | unit, e2e | done |
+| US-29..36 Idempotency and crash resume | T3, T9, T10 | integration, e2e, concurrency | done |
+| US-37..46 Settlement, outcomes, lifecycle, one Ledger Transaction per settled Payment | T5, T6, T9 | unit, integration, e2e | done |
+| US-47..52 Concurrency safety | T6, T10 | integration, concurrency | done |
+| US-53..61 Ledger integrity in the database | T3, T4 | integration (SQL) | done |
+| US-62..70 History, Payment list, daily report | T11 | integration, e2e | done |
+| US-71..75 Benchmark dataset and plan capture | T12 | validation scripts | done |
+| US-76..78 Index, pagination and Balance experiments | T13 | experiment, plan regression test | done |
+| US-79 Concurrency strategy comparison | T14 | experiment | done |
+| US-80 Local run and inherited logging | T1, T2, T15 | e2e health, docs check | done |
+| US-81 Migrations build the full schema | T2, T3, T4 | integration | done |
+| US-82 Global invariant check everywhere | T4 (and every DB test) | integration, concurrency | done |
+| US-83 Structured errors and logging inherited | T1, T9 | e2e | done |
+| US-84 CI gate | T2, T15 | CI run | done locally; workflow not yet run on GitHub |
 
 ## Test Strategy
 

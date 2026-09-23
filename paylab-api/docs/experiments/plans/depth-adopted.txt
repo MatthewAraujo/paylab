@@ -1,0 +1,126 @@
+===== depth 0: keyset
+Limit  (cost=0.43..22.11 rows=21 width=52) (actual time=0.037..0.059 rows=21 loops=1)
+  Buffers: shared hit=17
+  ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries  (cost=0.43..99191.59 rows=96050 width=52) (actual time=0.036..0.057 rows=21 loops=1)
+        Index Cond: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+        Buffers: shared hit=17
+Planning:
+  Buffers: shared hit=161
+Planning Time: 1.027 ms
+Execution Time: 0.111 ms
+
+===== depth 0: offset
+Limit  (cost=0.43..22.11 rows=21 width=52) (actual time=0.035..0.057 rows=21 loops=1)
+  Buffers: shared hit=17
+  ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries  (cost=0.43..99191.59 rows=96050 width=52) (actual time=0.034..0.055 rows=21 loops=1)
+        Index Cond: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+        Buffers: shared hit=17
+Planning:
+  Buffers: shared hit=161
+Planning Time: 0.959 ms
+Execution Time: 0.103 ms
+
+===== depth 1000: keyset
+Limit  (cost=0.43..22.42 rows=21 width=52) (actual time=0.054..0.081 rows=21 loops=1)
+  Buffers: shared hit=13
+  ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries  (cost=0.43..99364.45 rows=94887 width=52) (actual time=0.053..0.079 rows=21 loops=1)
+        Index Cond: ((account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid) AND (ROW(created_at, id) < ROW('2026-08-29 00:45:30.24+00'::timestamp with time zone, '56aa9756-1550-5662-feb2-b75eb5579a32'::uuid)))
+        Buffers: shared hit=13
+Planning:
+  Buffers: shared hit=160
+Planning Time: 1.140 ms
+Execution Time: 0.182 ms
+
+===== depth 1000: offset
+Limit  (cost=1033.13..1054.82 rows=21 width=52) (actual time=0.605..0.617 rows=21 loops=1)
+  Buffers: shared hit=565
+  ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries  (cost=0.43..99191.59 rows=96050 width=52) (actual time=0.035..0.590 rows=1021 loops=1)
+        Index Cond: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+        Buffers: shared hit=565
+Planning:
+  Buffers: shared hit=161
+Planning Time: 1.015 ms
+Execution Time: 0.666 ms
+
+===== depth 10000: keyset
+Limit  (cost=0.43..24.64 rows=21 width=52) (actual time=0.033..0.049 rows=21 loops=1)
+  Buffers: shared hit=11
+  ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries  (cost=0.43..98837.47 rows=85740 width=52) (actual time=0.032..0.047 rows=21 loops=1)
+        Index Cond: ((account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid) AND (ROW(created_at, id) < ROW('2026-08-20 11:51:07.776+00'::timestamp with time zone, 'e2672784-f3e1-70f9-f233-94dc0ff04ad6'::uuid)))
+        Buffers: shared hit=11
+Planning:
+  Buffers: shared hit=160
+Planning Time: 1.114 ms
+Execution Time: 0.138 ms
+
+===== depth 10000: offset
+Limit  (cost=10327.46..10349.15 rows=21 width=52) (actual time=5.236..5.244 rows=21 loops=1)
+  Buffers: shared hit=5712
+  ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries  (cost=0.43..99191.59 rows=96050 width=52) (actual time=0.036..4.987 rows=10021 loops=1)
+        Index Cond: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+        Buffers: shared hit=5712
+Planning:
+  Buffers: shared hit=161
+Planning Time: 1.005 ms
+Execution Time: 5.299 ms
+
+===== depth 50000: keyset
+Limit  (cost=0.43..44.27 rows=21 width=52) (actual time=0.036..0.057 rows=21 loops=1)
+  Buffers: shared hit=19
+  ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries  (cost=0.43..95090.01 rows=45550 width=52) (actual time=0.035..0.055 rows=21 loops=1)
+        Index Cond: ((account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid) AND (ROW(created_at, id) < ROW('2026-07-13 21:54:03.456+00'::timestamp with time zone, '2fd7c4b1-e336-8104-ae9f-f7e151b39b43'::uuid)))
+        Buffers: shared hit=19
+Planning:
+  Buffers: shared hit=160
+Planning Time: 1.003 ms
+Execution Time: 0.136 ms
+
+===== depth 50000: offset
+Limit  (cost=37117.30..37117.35 rows=21 width=52) (actual time=76.659..76.663 rows=21 loops=1)
+  Buffers: shared hit=23985
+  ->  Sort  (cost=36992.30..37232.42 rows=96050 width=52) (actual time=73.386..75.380 rows=50021 loops=1)
+        Sort Key: created_at DESC, id DESC
+        Sort Method: quicksort  Memory: 15756kB
+        Buffers: shared hit=23985
+        ->  Bitmap Heap Scan on ledger_entries  (cost=4360.81..29043.44 rows=96050 width=52) (actual time=8.051..52.589 rows=95496 loops=1)
+              Recheck Cond: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+              Heap Blocks: exact=23083
+              Buffers: shared hit=23979
+              ->  Bitmap Index Scan on ledger_entries_account_created_id_idx  (cost=0.00..4336.80 rows=96050 width=0) (actual time=5.532..5.532 rows=95496 loops=1)
+                    Index Cond: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+                    Buffers: shared hit=896
+Planning:
+  Buffers: shared hit=161
+Planning Time: 0.996 ms
+Execution Time: 77.938 ms
+
+===== depth 90000: keyset
+Limit  (cost=0.43..76.60 rows=21 width=52) (actual time=0.059..0.089 rows=21 loops=1)
+  Buffers: shared hit=15
+  ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries  (cost=0.43..20502.16 rows=5652 width=52) (actual time=0.058..0.087 rows=21 loops=1)
+        Index Cond: ((account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid) AND (ROW(created_at, id) < ROW('2026-06-06 04:56:50.496+00'::timestamp with time zone, 'ebcee4c2-2c47-f941-a6a6-742ba72e234f'::uuid)))
+        Buffers: shared hit=15
+Planning:
+  Buffers: shared hit=160
+Planning Time: 1.078 ms
+Execution Time: 0.182 ms
+
+===== depth 90000: offset
+Limit  (cost=37217.30..37217.35 rows=21 width=52) (actual time=79.954..79.957 rows=21 loops=1)
+  Buffers: shared hit=23985
+  ->  Sort  (cost=36992.30..37232.42 rows=96050 width=52) (actual time=74.069..77.688 rows=90021 loops=1)
+        Sort Key: created_at DESC, id DESC
+        Sort Method: quicksort  Memory: 15756kB
+        Buffers: shared hit=23985
+        ->  Bitmap Heap Scan on ledger_entries  (cost=4360.81..29043.44 rows=96050 width=52) (actual time=8.415..52.996 rows=95496 loops=1)
+              Recheck Cond: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+              Heap Blocks: exact=23083
+              Buffers: shared hit=23979
+              ->  Bitmap Index Scan on ledger_entries_account_created_id_idx  (cost=0.00..4336.80 rows=96050 width=0) (actual time=5.884..5.885 rows=95496 loops=1)
+                    Index Cond: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+                    Buffers: shared hit=896
+Planning:
+  Buffers: shared hit=161
+Planning Time: 1.033 ms
+Execution Time: 81.264 ms
+

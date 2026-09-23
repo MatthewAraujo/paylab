@@ -1,10 +1,16 @@
 import { NotAllowedError } from '@/core/errors/errors/not-allowed-error'
 import { ResourceNotFoundError } from '@/core/errors/errors/resource-not-found-error'
+import { DestinationAccountNotFoundError } from '@/domain/paylab/application/use-cases/errors/destination-account-not-found-error'
+import { IdempotencyKeyReusedError } from '@/domain/paylab/application/use-cases/errors/idempotency-key-reused-error'
+import { InvalidAmountError } from '@/domain/paylab/enterprise/errors/invalid-amount-error'
+import { InvalidPaymentError } from '@/domain/paylab/enterprise/errors/invalid-payment-error'
+import { UnsupportedCurrencyError } from '@/domain/paylab/enterprise/errors/unsupported-currency-error'
 import {
 	BadRequestException,
 	ConflictException,
 	ForbiddenException,
 	NotFoundException,
+	UnprocessableEntityException,
 } from '@nestjs/common'
 import { translateDomainError } from './domain-error-messages'
 
@@ -16,6 +22,11 @@ import { translateDomainError } from './domain-error-messages'
 export const domainErrorStatusCodes = new Map<Function, number>([
 	[NotAllowedError, 403],
 	[ResourceNotFoundError, 404],
+	[InvalidAmountError, 422],
+	[InvalidPaymentError, 422],
+	[UnsupportedCurrencyError, 422],
+	[DestinationAccountNotFoundError, 422],
+	[IdempotencyKeyReusedError, 422],
 ])
 
 /**
@@ -46,6 +57,8 @@ export function throwTranslatedDomainError(error: unknown): never {
 			throw new NotFoundException(body)
 		case 409:
 			throw new ConflictException(body)
+		case 422:
+			throw new UnprocessableEntityException(body)
 		default:
 			throw error
 	}

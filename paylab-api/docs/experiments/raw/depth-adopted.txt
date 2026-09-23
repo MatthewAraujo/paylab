@@ -1,0 +1,9 @@
+### Depth adopted
+
+| depth (rows skipped) | keyset ms | offset ms | keyset node | offset node |
+| ---: | ---: | ---: | --- | --- |
+| 0 | 0.111 | 0.108 | Index Scan using ledger_entries_account_created_id_idx on ledger_entries | Index Scan using ledger_entries_account_created_id_idx on ledger_entries |
+| 1000 | 0.152 | 0.677 | Index Scan using ledger_entries_account_created_id_idx on ledger_entries | Index Scan using ledger_entries_account_created_id_idx on ledger_entries |
+| 10000 | 0.131 | 5.322 | Index Scan using ledger_entries_account_created_id_idx on ledger_entries | Index Scan using ledger_entries_account_created_id_idx on ledger_entries |
+| 50000 | 0.137 | 77.938 | Index Scan using ledger_entries_account_created_id_idx on ledger_entries | Bitmap Heap Scan on ledger_entries |
+| 90000 | 0.166 | 81.062 | Index Scan using ledger_entries_account_created_id_idx on ledger_entries | Bitmap Heap Scan on ledger_entries |

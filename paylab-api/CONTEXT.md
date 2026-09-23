@@ -55,3 +55,11 @@ _Avoid_: Request id, dedup token
 **Amount**:
 A monetary value in the smallest unit of its currency (centavos for BRL), stored as an integer and never as a floating-point number. Each Account and Payment carries a currency; September operates in BRL only.
 _Avoid_: Value, price, decimal money
+
+## Performance facts (T13)
+
+Measured on the benchmark dataset; details and rejected alternatives are in the ADRs, not here.
+
+- Commit cost of a Settlement depends on an index the schema does not get from constraints: the deferred integrity trigger looks up entries by `ledger_transaction_id`. Without it the commit scans the whole ledger (linear, ~225 ms at 1.9 M entries) while the source Wallet lock is held (ADR 0005).
+- The Balance of a Wallet is an index-only scan whose cost grows linearly with that Wallet's entries (~0.11 ms per thousand). It is also the lock hold time, so it caps how fast one Wallet can be debited (ADRs 0006, 0009).
+- History and the Payment list are keyset-only; offset was measured and turns into a cliff on deep pages (ADR 0008). Listing by `accountId` for a small Merchant can hit a planner misestimate (22 ms instead of ~2 ms), left as a follow-up (ADR 0007).

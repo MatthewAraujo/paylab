@@ -1,0 +1,220 @@
+===== depth 0: keyset
+Limit  (cost=35485.70..35488.15 rows=21 width=52) (actual time=44.161..57.526 rows=21 loops=1)
+  Buffers: shared hit=23572
+  ->  Gather Merge  (cost=35485.70..44984.90 rows=81416 width=52) (actual time=44.160..57.523 rows=21 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=23572
+        ->  Sort  (cost=34485.68..34587.45 rows=40708 width=52) (actual time=41.295..41.296 rows=19 loops=3)
+              Sort Key: created_at DESC, id DESC
+              Sort Method: top-N heapsort  Memory: 30kB
+              Buffers: shared hit=23572
+              Worker 0:  Sort Method: top-N heapsort  Memory: 30kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 30kB
+              ->  Parallel Seq Scan on ledger_entries  (cost=0.00..33388.12 rows=40708 width=52) (actual time=0.028..37.198 rows=31832 loops=3)
+                    Filter: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+                    Rows Removed by Filter: 602160
+                    Buffers: shared hit=23482
+Planning:
+  Buffers: shared hit=118
+Planning Time: 0.809 ms
+Execution Time: 57.638 ms
+
+===== depth 0: offset
+Limit  (cost=35485.70..35488.15 rows=21 width=52) (actual time=43.984..57.442 rows=21 loops=1)
+  Buffers: shared hit=23572
+  ->  Gather Merge  (cost=35485.70..44984.90 rows=81416 width=52) (actual time=43.983..57.439 rows=21 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=23572
+        ->  Sort  (cost=34485.68..34587.45 rows=40708 width=52) (actual time=41.046..41.048 rows=16 loops=3)
+              Sort Key: created_at DESC, id DESC
+              Sort Method: top-N heapsort  Memory: 30kB
+              Buffers: shared hit=23572
+              Worker 0:  Sort Method: top-N heapsort  Memory: 30kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 30kB
+              ->  Parallel Seq Scan on ledger_entries  (cost=0.00..33388.12 rows=40708 width=52) (actual time=0.029..36.969 rows=31832 loops=3)
+                    Filter: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+                    Rows Removed by Filter: 602160
+                    Buffers: shared hit=23482
+Planning:
+  Buffers: shared hit=118
+Planning Time: 0.789 ms
+Execution Time: 57.553 ms
+
+===== depth 1000: keyset
+Limit  (cost=39436.40..39438.85 rows=21 width=52) (actual time=47.708..61.140 rows=21 loops=1)
+  Buffers: shared hit=23514
+  ->  Gather Merge  (cost=39436.40..48833.85 rows=80544 width=52) (actual time=47.706..61.137 rows=21 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=23514
+        ->  Sort  (cost=38436.37..38537.05 rows=40272 width=52) (actual time=44.668..44.670 rows=17 loops=3)
+              Sort Key: created_at DESC, id DESC
+              Sort Method: top-N heapsort  Memory: 30kB
+              Buffers: shared hit=23514
+              Worker 0:  Sort Method: top-N heapsort  Memory: 30kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 30kB
+              ->  Parallel Seq Scan on ledger_entries  (cost=0.00..37350.57 rows=40272 width=52) (actual time=0.031..40.686 rows=31499 loops=3)
+                    Filter: ((account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid) AND (ROW(created_at, id) < ROW('2026-08-29 00:45:30.24+00'::timestamp with time zone, '56aa9756-1550-5662-feb2-b75eb5579a32'::uuid)))
+                    Rows Removed by Filter: 602493
+                    Buffers: shared hit=23482
+Planning:
+  Buffers: shared hit=117
+Planning Time: 0.802 ms
+Execution Time: 61.291 ms
+
+===== depth 1000: offset
+Limit  (cost=36742.90..36745.35 rows=21 width=52) (actual time=47.195..60.797 rows=21 loops=1)
+  Buffers: shared hit=23572
+  ->  Gather Merge  (cost=36626.23..46125.42 rows=81416 width=52) (actual time=47.053..60.768 rows=1021 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=23572
+        ->  Sort  (cost=35626.20..35727.97 rows=40708 width=52) (actual time=44.114..44.145 rows=787 loops=3)
+              Sort Key: created_at DESC, id DESC
+              Sort Method: top-N heapsort  Memory: 320kB
+              Buffers: shared hit=23572
+              Worker 0:  Sort Method: top-N heapsort  Memory: 320kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 320kB
+              ->  Parallel Seq Scan on ledger_entries  (cost=0.00..33388.12 rows=40708 width=52) (actual time=0.029..37.002 rows=31832 loops=3)
+                    Filter: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+                    Rows Removed by Filter: 602160
+                    Buffers: shared hit=23482
+Planning:
+  Buffers: shared hit=118
+Planning Time: 0.777 ms
+Execution Time: 60.968 ms
+
+===== depth 10000: keyset
+Limit  (cost=39330.60..39333.05 rows=21 width=52) (actual time=47.394..60.945 rows=21 loops=1)
+  Buffers: shared hit=23514
+  ->  Gather Merge  (cost=39330.60..47812.39 rows=72696 width=52) (actual time=47.393..60.942 rows=21 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=23514
+        ->  Sort  (cost=38330.57..38421.44 rows=36348 width=52) (actual time=44.304..44.305 rows=21 loops=3)
+              Sort Key: created_at DESC, id DESC
+              Sort Method: top-N heapsort  Memory: 30kB
+              Buffers: shared hit=23514
+              Worker 0:  Sort Method: top-N heapsort  Memory: 30kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 30kB
+              ->  Parallel Seq Scan on ledger_entries  (cost=0.00..37350.57 rows=36348 width=52) (actual time=0.029..40.692 rows=28499 loops=3)
+                    Filter: ((account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid) AND (ROW(created_at, id) < ROW('2026-08-20 11:51:07.776+00'::timestamp with time zone, 'e2672784-f3e1-70f9-f233-94dc0ff04ad6'::uuid)))
+                    Rows Removed by Filter: 605493
+                    Buffers: shared hit=23482
+Planning:
+  Buffers: shared hit=117
+Planning Time: 0.802 ms
+Execution Time: 61.101 ms
+
+===== depth 10000: offset
+Limit  (cost=38463.63..38466.08 rows=21 width=52) (actual time=51.389..65.267 rows=21 loops=1)
+  Buffers: shared hit=23572
+  ->  Gather Merge  (cost=37296.89..46796.08 rows=81416 width=52) (actual time=50.143..65.002 rows=10021 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=23572
+        ->  Sort  (cost=36296.86..36398.63 rows=40708 width=52) (actual time=47.174..47.295 rows=3781 loops=3)
+              Sort Key: created_at DESC, id DESC
+              Sort Method: top-N heapsort  Memory: 3430kB
+              Buffers: shared hit=23572
+              Worker 0:  Sort Method: top-N heapsort  Memory: 3430kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 3430kB
+              ->  Parallel Seq Scan on ledger_entries  (cost=0.00..33388.12 rows=40708 width=52) (actual time=0.029..37.452 rows=31832 loops=3)
+                    Filter: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+                    Rows Removed by Filter: 602160
+                    Buffers: shared hit=23482
+Planning:
+  Buffers: shared hit=118
+Planning Time: 0.777 ms
+Execution Time: 65.682 ms
+
+===== depth 50000: keyset
+Limit  (cost=38878.08..38880.53 rows=21 width=52) (actual time=45.189..59.017 rows=21 loops=1)
+  Buffers: shared hit=23514
+  ->  Gather Merge  (cost=38878.08..43443.33 rows=39128 width=52) (actual time=45.188..59.013 rows=21 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=23514
+        ->  Sort  (cost=37878.05..37926.96 rows=19564 width=52) (actual time=42.098..42.100 rows=18 loops=3)
+              Sort Key: created_at DESC, id DESC
+              Sort Method: top-N heapsort  Memory: 30kB
+              Buffers: shared hit=23514
+              Worker 0:  Sort Method: top-N heapsort  Memory: 30kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 30kB
+              ->  Parallel Seq Scan on ledger_entries  (cost=0.00..37350.57 rows=19564 width=52) (actual time=0.030..39.924 rows=15165 loops=3)
+                    Filter: ((account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid) AND (ROW(created_at, id) < ROW('2026-07-13 21:54:03.456+00'::timestamp with time zone, '2fd7c4b1-e336-8104-ae9f-f7e151b39b43'::uuid)))
+                    Rows Removed by Filter: 618827
+                    Buffers: shared hit=23482
+Planning:
+  Buffers: shared hit=117
+Planning Time: 0.797 ms
+Execution Time: 59.186 ms
+
+===== depth 50000: offset
+Limit  (cost=43338.70..43341.15 rows=21 width=52) (actual time=53.815..68.101 rows=21 loops=1)
+  Buffers: shared hit=23572
+  ->  Gather Merge  (cost=37504.96..47004.16 rows=81416 width=52) (actual time=47.580..66.760 rows=50021 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=23572
+        ->  Sort  (cost=36504.94..36606.71 rows=40708 width=52) (actual time=44.084..44.624 rows=17129 loops=3)
+              Sort Key: created_at DESC, id DESC
+              Sort Method: quicksort  Memory: 6076kB
+              Buffers: shared hit=23572
+              Worker 0:  Sort Method: quicksort  Memory: 4830kB
+              Worker 1:  Sort Method: quicksort  Memory: 4851kB
+              ->  Parallel Seq Scan on ledger_entries  (cost=0.00..33388.12 rows=40708 width=52) (actual time=0.031..37.039 rows=31832 loops=3)
+                    Filter: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+                    Rows Removed by Filter: 602160
+                    Buffers: shared hit=23482
+Planning:
+  Buffers: shared hit=118
+Planning Time: 0.794 ms
+Execution Time: 68.756 ms
+
+===== depth 90000: keyset
+Limit  (cost=38413.74..38416.19 rows=21 width=52) (actual time=42.496..56.204 rows=21 loops=1)
+  Buffers: shared hit=23514
+  ->  Gather Merge  (cost=38413.74..38960.25 rows=4684 width=52) (actual time=42.495..56.201 rows=21 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=23514
+        ->  Sort  (cost=37413.72..37419.57 rows=2342 width=52) (actual time=39.420..39.422 rows=17 loops=3)
+              Sort Key: created_at DESC, id DESC
+              Sort Method: top-N heapsort  Memory: 30kB
+              Buffers: shared hit=23514
+              Worker 0:  Sort Method: top-N heapsort  Memory: 30kB
+              Worker 1:  Sort Method: top-N heapsort  Memory: 30kB
+              ->  Parallel Seq Scan on ledger_entries  (cost=0.00..37350.57 rows=2342 width=52) (actual time=0.028..39.117 rows=1832 loops=3)
+                    Filter: ((account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid) AND (ROW(created_at, id) < ROW('2026-06-06 04:56:50.496+00'::timestamp with time zone, 'ebcee4c2-2c47-f941-a6a6-742ba72e234f'::uuid)))
+                    Rows Removed by Filter: 632160
+                    Buffers: shared hit=23482
+Planning:
+  Buffers: shared hit=112
+Planning Time: 0.899 ms
+Execution Time: 56.357 ms
+
+===== depth 90000: offset
+Limit  (cost=47004.16..47004.28 rows=1 width=52) (actual time=58.879..73.376 rows=21 loops=1)
+  Buffers: shared hit=23572
+  ->  Gather Merge  (cost=37504.96..47004.16 rows=81416 width=52) (actual time=47.190..70.898 rows=90021 loops=1)
+        Workers Planned: 2
+        Workers Launched: 2
+        Buffers: shared hit=23572
+        ->  Sort  (cost=36504.94..36606.71 rows=40708 width=52) (actual time=44.062..45.208 rows=30376 loops=3)
+              Sort Key: created_at DESC, id DESC
+              Sort Method: quicksort  Memory: 6143kB
+              Buffers: shared hit=23572
+              Worker 0:  Sort Method: quicksort  Memory: 4779kB
+              Worker 1:  Sort Method: quicksort  Memory: 4835kB
+              ->  Parallel Seq Scan on ledger_entries  (cost=0.00..33388.12 rows=40708 width=52) (actual time=0.028..36.923 rows=31832 loops=3)
+                    Filter: (account_id = '51dcbf38-ab78-8b0b-acfb-954297fd8a16'::uuid)
+                    Rows Removed by Filter: 602160
+                    Buffers: shared hit=23482
+Planning:
+  Buffers: shared hit=118
+Planning Time: 0.974 ms
+Execution Time: 74.047 ms
+

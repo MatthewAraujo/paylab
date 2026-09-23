@@ -6,3 +6,125 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// Migrations are the source of truth. Some constraints (check constraints, the
+// partial unique index on clearing Accounts, and from T4 the ledger triggers)
+// are hand-written SQL that Prisma does not model; never regenerate the baseline
+// with `prisma migrate dev --create-only` without carrying them over.
+//
+// Money is a 64-bit integer of centavos (BigInt here). The conversion to the
+// domain Amount happens only in the infra mapper (T5, T6).
+
+enum AccountKind {
+  WALLET
+  EXTERNAL_CLEARING
+
+  @@map("account_kind")
+}
+
+enum PaymentStatus {
+  CREATED
+  PROCESSING
+  SUCCEEDED
+  FAILED
+
+  @@map("payment_status")
+}
+
+enum EntryDirection {
+  DEBIT
+  CREDIT
+
+  @@map("entry_direction")
+}
+
+model Merchant {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  apiKeys  MerchantApiKey[]
+  accounts Account[]
+  payments Payment[]
+
+  @@map("merchants")
+}
+
+model MerchantApiKey {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  merchantId String    @map("merchant_id") @db.Uuid
+  // Only the hash is stored; the raw key is shown once at provisioning.
+  keyHash    String    @unique @map("key_hash")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(3)
+
+  merchant Merchant @relation(fields: [merchantId], references: [id], onDelete: Restrict)
+
+  @@map("merchant_api_keys")
+}
+
+model Account {
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  kind       AccountKind
+  // Null for the External Clearing Account; enforced by accounts_kind_merchant_check.
+  merchantId String?     @map("merchant_id") @db.Uuid
+  currency   String
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  merchant            Merchant?     @relation(fields: [merchantId], references: [id], onDelete: Restrict)
+  sourcePayments      Payment[]     @relation("PaymentSource")
+  destinationPayments Payment[]     @relation("PaymentDestination")
+  ledgerEntries       LedgerEntry[]
+
+  @@map("accounts")
+}
+
+model Payment {
+  id                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  merchantId           String        @map("merchant_id") @db.Uuid
+  sourceAccountId      String        @map("source_account_id") @db.Uuid
+  destinationAccountId String        @map("destination_account_id") @db.Uuid
+  amount               BigInt
+  currency             String
+  status               PaymentStatus
+  failureReason        String?       @map("failure_reason")
+  idempotencyKey       String        @map("idempotency_key")
+  requestFingerprint   String        @map("request_fingerprint")
+  // At most one Payment per Ledger Transaction (unique).
+  ledgerTransactionId  String?       @unique @map("ledger_transaction_id") @db.Uuid
+  createdAt            DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  merchant           Merchant           @relation(fields: [merchantId], references: [id], onDelete: Restrict)
+  sourceAccount      Account            @relation("PaymentSource", fields: [sourceAccountId], references: [id], onDelete: Restrict)
+  destinationAccount Account            @relation("PaymentDestination", fields: [destinationAccountId], references: [id], onDelete: Restrict)
+  ledgerTransaction  LedgerTransaction? @relation(fields: [ledgerTransactionId], references: [id], onDelete: Restrict)
+
+  @@unique([merchantId, idempotencyKey])
+  @@map("payments")
+}
+
+model LedgerTransaction {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  entries LedgerEntry[]
+  payment Payment?
+
+  @@map("ledger_transactions")
+}
+
+model LedgerEntry {
+  id                  String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ledgerTransactionId String         @map("ledger_transaction_id") @db.Uuid
+  accountId           String         @map("account_id") @db.Uuid
+  direction           EntryDirection
+  // Strictly positive centavos (ledger_entries_amount_positive_check); sign comes from direction.
+  amount              BigInt
+  createdAt           DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  ledgerTransaction LedgerTransaction @relation(fields: [ledgerTransactionId], references: [id], onDelete: Restrict)
+  account           Account           @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@map("ledger_entries")
+}

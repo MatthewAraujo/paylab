@@ -29,12 +29,12 @@ React front end, FakeBank and provider integration, webhooks, reconciliation, qu
 | [T7](tasks/T7.md) | Merchant provisioning script and API key authentication | T1, T3 | done | [context](task-runs/T7-CONTEXT.md) | [summary](task-runs/T7-summary.md) |
 | [T8](tasks/T8.md) | Accounts API: create Wallet, read Account, read Balance | T6, T7 | done | [context](task-runs/T8-CONTEXT.md) | [summary](task-runs/T8-summary.md) |
 | [T9](tasks/T9.md) | Create Payment: validation, authorization and idempotency | T6, T7, T8 | done | [context](task-runs/T9-CONTEXT.md) | [summary](task-runs/T9-summary.md) |
-| [T10](tasks/T10.md) | Concurrency suite | T9 | planned | — | — |
-| [T11](tasks/T11.md) | History, Payment list and daily report with keyset pagination | T9 | planned | — | — |
+| [T10](tasks/T10.md) | Concurrency suite | T9 | in_progress | — | — |
+| [T11](tasks/T11.md) | History, Payment list and daily report with keyset pagination | T9 | in_progress | — | — |
 | [T12](tasks/T12.md) | Benchmark dataset and tooling | T4, T11 | planned | — | — |
 | [T13](tasks/T13.md) | Experiments: index design and pagination cost | T11, T12 | planned | — | — |
 | [T14](tasks/T14.md) | Experiments: concurrency strategy comparison | T10, T12 | planned | — | — |
-| [T15](tasks/T15.md) | Project handbook, CI and developer documentation | T9 | planned | — | — |
+| [T15](tasks/T15.md) | Project handbook, CI and developer documentation | T9 | in_progress | — | — |
 
 ## Acceptance Criteria Mapping
 

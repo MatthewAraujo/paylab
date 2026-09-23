@@ -2,7 +2,7 @@
 
 | Task | Lane | State |
 | --- | --- | --- |
-| T2 | A | in_progress |
-| T3 | A | planned (after T2) |
-| T4 | A | planned (after T3) |
+| T2 | A | done |
+| T3 | A | done |
+| T4 | A | done |
 | T5 | B | done |

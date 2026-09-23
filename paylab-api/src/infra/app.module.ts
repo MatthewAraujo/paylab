@@ -1,4 +1,5 @@
 import { DatabaseModule } from '@/infra/database/database.module'
+import { LedgerModule } from '@/infra/database/ledger.module'
 import { buildEnv } from '@/infra/env/env'
 import { EnvModule } from '@/infra/env/env.module'
 import { HealthModule } from '@/infra/http/health.module'
@@ -13,6 +14,7 @@ import { ConfigModule } from '@nestjs/config'
 			isGlobal: true,
 		}),
 		DatabaseModule,
+		LedgerModule,
 		HealthModule,
 		EnvModule,
 		ObservabilityModule,

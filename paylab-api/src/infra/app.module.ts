@@ -1,3 +1,4 @@
+import { AuthModule } from '@/infra/auth/auth.module'
 import { DatabaseModule } from '@/infra/database/database.module'
 import { buildEnv } from '@/infra/env/env'
 import { EnvModule } from '@/infra/env/env.module'
@@ -13,6 +14,7 @@ import { ConfigModule } from '@nestjs/config'
 			isGlobal: true,
 		}),
 		DatabaseModule,
+		AuthModule,
 		HealthModule,
 		EnvModule,
 		ObservabilityModule,

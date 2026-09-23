@@ -1,3 +1,4 @@
+import { DatabaseModule } from '@/infra/database/database.module'
 import { buildEnv } from '@/infra/env/env'
 import { EnvModule } from '@/infra/env/env.module'
 import { HealthModule } from '@/infra/http/health.module'
@@ -11,6 +12,7 @@ import { ConfigModule } from '@nestjs/config'
 			validate: (env) => buildEnv(env),
 			isGlobal: true,
 		}),
+		DatabaseModule,
 		HealthModule,
 		EnvModule,
 		ObservabilityModule,

@@ -1,0 +1,8 @@
+-- V1 entries account_id: CREATE INDEX exp_entries_account ON ledger_entries (account_id)
+exp_entries_account 13 MB
+| history first page (hot wallet) | 93.481 | ->  Parallel Bitmap Heap Scan on ledger_entries |
+| history next page, mid (hot wallet) | 73.509 | ->  Parallel Bitmap Heap Scan on ledger_entries |
+| history first page (cold wallet) | 5.999 | ->  Bitmap Heap Scan on ledger_entries |
+| history next page, mid (cold wallet) | 7.114 | ->  Bitmap Heap Scan on ledger_entries |
+| balance (hot wallet) | 103.709 | Aggregate |
+| balance (cold wallet) | 7.613 | Aggregate |

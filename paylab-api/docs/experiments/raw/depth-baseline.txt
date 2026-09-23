@@ -1,0 +1,9 @@
+### Depth baseline
+
+| depth (rows skipped) | keyset ms | offset ms | keyset node | offset node |
+| ---: | ---: | ---: | --- | --- |
+| 0 | 57.702 | 57.768 | Parallel Seq Scan on ledger_entries | Parallel Seq Scan on ledger_entries |
+| 1000 | 61.492 | 61.913 | Parallel Seq Scan on ledger_entries | Parallel Seq Scan on ledger_entries |
+| 10000 | 61.159 | 64.904 | Parallel Seq Scan on ledger_entries | Parallel Seq Scan on ledger_entries |
+| 50000 | 58.853 | 68.077 | Parallel Seq Scan on ledger_entries | Parallel Seq Scan on ledger_entries |
+| 90000 | 56.359 | 73.021 | Parallel Seq Scan on ledger_entries | Parallel Seq Scan on ledger_entries |

@@ -1,0 +1,8 @@
+-- V2b entries composite include: CREATE INDEX exp_entries_acct_time_inc ON ledger_entries (account_id, created_at DESC, id DESC) INCLUDE (direction, amount)
+exp_entries_acct_time_inc 140 MB
+| history first page (hot wallet) | 0.208 | ->  Index Scan using exp_entries_acct_time_inc on ledger_entries |
+| history next page, mid (hot wallet) | 0.290 | ->  Index Scan using exp_entries_acct_time_inc on ledger_entries |
+| history first page (cold wallet) | 0.395 | ->  Index Scan using exp_entries_acct_time_inc on ledger_entries |
+| history next page, mid (cold wallet) | 0.503 | ->  Index Scan using exp_entries_acct_time_inc on ledger_entries |
+| balance (hot wallet) | 28.176 | Aggregate |
+| balance (cold wallet) | 0.507 | Aggregate |

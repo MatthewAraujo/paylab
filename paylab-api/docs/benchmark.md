@@ -63,10 +63,28 @@ T13: the same lookup runs at every real Settlement commit, so its cost grows wit
 
 ## Indexes present after loading
 
-Only the ones the schema gives: the primary keys, `payments_ledger_transaction_id_key`,
-`payments_merchant_id_idempotency_key_key`, `merchant_api_keys_key_hash_key`,
-`accounts_one_clearing_per_currency`. There is no index on `ledger_entries.account_id`,
-`ledger_entries.ledger_transaction_id` or `payments (merchant_id, created_at, id)`.
+The loader itself only ever gets the indexes the migrations give. Until T13 that was the schema's own
+(primary keys, `payments_ledger_transaction_id_key`, `payments_merchant_id_idempotency_key_key`,
+`merchant_api_keys_key_hash_key`, `accounts_one_clearing_per_currency`). Migration
+`20260923160000_read_and_settlement_indexes` (T13, ADRs 0005 to 0007) adds
+`ledger_entries_ledger_transaction_id_idx`, `ledger_entries_account_created_id_idx` and
+`payments_merchant_created_id_idx`, so a `bench:seed` run from a fully migrated database loads with them in place
+(slower than the 4.5 minutes recorded below, which was measured before the migration). The full dataset in the
+existing benchmark database was loaded before that migration and had it applied afterwards with `bench:migrate`.
+
+### Known schema states (T13, T14)
+
+Two snapshots of the full dataset live in the same PostgreSQL container as template databases (they are in the
+Docker volume, not in the repository). Restore one into `paylab_bench` in seconds:
+
+```bash
+bench/exp/reset.sh adopted    # after migration 20260923160000 (the state T14 starts from)
+bench/exp/reset.sh baseline   # constraint-provided indexes only (the state T12 loaded)
+```
+
+If the templates are gone (a fresh volume), rebuild: `pnpm bench:up && pnpm bench:migrate && pnpm bench:seed`
+gives the adopted state directly. The experiment helpers (`bench/exp/`, plan timing, pgbench workloads) and the results are
+described in [experiments/T13-results.md](experiments/T13-results.md).
 
 ## Validation
 
@@ -121,6 +139,6 @@ Full run, seed `paylab-benchmark-v1`:
 | Load time | 256.7 s in the runner (plan 11.7 s, funding 0.4 s, transfers 243.9 s, vacuum and analyze 0.6 s); 4 min 23 s wall clock including start-up and validation; a second run took 253.6 s |
 | Determinism | two full runs gave the identical aggregate digest `f827ada9033d9ffa27971798ff908eff` |
 | Size | database 729 MB: `ledger_entries` 258 MB (heap 183 MB, primary key 74 MB), `payments` 379 MB with its three indexes, `ledger_transactions` 84 MB |
-| Baseline plan | history of the hot Wallet, first page of 21: parallel sequential scan of `ledger_entries` with top-N sort, 104 ms (cached), the expected starting point for T13 |
+| Baseline plan | history of the hot Wallet, first page of 21: parallel sequential scan of `ledger_entries` with top-N sort, 104 ms (cached), the starting point of T13 (see its results for the fix) |
 
 The small run takes about 5 s.

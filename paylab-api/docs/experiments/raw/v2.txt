@@ -1,0 +1,8 @@
+-- V2 entries composite: CREATE INDEX exp_entries_acct_time ON ledger_entries (account_id, created_at DESC, id DESC)
+exp_entries_acct_time 107 MB
+| history first page (hot wallet) | 0.212 | ->  Index Scan using exp_entries_acct_time on ledger_entries |
+| history next page, mid (hot wallet) | 0.340 | ->  Index Scan using exp_entries_acct_time on ledger_entries |
+| history first page (cold wallet) | 0.380 | ->  Index Scan using exp_entries_acct_time on ledger_entries |
+| history next page, mid (cold wallet) | 0.501 | ->  Index Scan using exp_entries_acct_time on ledger_entries |
+| balance (hot wallet) | 106.767 | Aggregate |
+| balance (cold wallet) | 7.746 | Aggregate |

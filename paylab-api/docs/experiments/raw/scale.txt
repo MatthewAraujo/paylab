@@ -1,0 +1,21 @@
+timings (ms): {"reset":33,"reference":38,"plan":789,"funding":283,"transfers":24861,"finish":139,"analyze":380}
+  "entries": 191988,
+  "walletEntries": 190988,
+validation: OK (invariants clean, 2 entries per settled Payment, no Wallet ever negative)
+entries=191988
+N=100000 payments, no index: tps = 43.021559 ; 22.023 0 COMMIT;;
+N=100000 payments, with ledger_transaction_id index: tps = 1041.748053 ; 0.152 0 COMMIT;;
+timings (ms): {"reset":23,"reference":29,"plan":1883,"funding":285,"transfers":62436,"finish":9,"analyze":449}
+  "entries": 477100,
+  "walletEntries": 476100,
+validation: OK (invariants clean, 2 entries per settled Payment, no Wallet ever negative)
+entries=477100
+N=250000 payments, no index: tps = 16.761985 ; 58.273 0 COMMIT;;
+N=250000 payments, with ledger_transaction_id index: tps = 1045.030358 ; 0.141 0 COMMIT;;
+timings (ms): {"reset":23,"reference":29,"plan":3911,"funding":322,"transfers":122104,"finish":9,"analyze":496}
+  "entries": 952150,
+  "walletEntries": 951150,
+validation: OK (invariants clean, 2 entries per settled Payment, no Wallet ever negative)
+entries=952150
+N=500000 payments, no index: tps = 8.473681 ; 116.754 0 COMMIT;;
+N=500000 payments, with ledger_transaction_id index: tps = 1020.168736 ; 0.147 0 COMMIT;;

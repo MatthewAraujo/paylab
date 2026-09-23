@@ -1,0 +1,8 @@
+## W1s LT + simple (account_id) index
+indexes: exp_entries_lt 45 MB, exp_entries_account 13 MB
+insert run 1: wal/txn=52766B; tps = 813.164152 ; 0.273 0 INSERT INTO ledger_entries , ('; 0.324 0 INSERT INTO payments (id, merch; 0.243 0 UPDATE payments SET status = 'S; 0.130 0 COMMIT;;
+insert run 2: wal/txn=41768B; tps = 836.747262 ; 0.267 0 INSERT INTO ledger_entries , ('; 0.301 0 INSERT INTO payments (id, merch; 0.236 0 UPDATE payments SET status = 'S; 0.130 0 COMMIT;;
+insert run 3: wal/txn=35985B; tps = 808.420072 ; 0.294 0 INSERT INTO ledger_entries , ('; 0.292 0 INSERT INTO payments (id, merch; 0.239 0 UPDATE payments SET status = 'S; 0.135 0 COMMIT;;
+settle run 1: wal/txn=52674B; tps = 42.505974 ; 19.702 0 SELECT coalesce::bigint FROM l; 0.915 0 INSERT INTO ledger_entries , ('; 1.391 0 INSERT INTO payments (id, merch; 0.807 0 UPDATE payments SET status = 'S; 0.204 0 COMMIT;;
+settle run 2: wal/txn=32338B; tps = 45.346788 ; 18.658 0 SELECT coalesce::bigint FROM l; 0.986 0 INSERT INTO ledger_entries , ('; 1.145 0 INSERT INTO payments (id, merch; 0.572 0 UPDATE payments SET status = 'S; 0.193 0 COMMIT;;
+settle run 3: wal/txn=27556B; tps = 50.433768 ; 17.643 0 SELECT coalesce::bigint FROM l; 0.507 0 INSERT INTO ledger_entries , ('; 0.702 0 INSERT INTO payments (id, merch; 0.333 0 UPDATE payments SET status = 'S; 0.179 0 COMMIT;;

@@ -1,0 +1,26 @@
+### V0 baseline
+
+| query | median ms | top plan node |
+| --- | ---: | --- |
+| history first page (hot wallet) | 95.927 | ->  Parallel Seq Scan on ledger_entries |
+| history next page, mid (hot wallet) | 97.700 | ->  Parallel Seq Scan on ledger_entries |
+| balance (hot wallet) | 90.529 | Finalize Aggregate |
+| history first page (cold wallet) | 83.714 | ->  Parallel Seq Scan on ledger_entries |
+| history next page, mid (cold wallet) | 90.128 | ->  Parallel Seq Scan on ledger_entries |
+| balance (cold wallet) | 83.391 | Finalize Aggregate |
+| list first page (hot merchant) | 117.937 | ->  Parallel Bitmap Heap Scan on payments |
+| list next page, deep (hot merchant) | 112.161 | ->  Bitmap Heap Scan on payments |
+| list status=CREATED (hot merchant) | 91.873 | ->  Bitmap Heap Scan on payments |
+| list status=FAILED (hot merchant) | 92.886 | ->  Bitmap Heap Scan on payments |
+| list account filter (hot merchant) | 94.399 | ->  Bitmap Heap Scan on payments |
+| list period 30d (hot merchant) | 107.216 | ->  Bitmap Heap Scan on payments |
+| report 30d (hot merchant) | 123.156 | GroupAggregate |
+| report 90d (hot merchant) | 136.897 | GroupAggregate |
+| list first page (cold merchant) | 34.368 | ->  Bitmap Heap Scan on payments |
+| list next page, deep (cold merchant) | 33.294 | ->  Bitmap Heap Scan on payments |
+| list status=CREATED (cold merchant) | 36.905 | ->  Bitmap Heap Scan on payments |
+| list status=FAILED (cold merchant) | 45.397 | ->  Bitmap Heap Scan on payments |
+| list account filter (cold merchant) | 45.101 | ->  Bitmap Heap Scan on payments |
+| list period 30d (cold merchant) | 48.466 | ->  Bitmap Heap Scan on payments |
+| report 30d (cold merchant) | 51.501 | GroupAggregate |
+| report 90d (cold merchant) | 63.225 | GroupAggregate |

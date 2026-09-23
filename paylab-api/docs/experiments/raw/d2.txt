@@ -1,0 +1,9 @@
+### D2 depth composite include
+
+| depth (rows skipped) | keyset ms | offset ms | keyset node | offset node |
+| ---: | ---: | ---: | --- | --- |
+| 0 | 0.126 | 0.124 | Index Scan using exp_entries_acct_time_inc on ledger_entries | Index Scan using exp_entries_acct_time_inc on ledger_entries |
+| 1000 | 0.156 | 0.796 | Index Scan using exp_entries_acct_time_inc on ledger_entries | Index Scan using exp_entries_acct_time_inc on ledger_entries |
+| 10000 | 0.174 | 6.721 | Index Scan using exp_entries_acct_time_inc on ledger_entries | Index Scan using exp_entries_acct_time_inc on ledger_entries |
+| 50000 | 0.157 | 83.597 | Index Scan using exp_entries_acct_time_inc on ledger_entries | Bitmap Heap Scan on ledger_entries |
+| 90000 | 0.173 | 86.629 | Index Scan using exp_entries_acct_time_inc on ledger_entries | Bitmap Heap Scan on ledger_entries |

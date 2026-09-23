@@ -1,0 +1,27 @@
+### Final adopted
+
+| query | median ms | top plan node |
+| --- | ---: | --- |
+| history first page (hot wallet) | 0.108 | ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries |
+| history next page, mid (hot wallet) | 0.146 | ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries |
+| balance (hot wallet) | 13.063 | Aggregate |
+| history first page (cold wallet) | 0.191 | ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries |
+| history next page, mid (cold wallet) | 0.230 | ->  Index Scan using ledger_entries_account_created_id_idx on ledger_entries |
+| balance (cold wallet) | 0.250 | Aggregate |
+| list first page (hot merchant) | 0.105 | ->  Index Scan using payments_merchant_created_id_idx on payments |
+| list next page, deep (hot merchant) | 0.138 | ->  Index Scan using payments_merchant_created_id_idx on payments |
+| list status=CREATED (hot merchant) | 2.561 | ->  Index Scan using payments_merchant_created_id_idx on payments |
+| list status=FAILED (hot merchant) | 0.534 | ->  Index Scan using payments_merchant_created_id_idx on payments |
+| list account filter (hot merchant) | 0.112 | ->  Index Scan using payments_merchant_created_id_idx on payments |
+| list period 30d (hot merchant) | 0.130 | ->  Index Scan using payments_merchant_created_id_idx on payments |
+| report 30d (hot merchant) | 14.961 | GroupAggregate |
+| report 90d (hot merchant) | 31.849 | ->  HashAggregate |
+| list first page (cold merchant) | 0.143 | ->  Index Scan using payments_merchant_created_id_idx on payments |
+| list next page, deep (cold merchant) | 0.189 | ->  Index Scan using payments_merchant_created_id_idx on payments |
+| list status=CREATED (cold merchant) | 6.615 | ->  Index Scan using payments_merchant_created_id_idx on payments |
+| list status=FAILED (cold merchant) | 1.478 | ->  Index Scan using payments_merchant_created_id_idx on payments |
+| list account filter (cold merchant) | 22.106 | ->  Bitmap Heap Scan on payments |
+| list account filter, rare match (cold merchant) | 22.166 | ->  Bitmap Heap Scan on payments |
+| list period 30d (cold merchant) | 0.156 | ->  Index Scan using payments_merchant_created_id_idx on payments |
+| report 30d (cold merchant) | 2.818 | GroupAggregate |
+| report 90d (cold merchant) | 8.290 | GroupAggregate |

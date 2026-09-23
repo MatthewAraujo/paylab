@@ -1,0 +1,13 @@
+ ?column? 
+----------
+        1
+(1 row)
+
+## H-base: baseline schema, all Settlements debit the hottest Wallet
+clients=1: latency average = 285.372 ms;tps = 3.504192 ; 0.168 0 SELECT 1 FROM accounts WHERE id = ':sid' FO; 55.045 0 SELECT coalesce::bigint FROM ledger_entrie; 225.645 0 COMMIT;;
+clients=4: latency average = 1146.622 ms;tps = 3.488509 ; 835.742 0 SELECT 1 FROM accounts WHERE id = ':sid' ; 55.852 0 SELECT coalesce::bigint FROM ledger_entrie; 225.428 0 COMMIT;;
+clients=16: latency average = 4407.347 ms;tps = 3.630302 ; 3756.295 0 SELECT 1 FROM accounts WHERE id = ':sid'; 57.763 0 SELECT coalesce::bigint FROM ledger_entrie; 214.084 0 COMMIT;;
+## H-adopted: LT + entries composite INCLUDE + payments composite INCLUDE
+clients=1: latency average = 10.505 ms;tps = 95.189948 ; 0.091 0 SELECT 1 FROM accounts WHERE id = ':sid' FO; 7.655 0 SELECT coalesce::bigint FROM ledger_entries; 0.163 0 COMMIT;;
+clients=4: latency average = 55.040 ms;tps = 72.674651 ; 40.989 0 SELECT 1 FROM accounts WHERE id = ':sid' F; 8.416 0 SELECT coalesce::bigint FROM ledger_entries; 0.210 0 COMMIT;;
+clients=16: latency average = 193.292 ms;tps = 82.776254 ; 180.083 0 SELECT 1 FROM accounts WHERE id = ':sid' ; 8.759 0 SELECT coalesce::bigint FROM ledger_entries; 0.226 0 COMMIT;;

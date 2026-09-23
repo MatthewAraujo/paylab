@@ -21,10 +21,11 @@ copied here.
   Account, which the use case has already proven belongs to the caller.
 - **Days** in the report are UTC. The use case turns the inclusive `from` and `to` days into
   the half-open instant range `[from 00:00Z, to+1 day 00:00Z)`.
-- **Indexes**: only what the constraints already give exist (primary keys, the unique
-  `(merchant_id, idempotency_key)` on `payments`, foreign keys carry no index in
-  PostgreSQL). There is no index on `ledger_entries.account_id` or on
-  `payments (merchant_id, created_at, id)` yet; choosing them is T13.
+- **Indexes**: T13 adopted three (migration `20260923160000_read_and_settlement_indexes`, ADRs
+  0005 to 0007): `ledger_entries (ledger_transaction_id)`, `ledger_entries (account_id, created_at
+  DESC, id DESC) INCLUDE (direction, amount)` and `payments (merchant_id, created_at DESC, id DESC)
+  INCLUDE (status, amount)`. The query text below did not change; measurements with the constraint-only
+  schema and with these indexes are in [experiments/T13-results.md](experiments/T13-results.md).
 
 ## Ledger Entry history
 

@@ -5,22 +5,31 @@ export const prisma = new PrismaClient({
 	datasourceUrl: process.env.DATABASE_URL,
 })
 
-// Tables that must survive a reset: Prisma's own migration history.
+// Prisma's migration history must survive a reset. `accounts` and `merchants` are
+// emptied with DELETE instead of TRUNCATE so the External Clearing Account seeded
+// by the baseline migration survives (TRUNCATE would also need to include tables
+// referencing them, and would drop the seeded row).
 const PRESERVED_TABLES = ['_prisma_migrations']
+const DELETED_TABLES = ['accounts', 'merchants']
 
-// Empties every application table between tests. TRUNCATE is used on purpose: it
-// is not covered by the ledger's row triggers (see T4) and is much cheaper than DELETE.
+// Empties application data between tests, keeping migration-seeded reference data.
+// TRUNCATE is used on purpose for the rest: it is not covered by the ledger's row
+// triggers (see T4) and is much cheaper than DELETE.
 export async function resetDatabase() {
 	const rows = await prisma.$queryRaw<{ tablename: string }[]>`
 		SELECT tablename FROM pg_tables WHERE schemaname = 'public'`
-	const tables = rows.map((row) => row.tablename).filter((name) => !PRESERVED_TABLES.includes(name))
+	const truncated = rows
+		.map((row) => row.tablename)
+		.filter((name) => !PRESERVED_TABLES.includes(name) && !DELETED_TABLES.includes(name))
 
-	if (tables.length === 0) {
-		return
+	if (truncated.length > 0) {
+		const list = truncated.map((name) => `"${name}"`).join(', ')
+		await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${list} RESTART IDENTITY`)
 	}
 
-	const list = tables.map((name) => `"${name}"`).join(', ')
-	await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${list} RESTART IDENTITY CASCADE`)
+	// Wallets first (they reference merchants); the clearing Account has no Merchant.
+	await prisma.$executeRawUnsafe('DELETE FROM accounts WHERE merchant_id IS NOT NULL')
+	await prisma.$executeRawUnsafe('DELETE FROM merchants')
 }
 
 // True when the history table exists and every migration in it finished.

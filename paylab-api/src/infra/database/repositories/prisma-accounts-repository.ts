@@ -15,6 +15,14 @@ export class PrismaAccountsRepository implements AccountsRepository {
 		return row ? accountToDomain(row) : null
 	}
 
+	async findClearingAccount(currency: string): Promise<Account | null> {
+		const row = await this.prisma.account.findFirst({
+			where: { kind: 'EXTERNAL_CLEARING', currency },
+		})
+
+		return row ? accountToDomain(row) : null
+	}
+
 	async create(account: Account): Promise<void> {
 		await this.prisma.account.create({ data: accountToPrisma(account) })
 	}

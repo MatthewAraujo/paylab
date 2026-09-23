@@ -1,6 +1,7 @@
 import { PaymentsRepository } from '@/domain/paylab/application/repositories/payments-repository'
 import { Payment } from '@/domain/paylab/enterprise/entities/payment'
 import { Injectable } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
 import { paymentInclude, paymentToDomain, paymentToPrisma } from '../mappers/payment-mapper'
 import { PrismaService } from '../prisma.service'
 
@@ -23,8 +24,19 @@ export class PrismaPaymentsRepository implements PaymentsRepository {
 		return row ? paymentToDomain(row) : null
 	}
 
-	async create(payment: Payment): Promise<void> {
-		await this.prisma.payment.create({ data: paymentToPrisma(payment) })
+	async create(payment: Payment): Promise<boolean> {
+		try {
+			await this.prisma.payment.create({ data: paymentToPrisma(payment) })
+
+			return true
+		} catch (error) {
+			// P2002 on (merchant_id, idempotency_key): the key is already taken.
+			if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+				return false
+			}
+
+			throw error
+		}
 	}
 
 	async save(payment: Payment): Promise<void> {

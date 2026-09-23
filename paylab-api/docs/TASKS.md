@@ -21,10 +21,10 @@ React front end, FakeBank and provider integration, webhooks, reconciliation, qu
 | Task | Title | Depends on | Status | Context | Summary |
 | --- | --- | --- | --- | --- | --- |
 | [T1](tasks/T1.md) | Prune the copied base down to the technical spine | — | done | [context](task-runs/T1-CONTEXT.md) | [summary](task-runs/T1-summary.md) |
-| [T2](tasks/T2.md) | Test infrastructure: Testcontainers and suite layout | T1 | planned | — | — |
+| [T2](tasks/T2.md) | Test infrastructure: Testcontainers and suite layout | T1 | in_progress | — | — |
 | [T3](tasks/T3.md) | Schema baseline: accounts, payments and the ledger | T2 | planned | — | — |
 | [T4](tasks/T4.md) | Ledger integrity triggers and the global invariant check | T3 | planned | — | — |
-| [T5](tasks/T5.md) | Domain model: Amount, Accounts and the Payment state machine | T1 | planned | — | — |
+| [T5](tasks/T5.md) | Domain model: Amount, Accounts and the Payment state machine | T1 | in_progress | — | — |
 | [T6](tasks/T6.md) | Settlement: lock, funds check and atomic ledger write | T3, T4, T5 | planned | — | — |
 | [T7](tasks/T7.md) | Merchant provisioning script and API key authentication | T1, T3 | planned | — | — |
 | [T8](tasks/T8.md) | Accounts API: create Wallet, read Account, read Balance | T6, T7 | planned | — | — |

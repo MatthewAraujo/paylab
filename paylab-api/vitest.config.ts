@@ -1,26 +1,14 @@
-import { fileURLToPath } from 'node:url'
-import swc from 'unplugin-swc'
-import tsConfigPaths from 'vite-tsconfig-paths'
 import { defineConfig } from 'vitest/config'
+import { sharedConfig } from './vitest.config.shared'
 
+// Unit layer: pure specs, no database and no container.
 export default defineConfig({
-	resolve: {
-		alias: {
-			'@': fileURLToPath(new URL('./src', import.meta.url)),
-		},
-	},
+	...sharedConfig,
 	test: {
-		fileParallelism: false,
 		globals: true,
 		include: ['test/**/*.spec.ts'],
-		exclude: ['test/e2e/**/*.e2e-spec.ts'],
+		exclude: ['test/integration/**', 'test/concurrency/**', 'test/e2e/**'],
 		root: './',
-		setupFiles: ['./test/setup-e2e.ts'],
+		setupFiles: ['./test/support/setup-env.ts'],
 	},
-	plugins: [
-		tsConfigPaths(),
-		swc.vite({
-			module: { type: 'es6' },
-		}),
-	],
 })

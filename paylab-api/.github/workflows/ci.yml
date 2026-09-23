@@ -38,6 +38,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
 
+  # Database suites start their own PostgreSQL through Testcontainers; GitHub
+  # runners provide Docker, so no service container is needed.
   tests:
     runs-on: ubuntu-latest
     env:
@@ -53,9 +55,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
+      - run: pnpm test:integration
+      - run: pnpm test:e2e
 
-  e2e:
+  # Separate and non-blocking so a slow or flaky concurrency run cannot block the fast gate.
+  concurrency:
     runs-on: ubuntu-latest
+    continue-on-error: true
     env:
       NODE_ENV: test
     steps:
@@ -68,4 +74,4 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test:e2e
+      - run: pnpm test:concurrency

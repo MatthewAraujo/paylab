@@ -2,5 +2,5 @@
 
 | Task | Lane | State |
 | --- | --- | --- |
-| T6 | A | in_progress |
-| T7 | B | in_progress |
+| T6 | A | done |
+| T7 | B | done |

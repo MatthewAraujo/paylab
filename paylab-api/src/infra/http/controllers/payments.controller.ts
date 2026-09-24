@@ -8,8 +8,11 @@ import { cursorSchema, instantSchema, limitSchema } from '@/infra/http/paginatio
 import { IdempotencyKey } from '@/infra/http/pipes/idempotency-key.decorator'
 import { ZodValidationPipe } from '@/infra/http/pipes/zod-validation-pipe'
 import { Body, Controller, Get, Param, Post, Query, Res, UseGuards } from '@nestjs/common'
+import { ApiBearerAuth, ApiHeader, ApiQuery, ApiTags } from '@nestjs/swagger'
 import type { Response } from 'express'
 import { z } from 'zod'
+import { ApiIdParam, ApiPageQuery, ApiReadRoute } from '../openapi/decorators'
+import { PAYMENT_STATUSES, PaymentPageResponse, PaymentResponse } from '../openapi/responses'
 import { KeysetPagePresenter } from '../presenters/keyset-page-presenter'
 import { PaymentPresenter } from '../presenters/payment-presenter'
 
@@ -47,6 +50,7 @@ type ListQuery = z.infer<typeof listQuerySchema>
 const idempotencyKeyPipe = new ZodValidationPipe(z.string().trim().min(1).max(255))
 const paymentIdPipe = new ZodValidationPipe(z.string().uuid())
 
+@ApiTags('Payments')
 @Controller('v1/payments')
 @UseGuards(ApiKeyGuard)
 export class PaymentsController {
@@ -59,6 +63,8 @@ export class PaymentsController {
 	// 201 for a newly created Payment, 200 when the Idempotency Key already existed.
 	// A funds failure is a successful response whose Payment is FAILED.
 	@Post()
+	@ApiBearerAuth()
+	@ApiHeader({ name: 'Idempotency-Key', required: true })
 	async create(
 		@CurrentMerchant() merchant: MerchantContext,
 		@IdempotencyKey(idempotencyKeyPipe) idempotencyKey: string,
@@ -81,6 +87,22 @@ export class PaymentsController {
 	}
 
 	@Get()
+	@ApiReadRoute(PaymentPageResponse, { validated: true })
+	@ApiPageQuery()
+	@ApiQuery({ name: 'accountId', required: false, schema: { type: 'string', format: 'uuid' } })
+	@ApiQuery({ name: 'status', required: false, enum: PAYMENT_STATUSES })
+	@ApiQuery({
+		name: 'from',
+		required: false,
+		description: 'Inclusive. ISO 8601 timestamp with a zone, or a YYYY-MM-DD day (00:00 UTC).',
+		schema: { type: 'string' },
+	})
+	@ApiQuery({
+		name: 'to',
+		required: false,
+		description: 'Exclusive. Same format as `from`.',
+		schema: { type: 'string' },
+	})
 	async list(
 		@CurrentMerchant() merchant: MerchantContext,
 		@Query(new ZodValidationPipe(listQuerySchema)) query: ListQuery,
@@ -99,6 +121,8 @@ export class PaymentsController {
 	}
 
 	@Get(':id')
+	@ApiReadRoute(PaymentResponse, { notFound: true, validated: true })
+	@ApiIdParam()
 	async get(@CurrentMerchant() merchant: MerchantContext, @Param('id', paymentIdPipe) id: string) {
 		const result = await this.getPayment.execute({ merchantId: merchant.id, paymentId: id })
 

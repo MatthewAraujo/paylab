@@ -9,7 +9,15 @@ import { throwTranslatedDomainError } from '@/infra/http/error-translation/throw
 import { cursorSchema, limitSchema } from '@/infra/http/pagination/query-schemas'
 import { ZodValidationPipe } from '@/infra/http/pipes/zod-validation-pipe'
 import { Controller, Get, HttpCode, Param, Post, Query, UseGuards } from '@nestjs/common'
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod'
+import { ApiIdParam, ApiPageQuery, ApiReadRoute } from '../openapi/decorators'
+import {
+	AccountResponse,
+	BalanceResponse,
+	LedgerEntryPageResponse,
+	WalletPageResponse,
+} from '../openapi/responses'
 import { AccountPresenter } from '../presenters/account-presenter'
 import { KeysetPagePresenter } from '../presenters/keyset-page-presenter'
 
@@ -21,6 +29,7 @@ const pageQuerySchema = z.object({ limit: limitSchema, cursor: cursorSchema.opti
 const pageQueryPipe = new ZodValidationPipe(pageQuerySchema)
 type PageQuery = z.infer<typeof pageQuerySchema>
 
+@ApiTags('Accounts')
 @Controller('v1/accounts')
 @UseGuards(ApiKeyGuard)
 export class AccountsController {
@@ -35,6 +44,7 @@ export class AccountsController {
 	// No body is read: the API only ever creates a BRL Wallet for the authenticated
 	// Merchant, so a caller cannot ask for another kind, currency or owner.
 	@Post()
+	@ApiBearerAuth()
 	@HttpCode(201)
 	async create(@CurrentMerchant() merchant: MerchantContext) {
 		const result = await this.createWallet.execute({ merchantId: merchant.id })
@@ -49,6 +59,8 @@ export class AccountsController {
 	// The caller's Wallets, newest first. Declared before `:id` only for readability;
 	// the two routes cannot collide because `:id` is never an empty segment.
 	@Get()
+	@ApiReadRoute(WalletPageResponse, { validated: true })
+	@ApiPageQuery()
 	async list(@CurrentMerchant() merchant: MerchantContext, @Query(pageQueryPipe) query: PageQuery) {
 		const page = await this.listAccounts.execute({
 			merchantId: merchant.id,
@@ -60,6 +72,8 @@ export class AccountsController {
 	}
 
 	@Get(':id')
+	@ApiReadRoute(AccountResponse, { notFound: true, validated: true })
+	@ApiIdParam()
 	async get(@CurrentMerchant() merchant: MerchantContext, @Param('id', accountIdPipe) id: string) {
 		const result = await this.getAccount.execute({ merchantId: merchant.id, accountId: id })
 
@@ -71,6 +85,8 @@ export class AccountsController {
 	}
 
 	@Get(':id/balance')
+	@ApiReadRoute(BalanceResponse, { notFound: true, validated: true })
+	@ApiIdParam()
 	async balance(
 		@CurrentMerchant() merchant: MerchantContext,
 		@Param('id', accountIdPipe) id: string,
@@ -86,6 +102,9 @@ export class AccountsController {
 
 	// Ledger Entry history, newest first (created time desc, then id desc).
 	@Get(':id/entries')
+	@ApiReadRoute(LedgerEntryPageResponse, { notFound: true, validated: true })
+	@ApiIdParam()
+	@ApiPageQuery()
 	async entries(
 		@CurrentMerchant() merchant: MerchantContext,
 		@Param('id', accountIdPipe) id: string,

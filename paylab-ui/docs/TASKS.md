@@ -10,7 +10,8 @@
 - Backend handbook and domain language: `../paylab-api/PROJECT.md` and `../paylab-api/CONTEXT.md`.
 - Backend scope and task status: `../paylab-api/docs/PRD.md` and `../paylab-api/docs/TASKS.md`.
 - Backend contracts currently inspected: `GET /health`, Swagger document setup, CORS configuration, Prisma schema, `Account`, `Amount`, and `Payment` domain types.
-- Backend readiness at implementation time: Accounts, Payments, Account Ledger Entry history, and daily-report routes exist on the inspected integration branch. Their OpenAPI operations have no typed request/response schemas, so only `GET /health` is currently safe to integrate.
+- Backend readiness: all read routes (`GET /v1/accounts`, `/v1/accounts/{id}`, `/balance`, `/entries`, `/v1/payments`, `/v1/payments/{id}`, `/v1/reports/daily`) are typed in OpenAPI since backend T16 and T17. Reads require a Merchant API key, which the console holds server-side (`PAYLAB_API_KEY`).
+- Read-only decision: no login, no Payment or Wallet creation, no Ledger Transaction lookup. Financial data is fetched on the Next server.
 
 ## Implementation Goal
 
@@ -21,7 +22,7 @@ Create a production-oriented Next.js and TypeScript Operational Console in `payl
 - Runtime mocks, demo financial records, localStorage persistence, or silent API fallbacks.
 - Speculative financial DTOs or request contracts not present in OpenAPI.
 - Backend implementation or changes to T6–T11.
-- Browser storage or bundling of Merchant API keys.
+- Browser storage or bundling of Merchant API keys, and any write operation (creating Wallets or Payments).
 - Reconciliation, FakeBank, webhooks, provider timelines, queues, retries, DLQ, cache, or asynchronous streaming.
 - Refunds, reversals, cancellations, multi-currency, or future Payment states.
 - A standalone design-system package, white labeling, marketing pages, or elaborate animation.
@@ -37,15 +38,15 @@ Create a production-oriented Next.js and TypeScript Operational Console in `payl
 | US-11 API base URL configuration | T1, T4 | unit, build | done |
 | US-12..15 generated client and capability detection | T2 | generation, typecheck, unit | done |
 | US-16..18 live health, refresh, disconnected state | T4 | component/integration, e2e | done |
-| US-19..20 Dashboard report and honest unavailable state | T3, T8 | component; integration after T11 | partially blocked by backend T11 |
-| US-21..24 Wallet browse/detail/create/scoping | T3, T5 | component; integration after T8 | blocked by backend T8 and browser authentication contract |
-| US-25..34 Payment browse/create/detail/lifecycle/errors | T3, T6 | component; integration after T9/T11 | blocked by backend T9/T11 and browser authentication contract |
-| US-35..39 Ledger history, directions, grouping, traceability | T3, T7 | component; integration after T11 | blocked by backend T11 and a Ledger Transaction lookup contract |
+| US-19..20 Dashboard report and honest unavailable state | T3, T8 | component, route-level | done |
+| US-21..24 Wallet browse/detail/Balance/scoping (no creation) | T3, T5 | component, route-level | done |
+| US-25..34 Payment browse/detail/lifecycle/failure reason (no creation) | T3, T6 | component, route-level | list, filters, cursor paging and detail done |
+| US-35..39 Ledger Entry history and directions (no Ledger Transaction lookup) | T3, T7 | component, route-level | done |
 | US-40..41 observable test seams and test-only HTTP control | T1–T4 | unit, component, e2e | done |
 | US-42 validation commands and documentation | T1, T9 | command validation, docs review | done |
 | US-43 backend capability mapping | T3, T9 | docs review | done |
 | US-44 no bundled credentials | T1, T2, T9 | repository scan, build inspection | done |
-| US-45 authentication-dependent requests blocked | T3, T5–T7 | component, integration after backend T7 | planned/blocked by backend T7 |
+| US-45 server-side API key, missing key is an explicit error | T10 | unit | done (client); wired by T5–T8 |
 
 ## T1 — Generate the frontend foundation
 
@@ -186,11 +187,13 @@ Completion signal:
 
 System Health displays real backend identity and status, refreshes on demand, distinguishes an unreachable API, and passes route-level tests.
 
-## T5 — Activate Accounts when backend T8 is available
+## T5 — Activate Accounts (read-only)
+
+Status: done. `/accounts` lists Wallets with cursor paging; `/accounts/[id]` shows the Wallet and its Balance (derived, never editable) with links to its Ledger Entries and Payments. A Balance failure does not hide the Wallet. An unknown or foreign Wallet is a not-found state.
 
 Objective:
 
-Replace the Accounts unavailable state with live Wallet creation, detail, and Balance behavior generated from the backend contract.
+Replace the Accounts unavailable state with a live Wallet list (cursor pagination), Wallet detail, and Balance, using `createServerApiClient`. There is no creation flow.
 
 Affected files / areas:
 
@@ -207,23 +210,24 @@ Test-first plan:
 
 Implementation notes:
 
-- Do not begin until backend T8 and a browser-safe authentication decision exist.
-- If T8 does not include a Wallet list operation, do not invent one; adjust the navigation to supported entry points.
+- The backend contract is ready (T8, T16, T17); reads run on the server with the server-side key.
 - Balance always comes from the API and is presented as derived ledger state.
 
 Dependencies:
 
-T4; external dependency on backend T7 and T8.
+T4, T10.
 
 Completion signal:
 
 Every enabled Account interaction is backed by a generated operation and route-level tests, with no embedded credential or handwritten DTO.
 
-## T6 — Activate Payments when backend T9 and T11 are available
+## T6 — Activate Payments (read-only)
+
+Status: the list is live (`/payments`): server-rendered from `createServerApiClient`, GET-form filters (status, Account id, period) kept in the URL, standard Previous / numbered pages / Next pagination over the cursor-only API (the URL carries the trail of visited cursors as `?pages=c1,c2`, so Previous and visited pages work without offset; there is no total or jump-ahead), UTC timestamps, BRL amounts, status with icon and text, `FAILED`/`INSUFFICIENT_FUNDS` shown as an outcome, and explicit states for missing key, rejected key, unreachable API and validation errors. The detail (`/payments/[id]`) shows every field of the Payment, links each Account to its filtered list, shows the Ledger Transaction id as plain evidence (or that none was written for a failed Payment), and treats an unknown id as a not-found state. T6 is done.
 
 Objective:
 
-Enable Payment creation, detail, list, filters, and cursor pagination as the corresponding OpenAPI operations appear.
+Enable the Payment list (filters by Account, status and period, cursor pagination) and Payment detail. There is no creation flow.
 
 Affected files / areas:
 
@@ -233,31 +237,30 @@ Affected files / areas:
 
 Test-first plan:
 
-- Begin with creation or detail according to the first available operation.
-- Verify the Idempotency Key is sent exactly as the backend contract requires.
-- Add `SUCCEEDED` and `FAILED`/`INSUFFICIENT_FUNDS` outcomes as separate vertical slices.
-- Add list filtering and cursor navigation only after T11 exposes them.
+- Begin with the Payment list, then detail.
+- Render `SUCCEEDED` and `FAILED`/`INSUFFICIENT_FUNDS` outcomes as separate vertical slices.
+- Add filters and cursor navigation.
 
 Implementation notes:
 
 - Do not treat a `FAILED` Payment as an HTTP error.
-- Disable duplicate form interaction while a request is pending, but rely on backend idempotency for correctness.
 - Do not add future lifecycle states.
-- Backend CORS must allow the final idempotency and authentication headers before enabling browser creation.
 
 Dependencies:
 
-T5; external dependency on backend T9 for create/detail and T11 for list/filter/pagination.
+T10.
 
 Completion signal:
 
 Enabled Payment workflows use only generated operations, preserve backend outcomes, and pass route-level tests for critical paths.
 
-## T7 — Activate Ledger inspection when backend read contracts are available
+## T7 — Activate Ledger Entry history
+
+Status: done. `/ledger` lists Wallets; `/ledger/[id]` shows the Wallet's Ledger Entries newest first with cursor paging. Direction is text plus an icon and the Amount stays unsigned. Ledger Transaction ids are shown as evidence only.
 
 Objective:
 
-Enable Account Ledger Entry history and Payment-to-Ledger traceability without inventing transaction grouping or relationships.
+Enable Account Ledger Entry history with debit/credit direction and show a Payment's `ledgerTransactionId` as plain evidence. No Ledger Transaction lookup or grouping exists or is planned.
 
 Affected files / areas:
 
@@ -278,13 +281,15 @@ Implementation notes:
 
 Dependencies:
 
-T5; external dependency on backend T11 and any future Ledger Transaction lookup endpoint.
+T10.
 
 Completion signal:
 
 All displayed accounting relationships come directly from the API, directions are accessible, and unsupported grouping remains explicitly unavailable.
 
-## T8 — Activate Dashboard metrics when backend T11 is available
+## T8 — Activate Dashboard metrics
+
+Status: done. `/dashboard` reads `GET /v1/reports/daily` for a UTC day range (default: last 7 days, editable in the URL). Totals are summed from the report rows only, never from a paginated Payment list; an empty range is an explicit state.
 
 Objective:
 
@@ -309,11 +314,28 @@ Implementation notes:
 
 Dependencies:
 
-T4; external dependency on backend T11.
+T4, T10.
 
 Completion signal:
 
 Dashboard values are backed solely by the report operation and remain correct under loading, empty, and error states.
+
+## T10 — Read-only contract and server-side API client
+
+Objective:
+
+Adopt the typed read contract and give Server Components an authenticated, typed client without exposing the key.
+
+Done:
+
+- `pnpm sync:api` refreshed the snapshot from backend T16/T17.
+- `deriveCapabilities` depends only on typed GET responses; the Wallet list is required for Accounts.
+- `createServerApiClient` (`src/api/server-client.ts`) sends `Authorization: Bearer $PAYLAB_API_KEY`, refuses to run in the browser, fails with `MissingApiKeyError` when the key is absent and disables caching.
+- Create Wallet and Create Payment placeholders removed; `.env.example` documents `PAYLAB_API_KEY`.
+
+Completion signal:
+
+Unit tests for the capability rule and the client pass; lint, typecheck and test are clean.
 
 ## T9 — Complete handbook, CI, and integration handoff
 
@@ -363,8 +385,7 @@ A contributor can install, generate, run, test, and build the UI from documentat
 
 - Contract drift: generate from OpenAPI and fail typecheck rather than maintaining handwritten financial DTOs.
 - Backend incompleteness: render capability-unavailable states; never substitute runtime mocks.
-- Authentication: do not bundle or persist a Merchant API key. Keep financial actions unavailable until the backend contract and browser security model are explicit.
-- CORS: Payment creation needs headers not currently allowed by the backend. Treat this as an external dependency, not a frontend workaround.
+- Authentication: the key lives only in the server environment (`PAYLAB_API_KEY`). Never read it in a Client Component or prefix it with `NEXT_PUBLIC_`; the client refuses to run in the browser.
 - Money correctness: keep centavos as integers and test presentation with fixed independent examples.
 - Generated-code churn: isolate generated output and wrap only at feature boundaries.
 - UI overbuild: keep one shadcn/Tailwind token set and a small shared-state vocabulary; do not create a separate component package.
@@ -378,10 +399,8 @@ A contributor can install, generate, run, test, and build the UI from documentat
 3. T3 builds the responsive shell and honest unavailable routes.
 4. T4 integrates live System Health, completing the currently achievable operational slice.
 5. T9 documents and gates that initial foundation.
-6. T5 activates Accounts after backend T7/T8.
-7. T6 activates Payment create/detail after T9, then list/filter after T11.
-8. T7 activates Ledger history after T11 and transaction detail only if a contract is added.
-9. T8 activates Dashboard reports after T11.
+6. T10 adopts the typed contract and the server-side client (done).
+7. T5 activates Accounts, T6 Payments, T7 Ledger history and T8 Dashboard reports, in any order.
 
 The application must remain buildable and honest after every step. Blocked tasks do not justify speculative types or runtime data.
 
@@ -389,12 +408,7 @@ The application must remain buildable and honest after every step. Blocked tasks
 
 No blocking product questions for T1–T4 and the initial T9 documentation pass.
 
-External contract questions before T5–T8:
-
-- Which request header will carry the Merchant API key in backend T7, and is direct browser use acceptable for this internal lab?
-- Will backend CORS explicitly allow the authentication and `Idempotency-Key` headers?
-- Will Accounts gain a list endpoint, since T8 currently specifies only create and read-by-id?
-- Will the API expose Ledger Transaction detail, since T11 currently specifies only Account Ledger Entry history?
+Resolved: the API key is a Bearer token held server-side; the UI is read-only; Accounts gained a list endpoint (backend T16); Ledger Transaction detail is not planned.
 
 ## Handoff to TDD
 

@@ -40,11 +40,13 @@ PayLab UI is the English-language Operational Console for the PayLab learning pl
 
 ## Environment
 
-`NEXT_PUBLIC_PAYLAB_API_URL` is the browser-visible API base URL. It defaults to `http://localhost:3333` for local development. Never place API keys or secrets in `NEXT_PUBLIC_*` variables.
+- `NEXT_PUBLIC_PAYLAB_API_URL` is the API base URL (also used by the browser for `GET /health`). It defaults to `http://localhost:3333`.
+- Demo data: in `paylab-api` run `pnpm demo:seed`, then `pnpm demo:dev`, and set `PAYLAB_API_KEY` to the printed "Demo Store" key ("Demo Rival" shows another Merchant's isolated data).
+- `PAYLAB_API_KEY` is the server-only Merchant API key used by Server Components for financial reads (`src/api/server-client.ts`). Provision one with `pnpm merchant:provision` in `paylab-api`. Never place API keys or secrets in `NEXT_PUBLIC_*` variables.
 
 ## Current capability boundary
 
-System Health is live. Financial routes exist in the backend snapshot, but their OpenAPI request/response schemas are empty, so financial workflows remain disabled. Regenerate the contract after backend Swagger metadata changes, then continue with the corresponding TDD task.
+The console is read-only: no login and no create operations. Every view is live and reads through `createServerApiClient` on the server: Dashboard (daily report for a UTC range), Accounts (Wallet list, detail and Balance), Payments (list with filters, detail), Ledger (Ledger Entries per Wallet) and System Health. Regenerate the contract with `pnpm sync:api` after backend changes.
 
 ## Working rules
 
@@ -52,6 +54,7 @@ System Health is live. Financial routes exist in the backend snapshot, but their
 - Use canonical domain names: Payment, Account, Wallet, Balance, Ledger Transaction, and Ledger Entry.
 - Treat integer centavos as the money boundary; do not introduce floating-point financial state.
 - Use generated OpenAPI DTOs rather than handwritten financial contracts.
+- Fetch financial data only on the server with `createServerApiClient`; never in a Client Component.
 - Do not add runtime mocks or silent API fallbacks.
 - Keep Server Components as the default and introduce Client Components only for interaction or browser-side remote state.
 - Follow red-green-refactor and keep tests at observable seams.

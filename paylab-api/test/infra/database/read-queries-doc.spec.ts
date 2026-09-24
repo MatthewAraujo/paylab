@@ -4,6 +4,8 @@ import {
 	DAILY_REPORT_SQL,
 	HISTORY_FIRST_PAGE_SQL,
 	HISTORY_NEXT_PAGE_SQL,
+	WALLET_LIST_FIRST_PAGE_SQL,
+	WALLET_LIST_NEXT_PAGE_SQL,
 	buildPaymentListQuery,
 } from '@/infra/database/read-queries-sql'
 
@@ -16,6 +18,8 @@ describe('docs/reads-sql.md', () => {
 		['history first page', HISTORY_FIRST_PAGE_SQL],
 		['history next page', HISTORY_NEXT_PAGE_SQL],
 		['daily report', DAILY_REPORT_SQL],
+		['Wallet list first page', WALLET_LIST_FIRST_PAGE_SQL],
+		['Wallet list next page', WALLET_LIST_NEXT_PAGE_SQL],
 	])('contains the exact %s SQL', (_name, sql) => {
 		expect(doc).toContain(sql)
 	})

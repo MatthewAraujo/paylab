@@ -2,7 +2,7 @@ import { PrismaService } from '@/infra/database/prisma.service'
 import { PrismaReadQueriesRepository } from '@/infra/database/repositories/prisma-read-queries-repository'
 import { prisma } from '../support/database'
 import { createMerchant, createWallet } from '../support/fixtures'
-import { insertCreditAt, insertPaymentAt } from '../support/reads'
+import { insertCreditAt, insertPaymentAt, insertWalletAt } from '../support/reads'
 
 // The Payment list query is assembled from optional predicates with positional
 // parameters. Every combination of filters must return exactly what the same
@@ -164,5 +164,41 @@ describe('Merchant read queries (integration)', () => {
 			{ date: '2026-09-01', status: 'SUCCEEDED', count: 2, volume: 10_000_000_000 },
 			{ date: '2026-09-02', status: 'FAILED', count: 1, volume: 1 },
 		])
+	})
+
+	test("listWallets returns only the Merchant's Wallets, newest first, resumable by keyset", async () => {
+		const merchantId = await createMerchant('Wallets')
+		const otherMerchantId = await createMerchant('Other wallets')
+		const ids: string[] = []
+		// Nine Wallets over three instants, so ties are exercised.
+		for (let i = 0; i < 9; i++) {
+			ids.push(await insertWalletAt(merchantId, at(Math.floor(i / 3))))
+		}
+		await insertWalletAt(otherMerchantId, at(1))
+
+		const expected = newestFirst(
+			ids.map((id, i) => ({ id, createdAt: at(Math.floor(i / 3)) })),
+		).map((row) => row.id)
+
+		const seen: string[] = []
+		let after: { createdAt: Date; id: string } | undefined
+		for (;;) {
+			const rows = await repository.listWallets({ merchantId, after, fetch: 5 })
+			const page = rows.slice(0, 4)
+			seen.push(...page.map((row) => row.id))
+			expect(rows.every((row) => row.kind === 'WALLET' && row.currency === 'BRL')).toBe(true)
+			if (rows.length <= 4) {
+				break
+			}
+			after = { createdAt: page[3].createdAt, id: page[3].id }
+		}
+
+		expect(seen).toEqual(expected)
+	})
+
+	test('listWallets never returns the External Clearing Account', async () => {
+		const merchantId = await createMerchant('No clearing')
+
+		expect(await repository.listWallets({ merchantId, fetch: 10 })).toEqual([])
 	})
 })

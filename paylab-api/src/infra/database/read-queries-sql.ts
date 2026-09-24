@@ -25,6 +25,23 @@ WHERE account_id = $1::uuid
 ORDER BY created_at DESC, id DESC
 LIMIT $4`
 
+/** Wallet list, first page. $1 Merchant id, $2 fetch size (page size + 1). */
+export const WALLET_LIST_FIRST_PAGE_SQL = `SELECT id, currency, created_at
+FROM accounts
+WHERE merchant_id = $1::uuid
+  AND kind = 'WALLET'
+ORDER BY created_at DESC, id DESC
+LIMIT $2`
+
+/** Wallet list, next page. $1 Merchant id, $2 and $3 cursor position, $4 fetch size. */
+export const WALLET_LIST_NEXT_PAGE_SQL = `SELECT id, currency, created_at
+FROM accounts
+WHERE merchant_id = $1::uuid
+  AND kind = 'WALLET'
+  AND (created_at, id) < ($2::timestamptz, $3::uuid)
+ORDER BY created_at DESC, id DESC
+LIMIT $4`
+
 /** Daily report. $1 Merchant id, $2 inclusive start instant, $3 exclusive end instant (UTC day bounds). */
 export const DAILY_REPORT_SQL = `SELECT to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS day,
        status,

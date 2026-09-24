@@ -1,10 +1,17 @@
-import { LedgerEntryItem } from '@/domain/paylab/application/repositories/read-queries-repository'
+import {
+	LedgerEntryItem,
+	WalletListItem,
+} from '@/domain/paylab/application/repositories/read-queries-repository'
 import { Account } from '@/domain/paylab/enterprise/entities/account'
 
 export interface AccountView {
 	id: string
 	kind: string
 	currency: string
+}
+
+export interface WalletListItemView extends AccountView {
+	createdAt: string
 }
 
 export interface BalanceView {
@@ -31,6 +38,15 @@ export class AccountPresenter {
 			direction: entry.direction,
 			amount: entry.amount,
 			createdAt: entry.createdAt.toISOString(),
+		}
+	}
+
+	static walletToHTTP(wallet: WalletListItem): WalletListItemView {
+		return {
+			id: wallet.id,
+			kind: wallet.kind,
+			currency: wallet.currency,
+			createdAt: wallet.createdAt.toISOString(),
 		}
 	}
 

@@ -211,7 +211,7 @@ Planned filters:
 - status;
 - date/time period.
 
-Pagination is cursor-based. Avoid page-number patterns that imply offset pagination.
+Pagination is cursor-based underneath but presented as Previous, numbered pages and Next. Only pages known to exist are numbered (visited pages and the next one); there is no total and no jump-ahead, because the API has no offset.
 
 Required states:
 

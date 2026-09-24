@@ -5,6 +5,7 @@ import {
 	PaymentListFilter,
 	PaymentListItem,
 	ReadQueriesRepository,
+	WalletListItem,
 } from '@/domain/paylab/application/repositories/read-queries-repository'
 import { Injectable } from '@nestjs/common'
 import { centavosToNumber } from '../mappers/money-mapper'
@@ -13,6 +14,8 @@ import {
 	DAILY_REPORT_SQL,
 	HISTORY_FIRST_PAGE_SQL,
 	HISTORY_NEXT_PAGE_SQL,
+	WALLET_LIST_FIRST_PAGE_SQL,
+	WALLET_LIST_NEXT_PAGE_SQL,
 	buildPaymentListQuery,
 } from '../read-queries-sql'
 
@@ -21,6 +24,12 @@ interface EntryRow {
 	ledger_transaction_id: string
 	direction: 'DEBIT' | 'CREDIT'
 	amount: bigint
+	created_at: Date
+}
+
+interface WalletRow {
+	id: string
+	currency: string
 	created_at: Date
 }
 
@@ -73,6 +82,33 @@ export class PrismaReadQueriesRepository implements ReadQueriesRepository {
 			ledgerTransactionId: row.ledger_transaction_id,
 			direction: row.direction,
 			amount: centavosToNumber(row.amount),
+			createdAt: row.created_at,
+		}))
+	}
+
+	async listWallets(input: {
+		merchantId: string
+		after?: KeysetPosition
+		fetch: number
+	}): Promise<WalletListItem[]> {
+		const rows = input.after
+			? await this.prisma.$queryRawUnsafe<WalletRow[]>(
+					WALLET_LIST_NEXT_PAGE_SQL,
+					input.merchantId,
+					input.after.createdAt,
+					input.after.id,
+					input.fetch,
+				)
+			: await this.prisma.$queryRawUnsafe<WalletRow[]>(
+					WALLET_LIST_FIRST_PAGE_SQL,
+					input.merchantId,
+					input.fetch,
+				)
+
+		return rows.map((row) => ({
+			id: row.id,
+			kind: 'WALLET',
+			currency: row.currency,
 			createdAt: row.created_at,
 		}))
 	}

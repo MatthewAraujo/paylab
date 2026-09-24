@@ -1,7 +1,8 @@
 import { INestApplication, Logger, ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { SwaggerModule } from '@nestjs/swagger'
 import { AppModule } from './app.module'
+import { buildOpenApiDocument } from './http/openapi/swagger'
 import {
 	buildCorsOptions,
 	getPathname,
@@ -29,12 +30,7 @@ export function configureApp(app: INestApplication) {
 	// SwaggerModule.setup mounts its routes on the HTTP adapter, ahead of Nest's
 	// own pipeline, so it stays out of production.
 	if (process.env.NODE_ENV !== 'production') {
-		const swaggerConfig = new DocumentBuilder()
-			.setTitle('PayLab API')
-			.setDescription('Payment processing and double-entry ledger lab.')
-			.setVersion('0.0.1')
-			.build()
-		const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig)
+		const swaggerDocument = buildOpenApiDocument(app)
 
 		SwaggerModule.setup('docs', app, swaggerDocument, {
 			jsonDocumentUrl: 'docs-json',

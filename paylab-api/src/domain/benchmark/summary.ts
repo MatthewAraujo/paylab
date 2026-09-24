@@ -35,6 +35,9 @@ export const scenarioSchema = z.object({
 	protocol: protocolSchema,
 	config: z.record(z.unknown()),
 	status: z.enum(['PENDING', 'ACTIVE', 'COMPLETED', 'FAILED']),
+	startedAt: isoTimestamp.optional(),
+	finishedAt: isoTimestamp.optional(),
+	durationMs: z.number().nonnegative().optional(),
 	metrics: z.array(metricSchema),
 })
 

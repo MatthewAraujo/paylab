@@ -17,6 +17,7 @@ export function benchmarkConfigFromEnv(env: EnvService): BenchmarkConfig {
 			rootDir: process.cwd(),
 			summaryDir: resolve(env.get('BENCH_SUMMARY_DIR')),
 			artifactRoot: resolve(env.get('BENCH_ARTIFACT_ROOT')),
+			baselineFile: resolve(env.get('BENCH_BASELINE_FILE')),
 		},
 	}
 }

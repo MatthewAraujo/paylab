@@ -3,18 +3,28 @@ import {
 	createReadStream,
 	existsSync,
 	fstatSync,
+	mkdirSync,
 	openSync,
 	readFileSync,
 	readSync,
 	readdirSync,
 	realpathSync,
+	renameSync,
 	statSync,
+	writeFileSync,
 } from 'node:fs'
-import { join, sep } from 'node:path'
+import { dirname, join, sep } from 'node:path'
 import type { Readable } from 'node:stream'
 import { artifactFileName } from '@/domain/benchmark/artifact'
+import {
+	BASELINE_SCHEMA_VERSION,
+	type BenchmarkBaseline,
+	parseBaseline,
+} from '@/domain/benchmark/baseline'
+import { canonicalJson } from '@/domain/benchmark/canonical'
 import { collectSecrets, createSanitizer } from '@/domain/benchmark/sanitize'
 import { type BenchmarkSummary, parseSummary, safeId } from '@/domain/benchmark/summary'
+import { type GitState, readGitState } from './git-status'
 import { SanitizingLines } from './sanitizing-lines'
 
 export interface BenchmarkPaths {
@@ -24,6 +34,8 @@ export interface BenchmarkPaths {
 	summaryDir: string
 	/** Local, ignored state and Artifacts (`.benchmark`). */
 	artifactRoot: string
+	/** The versioned pointer to the Baseline Run (`bench/baseline.json`). */
+	baselineFile: string
 	/** Values to redact when serving text; defaults to the ones the executor redacts. */
 	secrets?: string[]
 }
@@ -270,5 +282,57 @@ export class BenchmarkStore {
 		const sanitized = new SanitizingLines(this.sanitize)
 		source.on('error', (error) => sanitized.destroy(error))
 		return source.pipe(sanitized)
+	}
+
+	readBaseline(): { baseline: BenchmarkBaseline | null; problem?: string } {
+		if (!existsSync(this.paths.baselineFile)) {
+			return { baseline: null }
+		}
+		let json: unknown
+		try {
+			json = JSON.parse(readFileSync(this.paths.baselineFile, 'utf8'))
+		} catch {
+			return { baseline: null, problem: 'The Baseline file is not valid JSON.' }
+		}
+		const parsed = parseBaseline(json)
+		return parsed.isLeft()
+			? { baseline: null, problem: parsed.value.message }
+			: { baseline: parsed.value }
+	}
+
+	/**
+	 * Points the Baseline at a Run. Only the small pointer file changes (atomically); the Run's
+	 * Summary is never touched and nothing is committed. Selecting the current Baseline again
+	 * writes nothing, so the worktree does not change for no reason.
+	 */
+	writeBaseline(
+		runId: string,
+		now: Date = new Date(),
+	): { baseline: BenchmarkBaseline; changed: boolean } {
+		const baseline = {
+			schemaVersion: BASELINE_SCHEMA_VERSION,
+			runId,
+			selectedAt: now.toISOString(),
+		}
+		const parsed = parseBaseline(baseline)
+		if (parsed.isLeft()) {
+			throw parsed.value
+		}
+
+		const current = this.readBaseline().baseline
+		if (current?.runId === runId) {
+			return { baseline: current, changed: false }
+		}
+
+		mkdirSync(dirname(this.paths.baselineFile), { recursive: true })
+		const temp = `${this.paths.baselineFile}.${process.pid}.tmp`
+		writeFileSync(temp, `${canonicalJson(parsed.value, 2)}\n`)
+		renameSync(temp, this.paths.baselineFile)
+		return { baseline: parsed.value, changed: true }
+	}
+
+	/** The pending Git change, as `benchmark:run` sees it. */
+	gitState(): GitState {
+		return readGitState(this.paths.rootDir, this.paths.baselineFile)
 	}
 }

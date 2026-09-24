@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignore": ["bench/results"]
+    "ignore": ["bench/results", "bench/baseline.json"]
   },
   "organizeImports": {
     "enabled": true

@@ -16,6 +16,7 @@ describe('buildEnv', () => {
 			BENCHMARK_ENABLED: true,
 			BENCH_SUMMARY_DIR: 'bench/results',
 			BENCH_ARTIFACT_ROOT: '.benchmark',
+			BENCH_BASELINE_FILE: 'bench/baseline.json',
 		})
 	})
 

@@ -20,6 +20,7 @@ const ROUTES = [
 	'/v1/benchmarks/comparisons/default',
 	'/v1/benchmarks/comparisons',
 	'/v1/benchmarks/trends',
+	'/v1/benchmarks/baseline',
 ]
 
 const QUERY: Record<string, string[]> = {
@@ -173,5 +174,44 @@ describe('OpenAPI contract of the benchmark routes (E2E)', () => {
 				'422',
 			),
 		).toEqual([])
+	})
+
+	test('selecting the Baseline is documented with its body and its errors, and needs no credential', () => {
+		const put = document.paths['/v1/benchmarks/baseline'].put
+
+		expect(put.tags).toEqual(['Benchmarks'])
+		expect(put.security).toBeUndefined()
+		expect(put.requestBody.content['application/json'].schema.$ref).toContain(
+			'SelectBaselineRequest',
+		)
+		expect(document.components.schemas.SelectBaselineRequest.required).toEqual(['runId'])
+		for (const status of ['200', '404', '422']) expect(put.responses[status], status).toBeDefined()
+		expect(document.paths['/v1/benchmarks/baseline'].post).toBeUndefined()
+	})
+
+	test('real Baseline responses match the documented schemas', async () => {
+		const server = fixture.app.getHttpServer()
+		fixture.publish({
+			runId: 'b1',
+			startedAt: '2026-09-20T10:00:00.000Z',
+			finishedAt: '2026-09-20T11:00:00.000Z',
+		})
+		const schema = (status = '200', method: 'get' | 'put' = 'get') =>
+			document.paths['/v1/benchmarks/baseline'][method]?.responses?.[status]?.content?.[
+				'application/json'
+			]?.schema
+
+		const none = await request(server).get('/v1/benchmarks/baseline')
+		const selected = await request(server).put('/v1/benchmarks/baseline').send({ runId: 'b1' })
+		const read = await request(server).get('/v1/benchmarks/baseline')
+		const ineligible = await request(server)
+			.put('/v1/benchmarks/baseline')
+			.send({ runId: 'live-1' })
+
+		expect(bodyMatchesSchema(document, none.body, schema(), 'none')).toEqual([])
+		expect(bodyMatchesSchema(document, selected.body, schema('200', 'put'), 'put')).toEqual([])
+		expect(bodyMatchesSchema(document, read.body, schema(), 'read')).toEqual([])
+		expect(ineligible.statusCode).toBe(422)
+		expect(bodyMatchesSchema(document, ineligible.body, schema('422', 'put'), '422')).toEqual([])
 	})
 })

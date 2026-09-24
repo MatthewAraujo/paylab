@@ -33,6 +33,7 @@ describe('benchmark capability configuration', () => {
 
 		expect(env.BENCH_SUMMARY_DIR).toBe('bench/results')
 		expect(env.BENCH_ARTIFACT_ROOT).toBe('.benchmark')
+		expect(env.BENCH_BASELINE_FILE).toBe('bench/baseline.json')
 		expect(
 			buildEnv({ ...base, BENCH_SUMMARY_DIR: '/tmp/s', BENCH_ARTIFACT_ROOT: '/tmp/a' }),
 		).toMatchObject({ BENCH_SUMMARY_DIR: '/tmp/s', BENCH_ARTIFACT_ROOT: '/tmp/a' })

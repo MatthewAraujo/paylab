@@ -19,6 +19,7 @@ describe('BenchmarkStore', () => {
 			rootDir: root,
 			summaryDir: summaryDir(),
 			artifactRoot: artifactRoot(),
+			baselineFile: join(root, 'bench', 'baseline.json'),
 			secrets: [SECRET],
 		})
 	})

@@ -5,6 +5,7 @@ import { BENCHMARK_CONFIG } from '@/infra/benchmark/benchmark.config'
 import { INestApplication } from '@nestjs/common'
 import { buildTestApp } from './app'
 import { buildScenario, buildSummary } from './benchmark-fixtures'
+import { type TempRepo, createTempRepo } from './git-repo'
 
 export const SECRET = 'hunter2-private-value'
 
@@ -18,19 +19,30 @@ export interface BenchmarkFixture {
 	/** Writes any file under the working root, creating directories. */
 	write(relativePath: string, content: string): void
 	artifact(runId: string, fileName: string, content: string): void
+	/** Only with `git: true`: commits everything, like the developer does after reviewing. */
+	commit(): void
+	/** Only with `git: true`. */
+	git(...args: string[]): string
 	close(): Promise<void>
 }
 
 /** The real application with a temporary benchmark workspace instead of the repository's. */
-export async function buildBenchmarkApp(enabled = true): Promise<BenchmarkFixture> {
-	const root = mkdtempSync(join(tmpdir(), 'paylab-bench-e2e-'))
+export async function buildBenchmarkApp(
+	enabled = true,
+	options: { git?: boolean } = {},
+): Promise<BenchmarkFixture> {
+	// With `git`, the workspace is a real clean repository whose `.benchmark/` is ignored.
+	const repo: TempRepo | null = options.git ? createTempRepo() : null
+	const root = repo ? repo.repoDir : mkdtempSync(join(tmpdir(), 'paylab-bench-e2e-'))
 	const summaryDir = join(root, 'bench', 'results')
 	const artifactRoot = join(root, '.benchmark')
+	const baselineFile = join(root, 'bench', 'baseline.json')
 
 	const app = await buildTestApp((builder) =>
-		builder
-			.overrideProvider(BENCHMARK_CONFIG)
-			.useValue({ enabled, paths: { rootDir: root, summaryDir, artifactRoot, secrets: [SECRET] } }),
+		builder.overrideProvider(BENCHMARK_CONFIG).useValue({
+			enabled,
+			paths: { rootDir: root, summaryDir, artifactRoot, baselineFile, secrets: [SECRET] },
+		}),
 	)
 
 	const write = (relativePath: string, content: string) => {
@@ -62,6 +74,15 @@ export async function buildBenchmarkApp(enabled = true): Promise<BenchmarkFixtur
 		},
 		artifact: (runId, fileName, content) =>
 			write(join('.benchmark', 'runs', runId, 'artifacts', fileName), content),
+		commit() {
+			if (!repo) throw new Error('buildBenchmarkApp({ git: true }) is required')
+			repo.git('add', '-A')
+			repo.git('commit', '-q', '-m', 'save')
+		},
+		git(...args: string[]) {
+			if (!repo) throw new Error('buildBenchmarkApp({ git: true }) is required')
+			return repo.git(...args)
+		},
 		async close() {
 			await app.close()
 			rmSync(root, { recursive: true, force: true })

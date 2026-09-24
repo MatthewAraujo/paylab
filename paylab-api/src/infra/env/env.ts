@@ -18,6 +18,8 @@ const baseEnvSchema = z.object({
 	// Versioned Summaries and local Artifacts written by `pnpm benchmark:run`, relative to the working directory.
 	BENCH_SUMMARY_DIR: z.string().min(1).default('bench/results'),
 	BENCH_ARTIFACT_ROOT: z.string().min(1).default('.benchmark'),
+	// The versioned pointer to the Benchmark Baseline; kept outside BENCH_SUMMARY_DIR, where every file is a Run.
+	BENCH_BASELINE_FILE: z.string().min(1).default('bench/baseline.json'),
 })
 
 export const envSchema = baseEnvSchema

@@ -1,5 +1,6 @@
 import { basename } from 'node:path'
 import { artifactFileName } from '@/domain/benchmark/artifact'
+import { isBaselineEligible } from '@/domain/benchmark/baseline'
 import { compareRuns, selectDefaultComparison } from '@/domain/benchmark/comparison'
 import { buildTrend, toProgress, toRunListItem } from '@/domain/benchmark/read-models'
 import { type BenchmarkSummary, safeId } from '@/domain/benchmark/summary'
@@ -9,28 +10,34 @@ import { limitSchema } from '@/infra/http/pagination/query-schemas'
 import { decodeRunCursor, encodeRunCursor } from '@/infra/http/pagination/run-cursor'
 import { ZodValidationPipe } from '@/infra/http/pipes/zod-validation-pipe'
 import {
+	Body,
 	Controller,
 	Get,
 	NotFoundException,
 	Param,
+	Put,
 	Query,
 	StreamableFile,
 	UnprocessableEntityException,
 	UseGuards,
 } from '@nestjs/common'
-import { ApiParam, ApiProduces, ApiQuery, ApiTags } from '@nestjs/swagger'
+import { ApiBody, ApiParam, ApiProduces, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod'
 import {
 	ArtifactContentResponse,
 	ArtifactResponse,
+	BaselineResponse,
+	BaselineSelectionResponse,
 	BenchmarkStatusResponse,
 	ComparisonResponse,
 	RunDetailResponse,
 	RunPageResponse,
 	RunProgressResponse,
+	SelectBaselineRequest,
 	TrendResponse,
 } from '../openapi/benchmark-responses'
 import { ApiBenchmarkRoute } from '../openapi/decorators'
+import { ValidationErrorResponse } from '../openapi/responses'
 
 const runIdPipe = new ZodValidationPipe(safeId)
 const artifactIdPipe = new ZodValidationPipe(safeId)
@@ -49,6 +56,9 @@ const contentQuerySchema = z
 	})
 	.strict()
 type ContentQuery = z.infer<typeof contentQuerySchema>
+
+const selectBaselineBodySchema = z.object({ runId: safeId }).strict()
+type SelectBaselineBody = z.infer<typeof selectBaselineBodySchema>
 
 const comparisonQuerySchema = z.object({ current: safeId, reference: safeId }).strict()
 type ComparisonQuery = z.infer<typeof comparisonQuerySchema>
@@ -333,10 +343,52 @@ export class BenchmarksController {
 		schema: { type: 'array', items: { type: 'string' } },
 	})
 	trend(@Query(new ZodValidationPipe(trendQuerySchema)) query: TrendQuery): TrendResponse {
-		return buildTrend(this.store.loadRuns().runs, {
+		const trend = buildTrend(this.store.loadRuns().runs, {
 			scenarioId: query.scenarioId,
 			metricKey: query.metric,
 			dimensions: query.dimension,
 		})
+		return { ...trend, baselineRunId: this.store.readBaseline().baseline?.runId ?? null }
+	}
+
+	private baselineView(): BaselineResponse {
+		const { baseline, problem } = this.store.readBaseline()
+		const run = baseline ? this.store.findRun(baseline.runId) : null
+		return {
+			baseline: baseline && { runId: baseline.runId, selectedAt: baseline.selectedAt },
+			run: run ? toRunListItem(run) : null,
+			problem,
+			git: this.store.gitState(),
+		}
+	}
+
+	@Get('baseline')
+	@ApiBenchmarkRoute(BaselineResponse)
+	baseline(): BaselineResponse {
+		return this.baselineView()
+	}
+
+	@Put('baseline')
+	@ApiBenchmarkRoute(BaselineSelectionResponse, { notFound: true })
+	@ApiBody({ type: SelectBaselineRequest })
+	@ApiResponse({
+		status: 422,
+		type: ValidationErrorResponse,
+		description:
+			'Invalid body, or the Run is not eligible (code BENCHMARK_BASELINE_INELIGIBLE): only a completed Run can be the Baseline.',
+	})
+	selectBaseline(
+		@Body(new ZodValidationPipe(selectBaselineBodySchema)) body: SelectBaselineBody,
+	): BaselineSelectionResponse {
+		const run = this.requireRun(body.runId)
+		if (!isBaselineEligible(run)) {
+			throw new UnprocessableEntityException({
+				message: `Run ${run.runId} is ${run.status}; only a COMPLETED Run can be the Baseline.`,
+				statusCode: 422,
+				code: 'BENCHMARK_BASELINE_INELIGIBLE',
+			})
+		}
+		const { changed } = this.store.writeBaseline(run.runId)
+		return { ...this.baselineView(), changed }
 	}
 }

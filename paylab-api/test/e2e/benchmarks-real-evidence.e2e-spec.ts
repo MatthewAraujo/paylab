@@ -22,6 +22,7 @@ describe('Benchmark API on the imported evidence (E2E)', () => {
 					rootDir: process.cwd(),
 					summaryDir: join(process.cwd(), 'bench', 'results'),
 					artifactRoot: scratch,
+					baselineFile: join(scratch, 'baseline.json'),
 				},
 			}),
 		)

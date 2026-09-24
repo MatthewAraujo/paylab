@@ -326,4 +326,52 @@ export class TrendResponse {
 		description: 'Incomplete Runs: timeline markers, never values.',
 	})
 	incompleteRuns!: IncompleteRunMarkerResponse[]
+	@ApiProperty({
+		type: String,
+		nullable: true,
+		description: 'The Baseline Run, to mark on the line when it is one of the points.',
+	})
+	baselineRunId!: string | null
+}
+
+export class BaselinePointerResponse {
+	@ApiProperty({ description: 'The Run every Benchmark Comparison against the Baseline uses.' })
+	runId!: string
+	@ApiProperty({ format: 'date-time' }) selectedAt!: string
+}
+
+export class GitStateResponse {
+	@ApiProperty({ description: 'False outside a Git repository.' }) available!: boolean
+	@ApiProperty({ description: 'The Baseline pointer differs from what is committed.' })
+	baselineChangePending!: boolean
+	@ApiProperty({ type: [String], description: 'Files with uncommitted changes (at most 20).' })
+	dirtyFiles!: string[]
+	@ApiProperty({
+		description:
+			'All files with uncommitted changes. While there are any, the next `benchmark:run` refuses to start.',
+	})
+	dirtyCount!: number
+}
+
+export class BaselineResponse {
+	@ApiProperty({ type: BaselinePointerResponse, nullable: true })
+	baseline!: BaselinePointerResponse | null
+	@ApiProperty({
+		type: RunListItemResponse,
+		nullable: true,
+		description: 'The Baseline Run; null when none is selected or the Run is no longer published.',
+	})
+	run!: RunListItemResponse | null
+	@ApiProperty({ required: false, description: 'Why an existing pointer file could not be used.' })
+	problem?: string
+	@ApiProperty({ type: GitStateResponse }) git!: GitStateResponse
+}
+
+export class BaselineSelectionResponse extends BaselineResponse {
+	@ApiProperty({ description: 'False when the Run already was the Baseline: nothing was written.' })
+	changed!: boolean
+}
+
+export class SelectBaselineRequest {
+	@ApiProperty({ description: 'A completed Run, native or imported.' }) runId!: string
 }

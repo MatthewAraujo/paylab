@@ -28,6 +28,9 @@ describe('benchmarkConfigFromEnv', () => {
 		expect(isAbsolute(paths.summaryDir)).toBe(true)
 		expect(paths.summaryDir.endsWith('bench/results')).toBe(true)
 		expect(paths.artifactRoot.endsWith('.benchmark')).toBe(true)
+		expect(paths.baselineFile.endsWith('bench/baseline.json')).toBe(true)
+		// Never inside the Summary directory, where every JSON file is a Run.
+		expect(paths.baselineFile.startsWith(`${paths.summaryDir}/`)).toBe(false)
 		expect(paths.rootDir).toBe(process.cwd())
 	})
 })

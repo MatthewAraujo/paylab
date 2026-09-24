@@ -35,8 +35,8 @@ Deliver the API side of local benchmark observability: a terminal-only command t
 | [B4](tasks/B4.md) | Register the T14 correctness and load matrix | B1, B2, B3 | done | [context](task-runs/B4-CONTEXT.md) | [summary](task-runs/B4-summary.md) |
 | [B5](tasks/B5.md) | Import existing T13 and T14 evidence | B1 | done | [context](task-runs/B5-CONTEXT.md) | [summary](task-runs/B5-summary.md) |
 | [B6](tasks/B6.md) | Expose a development-only benchmark read API | B1, B2, B5 | done | [context](task-runs/B6-CONTEXT.md) | [summary](task-runs/B6-summary.md) |
-| [B7](tasks/B7.md) | Add versioned Baseline selection | B1, B2, B6 | ready | — | — |
-| [B8](tasks/B8.md) | Validate the integrated workflow and document operation | B1–B7 | planned | — | — |
+| [B7](tasks/B7.md) | Add versioned Baseline selection | B1, B2, B6 | done | [context](task-runs/B7-CONTEXT.md) | [summary](task-runs/B7-summary.md) |
+| [B8](tasks/B8.md) | Validate the integrated workflow and document operation | B1–B7 | ready | — | — |
 
 ## Acceptance Criteria Mapping
 

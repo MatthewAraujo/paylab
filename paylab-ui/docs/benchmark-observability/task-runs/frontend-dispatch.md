@@ -4,7 +4,7 @@ Approved partition: F1 alone; then {F2, F3, F4}; then {F5 to F6, F7 to F9, F8 to
 
 | Task | Lane | State | Notes |
 | --- | --- | --- | --- |
-| F1 | 1 | dispatched | shared worktree; API running at :3333 for `pnpm sync:api` |
+| F1 | 1 | done (`caacdc0`) | contract refreshed; flags `benchmarks`, `benchmarkBaselineWrite`; API stopped |
 | F2 | A | waiting on F1 | |
 | F3 | B | waiting on F1 | |
 | F4 | C | waiting on F1 | |

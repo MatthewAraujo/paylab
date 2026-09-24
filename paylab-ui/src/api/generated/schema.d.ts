@@ -11,7 +11,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["AccountsController_list"];
         put?: never;
         post: operations["AccountsController_create"];
         delete?: never;
@@ -135,7 +135,124 @@ export interface paths {
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: never;
+    schemas: {
+        WalletListItemResponse: {
+            /** Format: uuid */
+            id: string;
+            /** @example WALLET */
+            kind: string;
+            /** @example BRL */
+            currency: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        WalletPageResponse: {
+            items: components["schemas"]["WalletListItemResponse"][];
+            /** @description Pass as `cursor` to get the following page; null on the last page. */
+            nextCursor: string | null;
+        };
+        UnauthorizedResponse: {
+            /** @example 401 */
+            statusCode: number;
+            /** @example Invalid API key */
+            message: string;
+            /** @example Unauthorized */
+            error: string;
+        };
+        ValidationErrorResponse: {
+            /** @example 422 */
+            statusCode: number;
+            /** @example VALIDATION_ERROR */
+            code: string;
+            message: string;
+            /** @description Field-level details when available. */
+            errors?: Record<string, never>;
+        };
+        AccountResponse: {
+            /** Format: uuid */
+            id: string;
+            /** @example WALLET */
+            kind: string;
+            /** @example BRL */
+            currency: string;
+        };
+        ErrorResponse: {
+            /** @example RESOURCE_NOT_FOUND */
+            code: string;
+            message: string;
+        };
+        BalanceResponse: {
+            /** Format: uuid */
+            accountId: string;
+            /** @description Credits minus debits. Integer centavos, never a decimal. */
+            balance: number;
+            /** @example BRL */
+            currency: string;
+        };
+        LedgerEntryResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            ledgerTransactionId: string;
+            /** @enum {string} */
+            direction: "DEBIT" | "CREDIT";
+            /** @description Always positive; the sign comes from direction. Integer centavos, never a decimal. */
+            amount: number;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        LedgerEntryPageResponse: {
+            items: components["schemas"]["LedgerEntryResponse"][];
+            /** @description Pass as `cursor` to get the following page; null on the last page. */
+            nextCursor: string | null;
+        };
+        PaymentResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            sourceAccountId: string;
+            /** Format: uuid */
+            destinationAccountId: string;
+            /** @description Integer centavos, never a decimal. */
+            amount: number;
+            /** @example BRL */
+            currency: string;
+            /** @enum {string} */
+            status: "CREATED" | "PROCESSING" | "SUCCEEDED" | "FAILED";
+            /** @example INSUFFICIENT_FUNDS */
+            failureReason: string | null;
+            /** Format: uuid */
+            ledgerTransactionId: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        PaymentPageResponse: {
+            items: components["schemas"]["PaymentResponse"][];
+            /** @description Pass as `cursor` to get the following page; null on the last page. */
+            nextCursor: string | null;
+        };
+        DailyReportRowResponse: {
+            /**
+             * @description UTC calendar day.
+             * @example 2026-09-01
+             */
+            date: string;
+            /** @enum {string} */
+            status: "CREATED" | "PROCESSING" | "SUCCEEDED" | "FAILED";
+            count: number;
+            /** @description Sum of the Payments' amounts. Integer centavos, never a decimal. */
+            volume: number;
+        };
+        DailyReportResponse: {
+            /** @example 2026-09-01 */
+            from: string;
+            /** @example 2026-09-30 */
+            to: string;
+            items: components["schemas"]["DailyReportRowResponse"][];
+        };
+    };
     responses: never;
     parameters: never;
     requestBodies: never;
@@ -144,6 +261,46 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    AccountsController_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description Opaque `nextCursor` from the previous page. */
+                cursor?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletPageResponse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthorizedResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
     AccountsController_create: {
         parameters: {
             query?: never;
@@ -176,7 +333,35 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["AccountResponse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthorizedResponse"];
+                };
+            };
+            /** @description Unknown id or another Merchant's resource (indistinguishable). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
             };
         };
     };
@@ -195,13 +380,45 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["BalanceResponse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthorizedResponse"];
+                };
+            };
+            /** @description Unknown id or another Merchant's resource (indistinguishable). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
             };
         };
     };
     AccountsController_entries: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                /** @description Opaque `nextCursor` from the previous page. */
+                cursor?: string;
+            };
             header?: never;
             path: {
                 id: string;
@@ -214,13 +431,51 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["LedgerEntryPageResponse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthorizedResponse"];
+                };
+            };
+            /** @description Unknown id or another Merchant's resource (indistinguishable). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
             };
         };
     };
     PaymentsController_list: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Exclusive. Same format as `from`. */
+                to?: string;
+                /** @description Inclusive. ISO 8601 timestamp with a zone, or a YYYY-MM-DD day (00:00 UTC). */
+                from?: string;
+                status?: "CREATED" | "PROCESSING" | "SUCCEEDED" | "FAILED";
+                accountId?: string;
+                limit?: number;
+                /** @description Opaque `nextCursor` from the previous page. */
+                cursor?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -231,14 +486,35 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PaymentPageResponse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthorizedResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
             };
         };
     };
     PaymentsController_create: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -267,13 +543,46 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PaymentResponse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthorizedResponse"];
+                };
+            };
+            /** @description Unknown id or another Merchant's resource (indistinguishable). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
             };
         };
     };
     ReportsController_daily: {
         parameters: {
-            query?: never;
+            query: {
+                /** @description Last UTC day, inclusive, YYYY-MM-DD. The range is at most 366 days. */
+                to: string;
+                /** @description First UTC day, inclusive, YYYY-MM-DD. */
+                from: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -284,7 +593,26 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["DailyReportResponse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnauthorizedResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
             };
         };
     };

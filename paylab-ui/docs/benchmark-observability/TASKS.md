@@ -26,7 +26,7 @@ Add a Benchmarks area to the Operational Console that observes the API's benchma
 
 | Task | Title | Depends on | Status | Context | Summary |
 | --- | --- | --- | --- | --- | --- |
-| [F1](tasks/F1.md) | Refresh the contract and derive the Benchmarks capability | — | ready | — | — |
+| [F1](tasks/F1.md) | Refresh the contract and derive the Benchmarks capability | — | in_progress | — | — |
 | [F2](tasks/F2.md) | Typed benchmark client, failure taxonomy, and test support | F1 | planned | — | — |
 | [F3](tasks/F3.md) | Pure benchmark presentation rules | F1 | planned | — | — |
 | [F4](tasks/F4.md) | Navigation, route frames, design-system pieces, and shared states | F1 | planned | — | — |

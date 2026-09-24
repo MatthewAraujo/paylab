@@ -27,9 +27,9 @@ Add a Benchmarks area to the Operational Console that observes the API's benchma
 | Task | Title | Depends on | Status | Context | Summary |
 | --- | --- | --- | --- | --- | --- |
 | [F1](tasks/F1.md) | Refresh the contract and derive the Benchmarks capability | — | done | [context](task-runs/F1-CONTEXT.md) | [summary](task-runs/F1-summary.md) |
-| [F2](tasks/F2.md) | Typed benchmark client, failure taxonomy, and test support | F1 | ready | — | — |
-| [F3](tasks/F3.md) | Pure benchmark presentation rules | F1 | ready | — | — |
-| [F4](tasks/F4.md) | Navigation, route frames, design-system pieces, and shared states | F1 | ready | — | — |
+| [F2](tasks/F2.md) | Typed benchmark client, failure taxonomy, and test support | F1 | in_progress | — | — |
+| [F3](tasks/F3.md) | Pure benchmark presentation rules | F1 | in_progress | — | — |
+| [F4](tasks/F4.md) | Navigation, route frames, design-system pieces, and shared states | F1 | in_progress | — | — |
 | [F5](tasks/F5.md) | Overview of the latest Benchmark Run | F2, F3, F4 | planned | — | — |
 | [F6](tasks/F6.md) | Active Run: progress and recent log | F5 | planned | — | — |
 | [F7](tasks/F7.md) | Run detail | F2, F3, F4 | planned | — | — |

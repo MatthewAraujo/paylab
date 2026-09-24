@@ -6,7 +6,7 @@ Approved partition: F1 alone; then {F2, F3, F4}; then {F5 to F6, F7 to F9, F8 to
 | --- | --- | --- | --- |
 | F1 | 1 | done (`caacdc0`) | contract refreshed; flags `benchmarks`, `benchmarkBaselineWrite`; API stopped |
 | F2 | A | dispatched | own worktree |
-| F3 | B | dispatched | own worktree |
+| F3 | B | done (`f8e5ce8`, merged) | 80 new tests; rules API in `src/features/benchmarks/rules` |
 | F4 | C | dispatched | own worktree |
 | F5, F6 | A | waiting on F2, F3, F4 | |
 | F7, F9 | B | waiting on F2, F3, F4 | |

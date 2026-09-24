@@ -1,23 +1,18 @@
 import type { Metadata } from "next";
-import { capabilityNotice } from "@/api/current-capabilities";
-import { CapabilityUnavailable } from "@/components/capability-unavailable";
-import { PageHeader } from "@/components/page-header";
+import { WalletsView } from "@/features/accounts/wallets-view";
 
 export const metadata: Metadata = { title: "Ledger" };
 
-export default function LedgerPage() {
-  const notice = capabilityNotice("ledger", "Ledger");
-
-  return (
-    <>
-      <PageHeader
-        title="Ledger"
-        description="Immutable debit and credit evidence for consummated financial events."
-      />
-      <CapabilityUnavailable
-        title={notice.title}
-        description={notice.description}
-      />
-    </>
-  );
+export default function LedgerPage({
+  searchParams,
+}: Readonly<{
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}>) {
+  return WalletsView({
+    title: "Ledger",
+    description:
+      "Immutable debit and credit evidence. Choose a Wallet to inspect its Ledger Entries.",
+    basePath: "/ledger",
+    searchParams,
+  });
 }

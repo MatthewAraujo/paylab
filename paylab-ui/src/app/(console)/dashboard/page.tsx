@@ -1,46 +1,59 @@
 import type { Metadata } from "next";
-import { capabilityNotice } from "@/api/current-capabilities";
+import {
+  capabilityNotice,
+  currentCapabilities,
+} from "@/api/current-capabilities";
+import { ApiErrorAlert } from "@/components/api-error-alert";
 import { CapabilityUnavailable } from "@/components/capability-unavailable";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { DailyReport } from "@/features/dashboard/daily-report";
+import { RangeForm } from "@/features/dashboard/range-form";
+import { parseRange } from "@/features/dashboard/report";
+import { loadDailyReport } from "@/features/dashboard/report-api";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
-const metrics = [
-  ["Reporting", "Unavailable", "OpenAPI response schema pending"],
-  ["Payment volume", "—", "No typed report contract"],
-  ["Payment count", "—", "No typed report contract"],
-] as const;
+const description =
+  "Payment activity per UTC day and status, straight from the daily report.";
 
-export default function DashboardPage() {
-  const notice = capabilityNotice("dashboard", "Reporting");
+export default async function DashboardPage({
+  searchParams,
+}: Readonly<{
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}>) {
+  if (!currentCapabilities.dashboard) {
+    const notice = capabilityNotice("dashboard", "Reporting");
+    return (
+      <>
+        <PageHeader title="Dashboard" description={description} />
+        <CapabilityUnavailable
+          title={notice.title}
+          description={notice.description}
+        />
+      </>
+    );
+  }
+
+  const range = parseRange(await searchParams, new Date());
+  const result = await loadDailyReport(range);
 
   return (
     <>
-      <PageHeader
-        title="Dashboard"
-        description="Financial activity at a glance when the reporting contract becomes available."
-      />
-      <div className="mb-6 grid overflow-hidden rounded-xl border bg-border md:grid-cols-3 md:gap-px">
-        {metrics.map(([label, value, detail]) => (
-          <Card
-            key={label}
-            className="rounded-none border-0 bg-card shadow-none"
+      <PageHeader title="Dashboard" description={description} />
+      <RangeForm range={range} />
+      {result.ok ? (
+        <DailyReport report={result.data} />
+      ) : (
+        <ApiErrorAlert title={result.title} message={result.message}>
+          {/* A plain anchor forces a fresh server render, which is what a retry needs. */}
+          <a
+            href={`/dashboard?from=${range.from}&to=${range.to}`}
+            className="text-sm text-primary underline-offset-4 hover:underline"
           >
-            <CardContent className="min-h-28 px-6 py-5">
-              <p className="text-xs text-muted-foreground">{label}</p>
-              <p className="mt-3 text-lg font-semibold tracking-tight text-muted-foreground">
-                {value}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground/80">{detail}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      <CapabilityUnavailable
-        title={notice.title}
-        description={notice.description}
-      />
+            Retry
+          </a>
+        </ApiErrorAlert>
+      )}
     </>
   );
 }

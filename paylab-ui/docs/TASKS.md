@@ -11,6 +11,7 @@
 - Backend scope and task status: `../paylab-api/docs/PRD.md` and `../paylab-api/docs/TASKS.md`.
 - Backend contracts currently inspected: `GET /health`, Swagger document setup, CORS configuration, Prisma schema, `Account`, `Amount`, and `Payment` domain types.
 - Backend readiness: all read routes (`GET /v1/accounts`, `/v1/accounts/{id}`, `/balance`, `/entries`, `/v1/payments`, `/v1/payments/{id}`, `/v1/reports/daily`) are typed in OpenAPI since backend T16 and T17. Reads require a Merchant API key, which the console holds server-side (`PAYLAB_API_KEY`).
+- Follow-up feature: [Benchmark Observability plan](benchmark-observability/TASKS.md) (tasks `F1`–`F12`, PRD alongside), built on the backend's `/v1/benchmarks` routes.
 - Read-only decision: no login, no Payment or Wallet creation, no Ledger Transaction lookup. Financial data is fetched on the Next server.
 
 ## Implementation Goal

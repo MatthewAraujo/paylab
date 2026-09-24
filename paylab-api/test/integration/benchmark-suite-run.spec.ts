@@ -1,9 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import type { Strategy } from '../../bench/exp/strategies/strategies'
 import { snapshotTemplate } from '../../bench/lib/reset'
 import { runBenchmark } from '../../scripts/benchmark/executor'
-import { buildSuite } from '../../scripts/benchmark/suite'
+import { buildSuite, t14Scenarios } from '../../scripts/benchmark/suite'
 import {
 	benchDatabase,
 	createSeededDatabase,
@@ -80,4 +81,84 @@ describe('benchmark:run against a small dataset (reduced suite)', () => {
 			expect(readFileSync(file, 'utf8')).toContain('Execution Time')
 		}
 	}, 180_000)
+
+	describe('the reduced T14 group', () => {
+		const cell = {
+			id: 't14.load.M.c2.sync-off',
+			shape: 'M',
+			clients: 2,
+			sync: 'off',
+			index: 0,
+		} as const
+		const protocol = { warmupMs: 0, durationMs: 1000, repetitions: 1 }
+		const run = (gateStrategies: Strategy[]) => {
+			const full = buildSuite(database)
+			return runBenchmark({
+				repoDir: repo.repoDir,
+				artifactRoot: repo.artifactRoot,
+				summaryDir: repo.summaryDir,
+				executorVersion: 'test',
+				suite: {
+					prepare: full.prepare,
+					scenarios: t14Scenarios(database, { cells: [cell], protocol, gateStrategies }),
+				},
+			})
+		}
+
+		const commit = () => {
+			repo.git('add', '-A')
+			repo.git('commit', '-q', '-m', 'publish')
+		}
+
+		it('publishes the correctness gate and a cell with per-strategy metrics and raw samples', async () => {
+			commit()
+
+			const { summary } = await run(['nokey'])
+
+			expect(summary.status).toBe('COMPLETED')
+			expect(summary.scenarios.map((s) => s.id)).toEqual(['t14.correctness', cell.id])
+
+			const gate = summary.scenarios[0].metrics
+			expect(gate.find((m) => m.key === 'correctness_violations')?.value).toBe(0)
+			expect(gate.every((m) => m.dimensions?.strategy === 'nokey')).toBe(true)
+
+			const measured = summary.scenarios[1].metrics
+			expect(measured.filter((m) => m.key === 'tps').map((m) => m.dimensions?.strategy)).toEqual([
+				'nokey',
+				'forupdate',
+				'serializable',
+				'optimistic',
+				'advisory',
+			])
+			expect(
+				measured.find((m) => m.key === 'tps' && m.dimensions?.strategy === 'nokey')?.summaryRole,
+			).toBe('THROUGHPUT')
+
+			const raw = summary.artifacts.filter((a) => a.kind === 'RAW_DATA')
+			expect(raw.map((a) => a.id)).toEqual(['t14.correctness-correctness', `${cell.id}-samples`])
+			const samples = readFileSync(
+				join(repo.artifactRoot, 'runs', summary.runId, 'artifacts', `${cell.id}-samples.jsonl`),
+				'utf8',
+			)
+				.trim()
+				.split('\n')
+			expect(samples).toHaveLength(5)
+			expect(JSON.parse(samples[0])).toMatchObject({ shape: 'M', clients: 2, rep: 1 })
+		}, 300_000)
+
+		it('leaves the Run INCOMPLETE and skips the matrix when the correctness gate fails', async () => {
+			commit()
+
+			// A strategy that takes no lock overspends the Wallet: a genuine correctness failure.
+			const { summary } = await run(['unprotected' as Strategy])
+
+			expect(summary.status).toBe('INCOMPLETE')
+			expect(summary.scenarios.map((s) => [s.id, s.status])).toEqual([
+				['t14.correctness', 'FAILED'],
+				[cell.id, 'PENDING'],
+			])
+			expect(summary.failure?.scenarioId).toBe('t14.correctness')
+			expect(summary.failure?.summary).toContain('Correctness gate failed')
+		}, 300_000)
+	})
 })

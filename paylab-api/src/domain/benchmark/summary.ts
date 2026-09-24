@@ -12,8 +12,11 @@ export const metricSchema = z.object({
 	key: z.string().min(1),
 	label: z.string().min(1),
 	unit: z.string(),
-	direction: z.enum(['HIGHER_IS_BETTER', 'LOWER_IS_BETTER']),
+	// NEUTRAL is for informational counts (sample sizes) that are neither better nor worse.
+	direction: z.enum(['HIGHER_IS_BETTER', 'LOWER_IS_BETTER', 'NEUTRAL']),
 	aggregation: z.string().min(1).optional(),
+	// What the value belongs to inside one scenario, e.g. { strategy: 'nokey' }; part of the metric's identity.
+	dimensions: z.record(z.string()).optional(),
 	// Only measurements that exist are listed; an absent measurement has no entry.
 	value: z.number().finite(),
 	summaryRole: z.enum(['THROUGHPUT', 'LATENCY_P99', 'ERROR_RATE', 'DURATION']).optional(),

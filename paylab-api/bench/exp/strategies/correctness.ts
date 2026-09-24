@@ -1,5 +1,6 @@
 // EXPERIMENT ONLY (T14). The T10 concurrency scenarios, run against every strategy on the benchmark
 // database (fresh Wallets), followed by the global invariant check. Exit code 1 on any failure.
+// `runCorrectness` is the callable core, used by the benchmark suite as the T14 correctness gate.
 // Usage: ts-node -r tsconfig-paths/register bench/exp/strategies/correctness.ts [strategy ...]
 import type { Client } from 'pg'
 import {
@@ -16,7 +17,13 @@ import { STRATEGIES, type SettleResult, type Strategy, settle } from './strategi
 
 const randomInt = (min: number, max: number) => min + Math.floor(Math.random() * (max - min + 1))
 
-type Ctx = { control: Client; merchantId: string; clearing: string }
+type Ctx = {
+	control: Client
+	merchantId: string
+	clearing: string
+	url?: string
+	settleImpl: typeof settle
+}
 
 async function newWallet(ctx: Ctx, centavos: number): Promise<string> {
 	const { rows } = await ctx.control.query(
@@ -35,7 +42,7 @@ async function parallel(
 	strategy: Strategy,
 	jobs: { source: string; destination: string; amount: number; wallet: boolean }[],
 ) {
-	const clients = await Promise.all(jobs.map(() => connect('-c lock_timeout=60000')))
+	const clients = await Promise.all(jobs.map(() => connect('-c lock_timeout=60000', ctx.url)))
 	try {
 		const ids = await Promise.all(
 			jobs.map((j) =>
@@ -46,7 +53,7 @@ async function parallel(
 		)
 		return await Promise.all(
 			jobs.map((j, i) =>
-				settle(clients[i], strategy, {
+				ctx.settleImpl(clients[i], strategy, {
 					paymentId: ids[i],
 					sourceId: j.source,
 					destinationId: j.destination,
@@ -73,6 +80,7 @@ const tally = (results: SettleResult[]) => ({
 async function run(strategy: Strategy, ctx: Ctx) {
 	const failures: string[] = []
 	const notes: string[] = []
+	const totals = { retries: 0, deadlocks: 0 }
 	const check = (ok: boolean, message: string) => {
 		if (!ok) failures.push(message)
 	}
@@ -103,6 +111,7 @@ async function run(strategy: Strategy, ctx: Ctx) {
 			`S1: ${t.succeeded} succeeded / ${t.failed} failed, expected 10 / 40`,
 		)
 		check(balance === 0n, `S1: final Balance ${balance}, expected 0`)
+		totals.retries += t.retries
 		notes.push(`S1 retries=${t.retries} (serialization=${t.sf}, version=${t.vc})`)
 	}
 
@@ -139,6 +148,7 @@ async function run(strategy: Strategy, ctx: Ctx) {
 			)
 			// A failed Payment must have been truly unaffordable when decided: at least one success can never leave room for all.
 		}
+		totals.retries += retries
 		notes.push(`S2 retries=${retries}`)
 	}
 
@@ -174,6 +184,8 @@ async function run(strategy: Strategy, ctx: Ctx) {
 		const total = (await balanceOf(ctx.control, a)) + (await balanceOf(ctx.control, b))
 		check(total === 1_000_000n, `S3: money not conserved, ${total} != 1000000`)
 		check(deadlocks === 0, `S3: ${deadlocks} deadlocks`)
+		totals.retries += retries
+		totals.deadlocks += deadlocks
 		notes.push(`S3 retries=${retries} deadlocks=${deadlocks}`)
 	}
 
@@ -213,41 +225,69 @@ async function run(strategy: Strategy, ctx: Ctx) {
 				`S4 round ${round}: Balance ${balance}, expected 15000`,
 			)
 		}
+		totals.retries += retries
 		notes.push(`S4 retries=${retries}`)
 	}
 
 	const violations = await invariantViolations(ctx.control)
 	for (const v of violations) failures.push(`invariant: ${v}`)
-	return { failures, notes }
+	return { failures, notes, ...totals }
+}
+
+export interface CorrectnessResult {
+	strategy: Strategy
+	failures: string[]
+	notes: string[]
+	/** Retried attempts over every scenario (serializable and optimistic retry by design). */
+	retries: number
+	/** Deadlocks seen in the crossed-transfer scenario. */
+	deadlocks: number
+}
+
+/** Runs the correctness scenarios for each strategy; `url` defaults to BENCH_DATABASE_URL. */
+export async function runCorrectness(
+	strategies: Strategy[] = [...STRATEGIES],
+	options: { url?: string; settleImpl?: typeof settle } = {},
+): Promise<CorrectnessResult[]> {
+	const control = await connect(undefined, options.url)
+	try {
+		await prepareSchema(control)
+		const firstWallet = (await control.query("SELECT id FROM accounts WHERE kind='WALLET' LIMIT 1"))
+			.rows[0].id
+		const merchant = (await walletById(control, firstWallet)).merchantId
+		const ctx: Ctx = {
+			control,
+			merchantId: merchant,
+			clearing: await clearingAccount(control),
+			url: options.url,
+			settleImpl: options.settleImpl ?? settle,
+		}
+		const results: CorrectnessResult[] = []
+		for (const strategy of strategies) {
+			results.push({ strategy, ...(await run(strategy, ctx)) })
+		}
+		return results
+	} finally {
+		await control.end()
+	}
 }
 
 async function main() {
 	const chosen = (
 		process.argv.slice(2).length ? process.argv.slice(2) : [...STRATEGIES]
 	) as Strategy[]
-	const control = await connect()
-	await prepareSchema(control)
-	const merchant = (
-		await walletById(
-			control,
-			(
-				await control.query("SELECT id FROM accounts WHERE kind='WALLET' LIMIT 1")
-			).rows[0].id,
-		)
-	).merchantId
-	const ctx: Ctx = { control, merchantId: merchant, clearing: await clearingAccount(control) }
 	let bad = false
-	for (const strategy of chosen) {
-		const { failures, notes } = await run(strategy, ctx)
+	for (const { strategy, failures, notes } of await runCorrectness(chosen)) {
 		console.log(`${failures.length === 0 ? 'PASS' : 'FAIL'} ${strategy}  ${notes.join('  ')}`)
 		for (const f of failures.slice(0, 12)) console.log(`   - ${f}`)
 		if (failures.length) bad = true
 	}
-	await control.end()
 	process.exit(bad ? 1 : 0)
 }
 
-main().catch((e) => {
-	console.error(e)
-	process.exit(2)
-})
+if (typeof require !== 'undefined' && typeof module !== 'undefined' && require.main === module) {
+	main().catch((e) => {
+		console.error(e)
+		process.exit(2)
+	})
+}

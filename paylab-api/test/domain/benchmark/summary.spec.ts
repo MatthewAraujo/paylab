@@ -51,4 +51,29 @@ describe('parseSummary', () => {
 		expect(parseSummary(withRole('THROUGHPUT')).isRight()).toBe(true)
 		expect(parseSummary(withRole('LOUDEST')).isLeft()).toBe(true)
 	})
+
+	it('accepts a metric that belongs to a dimension such as a strategy', () => {
+		const metric = buildMetric({ dimensions: { strategy: 'nokey' } })
+		const result = parseSummary(buildSummary({ scenarios: [buildScenario({ metrics: [metric] })] }))
+
+		expect(result.isRight() && result.value.scenarios[0].metrics[0].dimensions).toEqual({
+			strategy: 'nokey',
+		})
+	})
+
+	it('rejects a dimension value that is not text', () => {
+		const metric = buildMetric({ dimensions: { strategy: 3 } })
+
+		expect(
+			parseSummary(buildSummary({ scenarios: [buildScenario({ metrics: [metric] })] })).isLeft(),
+		).toBe(true)
+	})
+
+	it('accepts an informational metric with a neutral direction', () => {
+		const metric = buildMetric({ direction: 'NEUTRAL', key: 'lock_samples', unit: 'count' })
+
+		expect(
+			parseSummary(buildSummary({ scenarios: [buildScenario({ metrics: [metric] })] })).isRight(),
+		).toBe(true)
+	})
 })

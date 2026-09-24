@@ -1,4 +1,4 @@
-export type MetricDirection = 'HIGHER_IS_BETTER' | 'LOWER_IS_BETTER'
+export type MetricDirection = 'HIGHER_IS_BETTER' | 'LOWER_IS_BETTER' | 'NEUTRAL'
 
 export type PerformanceChange =
 	| {
@@ -7,7 +7,7 @@ export type PerformanceChange =
 			percentDelta: number
 			classification: 'improved' | 'stable' | 'regressed'
 	  }
-	| { kind: 'not-comparable'; reason: 'missing-value' | 'zero-reference' }
+	| { kind: 'not-comparable'; reason: 'missing-value' | 'zero-reference' | 'informational' }
 
 // A presentation tolerance, not a claim of statistical significance.
 export const STABLE_TOLERANCE_PERCENT = 5
@@ -23,6 +23,9 @@ export function classifyChange(input: {
 	const { current, reference, direction } = input
 	if (current === undefined || reference === undefined) {
 		return { kind: 'not-comparable', reason: 'missing-value' }
+	}
+	if (direction === 'NEUTRAL') {
+		return { kind: 'not-comparable', reason: 'informational' }
 	}
 	if (reference === 0) {
 		return { kind: 'not-comparable', reason: 'zero-reference' }

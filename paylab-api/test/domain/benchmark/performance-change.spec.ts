@@ -78,4 +78,11 @@ describe('classifyChange', () => {
 			reason: 'missing-value',
 		})
 	})
+
+	it('never classifies an informational metric as better or worse', () => {
+		expect(classifyChange({ current: 500, reference: 100, direction: 'NEUTRAL' })).toEqual({
+			kind: 'not-comparable',
+			reason: 'informational',
+		})
+	})
 })

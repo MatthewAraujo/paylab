@@ -4,6 +4,7 @@
 
 - PRD: [docs/PRD.md](PRD.md) (September — financial core + PostgreSQL). Acceptance criteria are its numbered user stories, referenced below as `US-n`.
 - Glossary: [CONTEXT.md](../CONTEXT.md).
+- Follow-up feature: [Benchmark Observability plan](benchmark-observability/TASKS.md) (tasks `B1`–`B8`, PRD alongside).
 - ADRs: [0001 settle atomically](adr/0001-post-ledger-and-settle-payment-atomically.md), [0002 source lock](adr/0002-exclusive-source-lock-for-balance-consumers.md), [0003 database integrity](adr/0003-ledger-integrity-enforced-in-the-database.md), [0004 Prisma plus raw SQL](adr/0004-prisma-for-schema-raw-sql-for-critical-paths.md).
 - Reference architecture (read-only, gitignored): the sibling `petagro-api` project — layering, Either pattern, controller and Zod pipe conventions, error translation, observability, test tooling.
 - Current `PROJECT.md` is the reference project's and is replaced in T15.

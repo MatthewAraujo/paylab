@@ -13,6 +13,13 @@ export interface LedgerEntryItem {
 	createdAt: Date
 }
 
+export interface WalletListItem {
+	id: string
+	kind: 'WALLET'
+	currency: string
+	createdAt: Date
+}
+
 export interface PaymentListItem {
 	id: string
 	sourceAccountId: string
@@ -56,6 +63,13 @@ export abstract class ReadQueriesRepository {
 		after?: KeysetPosition
 		fetch: number
 	}): Promise<LedgerEntryItem[]>
+
+	/** The Merchant's Wallets only: never the External Clearing Account, never another Merchant's. */
+	abstract listWallets(input: {
+		merchantId: string
+		after?: KeysetPosition
+		fetch: number
+	}): Promise<WalletListItem[]>
 
 	abstract listPayments(
 		input: PaymentListFilter & { merchantId: string; after?: KeysetPosition; fetch: number },

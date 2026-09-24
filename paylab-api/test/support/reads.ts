@@ -33,6 +33,17 @@ export async function insertCreditAt(walletId: string, amount: number, at: Date)
 	})
 }
 
+// A Wallet with an explicit creation time (the write path always uses now()).
+export async function insertWalletAt(merchantId: string, at: Date) {
+	const [{ id }] = await prisma.$queryRawUnsafe<{ id: string }[]>(
+		`INSERT INTO accounts (kind, merchant_id, currency, created_at)
+		 VALUES ('WALLET', $1::uuid, 'BRL', $2::timestamptz) RETURNING id`,
+		merchantId,
+		at,
+	)
+	return id
+}
+
 export async function insertPaymentAt(input: {
 	merchantId: string
 	sourceAccountId: string

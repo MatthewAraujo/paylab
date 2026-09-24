@@ -52,6 +52,34 @@ ORDER BY created_at DESC, id DESC
 LIMIT $4
 ```
 
+## Wallet list
+
+`GET /v1/accounts`. `$1` is the Merchant id. Only the Merchant's Wallets: the External Clearing
+Account has no Merchant, and the `kind` predicate keeps the intent explicit.
+
+First page (`$2` = fetch size):
+
+```sql
+SELECT id, currency, created_at
+FROM accounts
+WHERE merchant_id = $1::uuid
+  AND kind = 'WALLET'
+ORDER BY created_at DESC, id DESC
+LIMIT $2
+```
+
+Next page (`$2`, `$3` = `created_at` and `id` of the last row of the previous page, `$4` = fetch size):
+
+```sql
+SELECT id, currency, created_at
+FROM accounts
+WHERE merchant_id = $1::uuid
+  AND kind = 'WALLET'
+  AND (created_at, id) < ($2::timestamptz, $3::uuid)
+ORDER BY created_at DESC, id DESC
+LIMIT $4
+```
+
 ## Payment list
 
 `GET /v1/payments`. One skeleton; each optional line is present only when its filter is

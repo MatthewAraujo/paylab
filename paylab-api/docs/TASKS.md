@@ -35,6 +35,8 @@ React front end, FakeBank and provider integration, webhooks, reconciliation, qu
 | [T13](tasks/T13.md) | Experiments: index design and pagination cost | T11, T12 | done | [context](task-runs/T13-CONTEXT.md) | [summary](task-runs/T13-summary.md) |
 | [T14](tasks/T14.md) | Experiments: concurrency strategy comparison | T10, T12 | done | [context](task-runs/T14-CONTEXT.md) | [summary](task-runs/T14-summary.md) |
 | [T15](tasks/T15.md) | Project handbook, CI and developer documentation | T9 | done | [context](task-runs/T15-CONTEXT.md) | [summary](task-runs/T15-summary.md) |
+| [T16](tasks/T16.md) | List the Merchant's Wallets (`GET /v1/accounts`) | T8, T11 | done | — | — |
+| [T17](tasks/T17.md) | Describe the read endpoints in OpenAPI | T16 | todo | — | — |
 
 ## Acceptance Criteria Mapping
 
@@ -56,6 +58,7 @@ React front end, FakeBank and provider integration, webhooks, reconciliation, qu
 | US-81 Migrations build the full schema | T2, T3, T4 | integration | done |
 | US-82 Global invariant check everywhere | T4 (and every DB test) | integration, concurrency | done |
 | US-83 Structured errors and logging inherited | T1, T9 | e2e | done |
+| Console: Wallet list and typed read contract | T16, T17 | integration, e2e, contract | T16 done, T17 todo |
 | US-84 CI gate | T2, T15 | CI run | done locally; workflow not yet run on GitHub |
 
 ## Test Strategy

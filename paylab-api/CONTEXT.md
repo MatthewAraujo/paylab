@@ -58,6 +58,50 @@ _Avoid_: Value, price, decimal money
 
 ## Performance facts (T13)
 
+**Benchmark Run**:
+One immutable, explicitly initiated execution of a defined performance scenario from a clean source revision on the approved local benchmark environment, including its parameters, measurements, outcome, and optional intent note. A published Benchmark Run becomes available to the Operational Console automatically and is never overwritten by a later run.
+_Avoid_: Benchmark report, latest metrics, mutable result
+
+**Benchmark Run Status**:
+The lifecycle state of a Benchmark Run: `RUNNING` while the suite is producing progress and Artifacts, `COMPLETED` after every scenario succeeds, or `INCOMPLETE` after interruption or failure. Measurements become immutable when the Run leaves `RUNNING`.
+_Avoid_: Passed/failed metric, editable completion state
+
+**Benchmark Suite**:
+The complete set of performance scenarios known by a source revision. Every Benchmark Run executes the whole Benchmark Suite; ad hoc or partial measurements are not published as Benchmark Runs.
+_Avoid_: Test selection, partial benchmark, benchmark filter
+
+**Benchmark Summary**:
+The canonical, durable record of a Benchmark Run's identity, provenance, outcome, and normalized measurements. Large diagnostic artifacts may support a Benchmark Summary but do not replace it.
+_Avoid_: Raw log, console output, mutable dashboard data
+
+**Benchmark Baseline**:
+A Benchmark Run deliberately retained as a stable long-term comparison reference. It is distinct from the previous compatible Benchmark Run, which remains the default comparison reference.
+_Avoid_: Previous run, latest run, target
+
+**Benchmark Comparison**:
+A comparison between one Benchmark Run and another compatible Run. The previous compatible Run is selected by default, while an operator may select a different Run or the Benchmark Baseline.
+_Avoid_: Diff against latest, cross-environment comparison
+
+**Comparable Benchmark Scenario**:
+A scenario whose identity, definition, dataset, and relevant execution environment are equivalent across two Benchmark Runs. Compatibility is evaluated per scenario, so newly added scenarios do not invalidate comparisons for unchanged scenarios.
+_Avoid_: Same display name, same suite membership, cross-environment metric
+
+**Performance Change**:
+The direction-normalized difference between compatible measurements: improved, stable, or regressed. A change is stable within a five-percent tolerance; higher throughput is favorable, while lower latency, contention, retry, and failure measurements are favorable.
+_Avoid_: Any difference is a regression, raw percentage without direction
+
+**Incomplete Benchmark Run**:
+A Benchmark Run whose Benchmark Suite did not finish successfully. It retains the completed measurements and failure evidence for diagnosis but is ineligible for comparison and cannot become a Benchmark Baseline.
+_Avoid_: Failed metric, comparable partial run, discarded run
+
+**Imported Benchmark Run**:
+A historical Benchmark Run reconstructed from trustworthy experiment results that predate the canonical executor. Missing measurements remain absent, and its imported provenance is always disclosed.
+_Avoid_: Synthetic run, inferred measurement, native run
+
+**Benchmark Artifact**:
+Sanitized diagnostic evidence attached to a Benchmark Run, such as execution logs, query plans, and failure output. Artifacts are retained locally without automatic expiration and support, but do not replace, the Benchmark Summary.
+_Avoid_: Benchmark Summary, unsanitized process output, dashboard metric
+
 Measured on the benchmark dataset; details and rejected alternatives are in the ADRs, not here.
 
 - Commit cost of a Settlement depends on an index the schema does not get from constraints: the deferred integrity trigger looks up entries by `ledger_transaction_id`. Without it the commit scans the whole ledger (linear, ~225 ms at 1.9 M entries) while the source Wallet lock is held (ADR 0005).

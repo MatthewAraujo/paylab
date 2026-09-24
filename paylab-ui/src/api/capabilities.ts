@@ -17,6 +17,10 @@ export type Capabilities = {
   accounts: boolean;
   payments: boolean;
   ledger: boolean;
+  /** Every Benchmarks read route the console uses is typed in the contract. */
+  benchmarks: boolean;
+  /** The single write the console makes: selecting the Benchmark Baseline. */
+  benchmarkBaselineWrite: boolean;
 };
 
 function hasJsonSchema(container: SchemaContainer | undefined): boolean {
@@ -27,9 +31,24 @@ function hasTypedResponse(operation: Operation | undefined): boolean {
   return Object.values(operation?.responses ?? {}).some(hasJsonSchema);
 }
 
+// Every read the Benchmarks area needs. The Artifact download is a plain link, not a typed read.
+const BENCHMARK_READ_PATHS = [
+  "/v1/benchmarks/status",
+  "/v1/benchmarks/runs",
+  "/v1/benchmarks/runs/{runId}",
+  "/v1/benchmarks/runs/{runId}/progress",
+  "/v1/benchmarks/runs/{runId}/artifacts/{artifactId}",
+  "/v1/benchmarks/runs/{runId}/artifacts/{artifactId}/content",
+  "/v1/benchmarks/comparisons/default",
+  "/v1/benchmarks/comparisons",
+  "/v1/benchmarks/trends",
+  "/v1/benchmarks/baseline",
+] as const;
+
 /**
  * The console is read-only, so a capability is available when every GET it needs
- * describes a JSON response. Write operations are never used and never required.
+ * describes a JSON response. The only write it ever makes is selecting the Benchmark
+ * Baseline; it has its own flag, so Benchmarks stay usable when that write is absent.
  */
 export function deriveCapabilities(document: OpenApiDocument): Capabilities {
   const paths = document.paths ?? {};
@@ -50,5 +69,11 @@ export function deriveCapabilities(document: OpenApiDocument): Capabilities {
       hasTypedResponse(getBalance),
     payments: hasTypedResponse(listPayments) && hasTypedResponse(getPayment),
     ledger: hasTypedResponse(getEntries),
+    benchmarks: BENCHMARK_READ_PATHS.every((path) =>
+      hasTypedResponse(paths[path]?.get),
+    ),
+    benchmarkBaselineWrite: hasTypedResponse(
+      paths["/v1/benchmarks/baseline"]?.put,
+    ),
   };
 }

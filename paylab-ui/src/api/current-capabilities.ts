@@ -3,8 +3,14 @@ import { type Capabilities, deriveCapabilities } from "./capabilities";
 
 export const currentCapabilities: Capabilities = deriveCapabilities(snapshot);
 
+/** The financial areas that show an "activation pending" notice; Benchmarks and health do not. */
+export type FinancialCapability = Exclude<
+  keyof Capabilities,
+  "health" | "benchmarks" | "benchmarkBaselineWrite"
+>;
+
 export function capabilityNotice(
-  capability: keyof Omit<Capabilities, "health">,
+  capability: FinancialCapability,
   label: string,
 ) {
   if (currentCapabilities[capability]) {

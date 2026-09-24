@@ -116,6 +116,182 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/benchmarks/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BenchmarksController_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/benchmarks/runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BenchmarksController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/benchmarks/runs/{runId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BenchmarksController_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/benchmarks/runs/{runId}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BenchmarksController_progress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/benchmarks/runs/{runId}/artifacts/{artifactId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BenchmarksController_artifact"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/benchmarks/runs/{runId}/artifacts/{artifactId}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BenchmarksController_content"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/benchmarks/runs/{runId}/artifacts/{artifactId}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BenchmarksController_download"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/benchmarks/comparisons/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BenchmarksController_defaultComparison"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/benchmarks/comparisons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BenchmarksController_compare"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/benchmarks/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BenchmarksController_trend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/benchmarks/baseline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BenchmarksController_baseline"];
+        put: operations["BenchmarksController_selectBaseline"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -251,6 +427,325 @@ export interface components {
             /** @example 2026-09-30 */
             to: string;
             items: components["schemas"]["DailyReportRowResponse"][];
+        };
+        BenchmarkStatusResponse: {
+            /** @example true */
+            enabled: boolean;
+            /** @description Runs found: published Summaries plus a Run still running. */
+            runCount: number;
+            /** @description Records that could not be read and were ignored. */
+            skippedRecords: number;
+            /** @description The Run being executed right now. */
+            activeRunId: string | null;
+        };
+        RunSourceResponse: {
+            /**
+             * @description "unknown" for imported Runs.
+             * @example abc1234def
+             */
+            commit: string;
+            /** @example main */
+            branch: string;
+        };
+        DatasetResponse: {
+            /** @description Digest of the data the measurements were taken on. */
+            fingerprint: string;
+            description?: string;
+        };
+        ScenarioCountsResponse: {
+            total: number;
+            pending: number;
+            active: number;
+            completed: number;
+            failed: number;
+        };
+        HeadlineMetricResponse: {
+            scenarioId: string;
+            key: string;
+            label: string;
+            unit: string;
+            value: number;
+            /** @enum {string} */
+            summaryRole: "THROUGHPUT" | "LATENCY_P99" | "ERROR_RATE" | "DURATION";
+            /** @description What the value belongs to inside the scenario, for example { strategy: "nokey" }. */
+            dimensions?: {
+                [key: string]: string;
+            };
+        };
+        RunFailureResponse: {
+            scenarioId?: string;
+            summary: string;
+        };
+        RunListItemResponse: {
+            runId: string;
+            /** @enum {string} */
+            kind: "native" | "imported";
+            /** @enum {string} */
+            status: "RUNNING" | "COMPLETED" | "INCOMPLETE";
+            note?: string;
+            source: components["schemas"]["RunSourceResponse"];
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            durationMs?: number;
+            dataset: components["schemas"]["DatasetResponse"];
+            environmentFingerprint: string;
+            scenarioCounts: components["schemas"]["ScenarioCountsResponse"];
+            /** @description Only the measurements a scenario explicitly featured with a summary role. */
+            headlineMetrics: components["schemas"]["HeadlineMetricResponse"][];
+            failure?: components["schemas"]["RunFailureResponse"];
+        };
+        SkippedRecordResponse: {
+            /** @example broken.json */
+            file: string;
+            /** @example not valid JSON */
+            reason: string;
+        };
+        RunPageResponse: {
+            items: components["schemas"]["RunListItemResponse"][];
+            /** @description Pass as `cursor` to get the following page; null on the last page. */
+            nextCursor: string | null;
+            /** @description Records that could not be read; they never break the history. */
+            skipped: components["schemas"]["SkippedRecordResponse"][];
+        };
+        ExecutorResponse: {
+            version: string;
+        };
+        EnvironmentResponse: {
+            fingerprint: string;
+            details: {
+                [key: string]: string;
+            };
+        };
+        ProtocolResponse: {
+            warmupMs?: number;
+            durationMs?: number;
+            warmupRuns?: number;
+            repetitions: number;
+            aggregation: string;
+        };
+        MetricResponse: {
+            key: string;
+            label: string;
+            unit: string;
+            /** @enum {string} */
+            direction: "HIGHER_IS_BETTER" | "LOWER_IS_BETTER" | "NEUTRAL";
+            aggregation?: string;
+            /** @description What the value belongs to inside the scenario, for example { strategy: "nokey" }. */
+            dimensions?: {
+                [key: string]: string;
+            };
+            value: number;
+            /** @enum {string} */
+            summaryRole?: "THROUGHPUT" | "LATENCY_P99" | "ERROR_RATE" | "DURATION";
+        };
+        ScenarioResponse: {
+            id: string;
+            group: string;
+            title: string;
+            /** @description Definition fingerprint: equal only when the workload and protocol are. */
+            fingerprint: string;
+            protocol: components["schemas"]["ProtocolResponse"];
+            config: {
+                [key: string]: unknown;
+            };
+            /** @enum {string} */
+            status: "PENDING" | "ACTIVE" | "COMPLETED" | "FAILED";
+            /** Format: date-time */
+            startedAt?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            durationMs?: number;
+            metrics: components["schemas"]["MetricResponse"][];
+        };
+        ArtifactResponse: {
+            id: string;
+            /** @enum {string} */
+            kind: "LOG" | "QUERY_PLAN" | "RAW_DATA";
+            label: string;
+            scenarioId?: string;
+            /** @description Imported Runs: the evidence file, in place in the repository. */
+            legacyFile?: string;
+            /** @description False when the local file is gone; the Summary stays valid. */
+            available: boolean;
+            sizeBytes?: number;
+        };
+        FailureDetailResponse: {
+            scenarioId?: string;
+            command?: string;
+            exitStatus?: number;
+            summary: string;
+        };
+        ImportedResponse: {
+            /** @example docs/experiments/T14-results.md */
+            source: string;
+        };
+        RunDetailResponse: {
+            /** @example 1 */
+            schemaVersion: number;
+            runId: string;
+            /** @enum {string} */
+            kind: "native" | "imported";
+            /** @enum {string} */
+            status: "RUNNING" | "COMPLETED" | "INCOMPLETE";
+            note?: string;
+            source: components["schemas"]["RunSourceResponse"];
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            durationMs?: number;
+            executor: components["schemas"]["ExecutorResponse"];
+            environment: components["schemas"]["EnvironmentResponse"];
+            dataset: components["schemas"]["DatasetResponse"];
+            scenarios: components["schemas"]["ScenarioResponse"][];
+            artifacts: components["schemas"]["ArtifactResponse"][];
+            failure?: components["schemas"]["FailureDetailResponse"];
+            imported?: components["schemas"]["ImportedResponse"];
+            /** @description A RUNNING record whose owner process is gone (stop polling it). */
+            abandoned: boolean;
+        };
+        ProgressScenarioResponse: {
+            id: string;
+            group: string;
+            title: string;
+            /** @enum {string} */
+            status: "PENDING" | "ACTIVE" | "COMPLETED" | "FAILED";
+            /** Format: date-time */
+            startedAt?: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            durationMs?: number;
+        };
+        RunProgressResponse: {
+            runId: string;
+            /** @enum {string} */
+            status: "RUNNING" | "COMPLETED" | "INCOMPLETE";
+            /** @description The scenario running right now. */
+            current: string | null;
+            completed: number;
+            total: number;
+            scenarios: components["schemas"]["ProgressScenarioResponse"][];
+            failure?: components["schemas"]["RunFailureResponse"];
+            /** @description A RUNNING record whose owner process is gone (stop polling it). */
+            abandoned: boolean;
+        };
+        ArtifactContentResponse: {
+            /** @description Whole lines of the sanitized text; at most 256 KiB per request. */
+            content: string;
+            /** @description Byte position this chunk starts at. */
+            offset: number;
+            /** @description Pass as `offset` to read on; null at the end of the file. */
+            nextOffset: number | null;
+            /** @description Size of the whole file in bytes. */
+            sizeBytes: number;
+        };
+        ScenarioComparisonResponse: {
+            scenarioId: string;
+            /**
+             * @description Only "comparable" scenarios may be compared numerically; "new" exists only in the current Run, "removed" only in the reference.
+             * @enum {string}
+             */
+            state: "comparable" | "new" | "removed" | "changed" | "environment-incompatible" | "dataset-incompatible";
+        };
+        ComparisonDetailResponse: {
+            /** @description False when the machine or PostgreSQL facts differ. */
+            environmentCompatible: boolean;
+            /** @description False when the data the measurements were taken on differs. */
+            datasetCompatible: boolean;
+            scenarios: components["schemas"]["ScenarioComparisonResponse"][];
+        };
+        ComparisonResponse: {
+            current: components["schemas"]["RunListItemResponse"] | null;
+            reference: components["schemas"]["RunListItemResponse"] | null;
+            /** @description Null when there is no reference to compare with. */
+            comparison: components["schemas"]["ComparisonDetailResponse"] | null;
+        };
+        TrendRunRefResponse: {
+            runId: string;
+            /** Format: date-time */
+            startedAt: string;
+        };
+        TrendPointResponse: {
+            runId: string;
+            /** Format: date-time */
+            startedAt: string;
+            /** @enum {string} */
+            kind: "native" | "imported";
+            value: number;
+        };
+        TrendExclusionResponse: {
+            runId: string;
+            /** Format: date-time */
+            startedAt: string;
+            /** @enum {string} */
+            reason: "changed" | "environment-incompatible" | "dataset-incompatible" | "metric-not-recorded";
+        };
+        IncompleteRunMarkerResponse: {
+            runId: string;
+            /** Format: date-time */
+            startedAt: string;
+            failureSummary?: string;
+        };
+        TrendResponse: {
+            scenarioId: string;
+            metricKey: string;
+            dimensions: {
+                [key: string]: string;
+            };
+            label: string | null;
+            unit: string | null;
+            /** @enum {string|null} */
+            direction: "HIGHER_IS_BETTER" | "LOWER_IS_BETTER" | "NEUTRAL" | null;
+            /** @description The newest completed Run with the scenario: the line follows its definition. */
+            reference: components["schemas"]["TrendRunRefResponse"] | null;
+            /** @description Chronological, comparable only. */
+            points: components["schemas"]["TrendPointResponse"][];
+            /** @description Completed Runs left out of the line, each with its reason. */
+            excluded: components["schemas"]["TrendExclusionResponse"][];
+            /** @description Incomplete Runs: timeline markers, never values. */
+            incompleteRuns: components["schemas"]["IncompleteRunMarkerResponse"][];
+            /** @description The Baseline Run, to mark on the line when it is one of the points. */
+            baselineRunId: string | null;
+        };
+        BaselinePointerResponse: {
+            /** @description The Run every Benchmark Comparison against the Baseline uses. */
+            runId: string;
+            /** Format: date-time */
+            selectedAt: string;
+        };
+        GitStateResponse: {
+            /** @description False outside a Git repository. */
+            available: boolean;
+            /** @description The Baseline pointer differs from what is committed. */
+            baselineChangePending: boolean;
+            /** @description Files with uncommitted changes (at most 20). */
+            dirtyFiles: string[];
+            /** @description All files with uncommitted changes. While there are any, the next `benchmark:run` refuses to start. */
+            dirtyCount: number;
+        };
+        BaselineResponse: {
+            baseline: components["schemas"]["BaselinePointerResponse"] | null;
+            /** @description The Baseline Run; null when none is selected or the Run is no longer published. */
+            run: components["schemas"]["RunListItemResponse"] | null;
+            /** @description Why an existing pointer file could not be used. */
+            problem?: string;
+            git: components["schemas"]["GitStateResponse"];
+        };
+        SelectBaselineRequest: {
+            /** @description A completed Run, native or imported. */
+            runId: string;
+        };
+        BaselineSelectionResponse: {
+            baseline: components["schemas"]["BaselinePointerResponse"] | null;
+            /** @description The Baseline Run; null when none is selected or the Run is no longer published. */
+            run: components["schemas"]["RunListItemResponse"] | null;
+            /** @description Why an existing pointer file could not be used. */
+            problem?: string;
+            git: components["schemas"]["GitStateResponse"];
+            /** @description False when the Run already was the Baseline: nothing was written. */
+            changed: boolean;
         };
     };
     responses: never;
@@ -606,6 +1101,414 @@ export interface operations {
                 };
             };
             /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
+    BenchmarksController_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BenchmarkStatusResponse"];
+                };
+            };
+        };
+    };
+    BenchmarksController_list: {
+        parameters: {
+            query?: {
+                status?: "RUNNING" | "COMPLETED" | "INCOMPLETE";
+                /** @description Opaque `nextCursor` from the previous page. */
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunPageResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
+    BenchmarksController_detail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunDetailResponse"];
+                };
+            };
+            /** @description Unknown Run or Artifact, or the capability is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
+    BenchmarksController_progress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunProgressResponse"];
+                };
+            };
+            /** @description Unknown Run or Artifact, or the capability is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
+    BenchmarksController_artifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runId: string;
+                artifactId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtifactResponse"];
+                };
+            };
+            /** @description Unknown Run or Artifact, or the capability is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
+    BenchmarksController_content: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                runId: string;
+                artifactId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtifactContentResponse"];
+                };
+            };
+            /** @description Unknown Run or Artifact, or the capability is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
+    BenchmarksController_download: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runId: string;
+                artifactId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Unknown Run or Artifact, or the capability is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
+    BenchmarksController_defaultComparison: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComparisonResponse"];
+                };
+            };
+        };
+    };
+    BenchmarksController_compare: {
+        parameters: {
+            query: {
+                /** @description Run id to compare it with. */
+                reference: unknown;
+                /** @description Run id of the Run being examined. */
+                current: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ComparisonResponse"];
+                };
+            };
+            /** @description Unknown Run or Artifact, or the capability is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
+    BenchmarksController_trend: {
+        parameters: {
+            query: {
+                /** @description Repeatable `key:value`, for example `strategy:nokey`. */
+                dimension?: string[];
+                /** @description Metric key, for example `tps`. */
+                metric: unknown;
+                scenarioId: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrendResponse"];
+                };
+            };
+            /** @description Invalid input. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationErrorResponse"];
+                };
+            };
+        };
+    };
+    BenchmarksController_baseline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaselineResponse"];
+                };
+            };
+        };
+    };
+    BenchmarksController_selectBaseline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SelectBaselineRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BaselineSelectionResponse"];
+                };
+            };
+            /** @description Unknown Run or Artifact, or the capability is off. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid body, or the Run is not eligible (code BENCHMARK_BASELINE_INELIGIBLE): only a completed Run can be the Baseline. */
             422: {
                 headers: {
                     [name: string]: unknown;

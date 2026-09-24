@@ -45,6 +45,22 @@ export function leakyScenario(id: string, secret: string): ScenarioSpec {
 	return { ...spec(id, script), args: ['-e', script, secret] }
 }
 
+/** Succeeds only if `markerPath` exists when it starts, proving something ran before it. */
+export function requiresFileScenario(id: string, markerPath: string): ScenarioSpec {
+	return spec(
+		id,
+		`if (!require('fs').existsSync(${JSON.stringify(markerPath)})) { console.error('marker missing'); process.exit(4) } console.log('BENCH_RESULT ' + ${JSON.stringify(metric(1))})`,
+	)
+}
+
+/** Writes extra evidence next to its log through BENCH_ARTIFACT_DIR, like the T13 plans. */
+export function evidenceScenario(id: string, files: Record<string, string>): ScenarioSpec {
+	return spec(
+		id,
+		`const fs = require('fs'), path = require('path'); const dir = process.env.BENCH_ARTIFACT_DIR; for (const [name, text] of Object.entries(${JSON.stringify(files)})) fs.writeFileSync(path.join(dir, name), text); console.log('BENCH_RESULT ' + ${JSON.stringify(metric(1))})`,
+	)
+}
+
 export function silentScenario(id: string): ScenarioSpec {
 	return spec(id, `console.log('finished without a result')`)
 }

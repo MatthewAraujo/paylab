@@ -1,6 +1,8 @@
 import { spawn } from 'node:child_process'
-import { relative, sep } from 'node:path'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { dirname, join, relative, sep } from 'node:path'
 import { createInterface } from 'node:readline'
+import { artifactIdForFile, artifactKindOfFile } from '@/domain/benchmark/artifact'
 import { scenarioFingerprint } from '@/domain/benchmark/canonical'
 import {
 	type BenchmarkMetric,
@@ -15,7 +17,15 @@ import { assertCleanWorktree } from './git'
 import { acquireLock } from './lock'
 import { recoverAbandonedRun } from './recovery'
 import { createSanitizer } from './sanitize'
-import { appendArtifactLine, artifactPath, publishSummary, removeState, writeState } from './store'
+import {
+	appendArtifactLine,
+	artifactPath,
+	incomingDir,
+	publishSummary,
+	removeState,
+	runDir,
+	writeState,
+} from './store'
 
 const RESULT_PREFIX = 'BENCH_RESULT '
 
@@ -31,11 +41,15 @@ export interface ScenarioSpec {
 	args: string[]
 	cwd?: string
 	env?: Record<string, string>
+	/** Runs just before this scenario, e.g. a deterministic reset before a mutating group. */
+	prepare?: () => Promise<void>
 }
 
 export interface DatasetInfo {
 	fingerprint: string
 	description?: string
+	/** Facts about where the data lives (PostgreSQL version and settings); merged into the environment. */
+	environment?: Record<string, string>
 }
 
 /** Everything a full Run needs from the registered benchmarks; there is no partial suite. */
@@ -70,6 +84,40 @@ export interface RunResult {
 	/** Generated versioned files, relative to the repository, waiting for manual review. */
 	files: string[]
 	suggestedCommitMessage: string
+}
+
+type ArtifactRef = BenchmarkSummary['artifacts'][number]
+
+/**
+ * A scenario may leave extra evidence (query plans, raw samples) in its BENCH_ARTIFACT_DIR.
+ * Each recognized file is sanitized like a log, stored as an Artifact of its kind, and the
+ * temporary directory is removed. Unrecognized files are dropped.
+ */
+function collectEvidence(input: {
+	artifactRoot: string
+	runId: string
+	scenarioId: string
+	sanitize: (line: string) => string
+}): ArtifactRef[] {
+	const { artifactRoot, runId, scenarioId, sanitize } = input
+	const dir = incomingDir(artifactRoot, runId, scenarioId)
+	const refs: ArtifactRef[] = []
+	if (existsSync(dir)) {
+		for (const file of readdirSync(dir).sort()) {
+			const kind = artifactKindOfFile(file)
+			const id = artifactIdForFile(scenarioId, file)
+			if (!kind || !id) {
+				continue
+			}
+			const clean = readFileSync(join(dir, file), 'utf8').split('\n').map(sanitize).join('\n')
+			const target = artifactPath(artifactRoot, runId, { id, kind })
+			mkdirSync(dirname(target), { recursive: true })
+			writeFileSync(target, clean)
+			refs.push({ id, kind, label: `${scenarioId}: ${file}`, scenarioId })
+		}
+	}
+	rmSync(join(runDir(artifactRoot, runId), 'incoming'), { recursive: true, force: true })
+	return refs
 }
 
 const stamp = (date: Date) =>
@@ -203,7 +251,11 @@ export async function runBenchmark(options: RunOptions): Promise<RunResult> {
 
 		let failure: BenchmarkSummary['failure']
 		try {
-			state.dataset = await suite.prepare()
+			const prepared = await suite.prepare()
+			state.dataset = { fingerprint: prepared.fingerprint, description: prepared.description }
+			if (prepared.environment) {
+				state.environment = captureEnvironment({ ...options.environment, ...prepared.environment })
+			}
 			persist('Dataset prepared')
 		} catch (error) {
 			failure = { summary: sanitize(`Preparation failed: ${(error as Error).message}`) }
@@ -220,19 +272,39 @@ export async function runBenchmark(options: RunOptions): Promise<RunResult> {
 			scenario.startedAt = scenarioStart.toISOString()
 			persist(`Running ${scenarioId}`)
 
+			let prepareError: Error | undefined
+			try {
+				await spec.prepare?.()
+			} catch (error) {
+				prepareError = error as Error
+			}
+
 			const artifactId = `${scenarioId}-log`
-			const result = await runProcess(
-				spec,
-				artifactPath(artifactRoot, runId, artifactId),
-				sanitize,
-				options.signal,
-			)
+			let result: ProcessResult | undefined
+			if (!prepareError) {
+				const evidence = incomingDir(artifactRoot, runId, scenarioId)
+				mkdirSync(evidence, { recursive: true })
+				result = await runProcess(
+					{ ...spec, env: { ...spec.env, BENCH_ARTIFACT_DIR: evidence } },
+					artifactPath(artifactRoot, runId, { id: artifactId, kind: 'LOG' }),
+					sanitize,
+					options.signal,
+				)
+			}
 			const scenarioEnd = now()
 			scenario.finishedAt = scenarioEnd.toISOString()
 			scenario.durationMs = scenarioEnd.getTime() - scenarioStart.getTime()
-			state.artifacts.push({ id: artifactId, kind: 'LOG', label: `${scenarioId} log`, scenarioId })
+			if (result) {
+				state.artifacts.push({
+					id: artifactId,
+					kind: 'LOG',
+					label: `${scenarioId} log`,
+					scenarioId,
+				})
+				state.artifacts.push(...collectEvidence({ artifactRoot, runId, scenarioId, sanitize }))
+			}
 
-			if (result.exitCode === 0 && result.metrics) {
+			if (result && result.exitCode === 0 && result.metrics) {
 				scenario.status = 'COMPLETED'
 				scenario.metrics = result.metrics
 				persist(`Completed ${scenarioId}`)
@@ -244,12 +316,14 @@ export async function runBenchmark(options: RunOptions): Promise<RunResult> {
 			failure = {
 				scenarioId,
 				command: sanitize([spec.command, ...spec.args].join(' ')),
-				exitStatus: interrupted ? undefined : (result.exitCode ?? undefined),
-				summary: interrupted
-					? `Interrupted while running ${scenarioId}`
-					: result.exitCode === 0
-						? `Scenario ${scenarioId} finished with no result`
-						: `Scenario ${scenarioId} exited with status ${result.exitCode}: ${result.lastLine}`,
+				exitStatus: interrupted || !result ? undefined : (result.exitCode ?? undefined),
+				summary: prepareError
+					? sanitize(`Scenario ${scenarioId} could not start: ${prepareError.message}`)
+					: interrupted
+						? `Interrupted while running ${scenarioId}`
+						: result?.exitCode === 0
+							? `Scenario ${scenarioId} finished with no result`
+							: `Scenario ${scenarioId} exited with status ${result?.exitCode}: ${result?.lastLine}`,
 			}
 			persist(`${interrupted ? 'Interrupted' : 'Failed'} ${scenarioId}`)
 		}

@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
+import { checkPrerequisites, loadBenchDatabase } from '../bench/lib/preflight'
 import {
 	CliUsageError,
 	EXECUTOR_VERSION,
@@ -11,14 +12,15 @@ import {
 	parseCliArgs,
 } from './benchmark/cli'
 import { runBenchmark } from './benchmark/executor'
-import { suite } from './benchmark/suite'
+import { buildSuite } from './benchmark/suite'
 
 async function main() {
 	const { note } = parseCliArgs(process.argv.slice(2))
 
-	if (suite.scenarios.length === 0) {
-		throw new Error('No benchmark scenarios are registered yet, so there is nothing to run')
-	}
+	// Nothing is opened, changed or published until the machine is known to be set up.
+	const database = loadBenchDatabase(process.env)
+	await checkPrerequisites(database)
+	const suite = buildSuite(database)
 
 	const repoDir = execFileSync('git', ['rev-parse', '--show-toplevel'], {
 		encoding: 'utf8',

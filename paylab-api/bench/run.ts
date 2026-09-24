@@ -3,14 +3,17 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { cpus, totalmem } from 'node:os'
 import { Pool } from 'pg'
+import { assertBenchDatabaseUrl } from './lib/database'
+import { snapshotTemplate } from './lib/reset'
 import { FULL_SIZE, type SeedOptions, seedBenchmark } from './lib/seed'
-import { collectDatasetStats } from './lib/stats'
+import { validateDataset } from './lib/validate'
 
 const USAGE = `Usage: pnpm bench:<command> [-- options]
 
 Commands
   bench:migrate   apply the Prisma migrations to the benchmark database
   bench:seed      replace the benchmark database contents with the generated dataset
+  bench:template  snapshot the validated database as the pristine copy benchmark:run restores from
   bench:validate  print the dataset statistics and run the global invariant check
   bench:targets   print a hot and a cold Wallet and Merchant to use as query parameters
   bench:explain   EXPLAIN (ANALYZE, BUFFERS) a parameterized SQL file: <file.sql> [param ...]
@@ -18,7 +21,8 @@ Commands
 Seed options: --small (10k Payments, 200 Wallets, 10 Merchants), --seed <text>,
   --payments <n>, --wallets <n>, --merchants <n>, --batch <n>
 
-Environment: BENCH_DATABASE_URL (required; the database name must contain "bench").`
+Environment: BENCH_DATABASE_URL (required; the database name must contain "bench").
+  BENCH_TEMPLATE_DATABASE (optional; default <database>_template, or an existing template).`
 
 function benchUrl(): string {
 	const url = process.env.BENCH_DATABASE_URL
@@ -78,34 +82,36 @@ async function seed(pool: Pool, args: string[]) {
 	const { totalMs, steps } = await seedBenchmark(pool, options)
 	console.log(`timings (ms): ${JSON.stringify(steps)}`)
 	console.log(`total: ${(totalMs / 1000).toFixed(1)} s`)
-	await validate(pool)
+	await validate()
 }
 
-async function validate(pool: Pool) {
-	const stats = await collectDatasetStats(pool)
+async function validate() {
+	const { stats, problems, invariantViolations } = await validateDataset(benchUrl())
 	console.log(JSON.stringify(stats, null, 2))
 
-	// The same helper every database test runs after each test, pointed at this database.
-	process.env.DATABASE_URL = benchUrl()
-	const { getInvariantViolations } = await import('../test/support/invariants')
-	const { prisma } = await import('../test/support/database')
-	const violations = await getInvariantViolations()
-	await prisma.$disconnect()
-
-	const problems = [...violations]
-	if (stats.walletsEverNegative > 0)
-		problems.push(`${stats.walletsEverNegative} Wallets went negative`)
-	if (stats.entries !== 2 * stats.paymentsByStatus.SUCCEEDED)
-		problems.push('entries are not 2 per settled Payment')
-	if (stats.leftoverHelperObjects.length > 0)
-		problems.push(`leftover: ${stats.leftoverHelperObjects}`)
-	if (stats.disabledTriggers.length > 0)
-		problems.push(`disabled triggers: ${stats.disabledTriggers}`)
-	if (problems.length > 0) {
-		throw new Error(`Dataset validation failed:\n- ${problems.join('\n- ')}`)
+	const all = [...invariantViolations, ...problems]
+	if (all.length > 0) {
+		throw new Error(`Dataset validation failed:\n- ${all.join('\n- ')}`)
 	}
 	console.log(
 		'validation: OK (invariants clean, 2 entries per settled Payment, no Wallet ever negative)',
+	)
+}
+
+// Freezes the validated benchmark database as the template every `pnpm benchmark:run` restores from.
+async function template() {
+	const database = assertBenchDatabaseUrl(process.env.BENCH_DATABASE_URL, {
+		templateName: process.env.BENCH_TEMPLATE_DATABASE,
+		forbiddenUrls: [process.env.DATABASE_URL],
+	})
+	const { problems, invariantViolations } = await validateDataset(database.url)
+	const all = [...invariantViolations, ...problems]
+	if (all.length > 0) {
+		throw new Error(`Refusing to snapshot an invalid dataset:\n- ${all.join('\n- ')}`)
+	}
+	const { digest } = await snapshotTemplate(database)
+	console.log(
+		`template "${database.templateName}" created from "${database.name}" (digest ${digest})`,
 	)
 }
 
@@ -173,10 +179,14 @@ async function main() {
 		migrate()
 		return
 	}
+	if (command === 'template') {
+		await template()
+		return
+	}
 	const pool = new Pool({ connectionString: benchUrl(), max: 2 })
 	try {
 		if (command === 'seed') await seed(pool, args)
-		else if (command === 'validate') await validate(pool)
+		else if (command === 'validate') await validate()
 		else if (command === 'targets') await targets(pool)
 		else if (command === 'explain') await explain(pool, args)
 		else throw new Error(`Unknown command ${command}\n${USAGE}`)

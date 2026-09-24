@@ -35,6 +35,7 @@
     "bench:migrate": "ts-node -r tsconfig-paths/register bench/run.ts migrate",
     "bench:seed": "ts-node -r tsconfig-paths/register bench/run.ts seed",
     "bench:validate": "ts-node -r tsconfig-paths/register bench/run.ts validate",
+    "bench:template": "ts-node -r tsconfig-paths/register bench/run.ts template",
     "bench:targets": "ts-node -r tsconfig-paths/register bench/run.ts targets",
     "bench:explain": "ts-node -r tsconfig-paths/register bench/run.ts explain",
     "benchmark:run": "ts-node -r tsconfig-paths/register scripts/benchmark-run.ts",

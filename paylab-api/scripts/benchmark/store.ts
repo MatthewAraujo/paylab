@@ -10,6 +10,7 @@ import {
 	writeFileSync,
 } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { type ArtifactKind, artifactFileName } from '@/domain/benchmark/artifact'
 import { serializeSummary } from '@/domain/benchmark/serialize'
 import { type BenchmarkSummary, parseSummary } from '@/domain/benchmark/summary'
 
@@ -30,8 +31,16 @@ export function atomicWrite(path: string, text: string) {
 export const runDir = (artifactRoot: string, runId: string) => join(artifactRoot, 'runs', runId)
 export const statePath = (artifactRoot: string, runId: string) =>
 	join(runDir(artifactRoot, runId), 'state.json')
-export const artifactPath = (artifactRoot: string, runId: string, artifactId: string) =>
-	join(runDir(artifactRoot, runId), 'artifacts', `${artifactId}.log`)
+export const artifactsDir = (artifactRoot: string, runId: string) =>
+	join(runDir(artifactRoot, runId), 'artifacts')
+export const artifactPath = (
+	artifactRoot: string,
+	runId: string,
+	ref: { id: string; kind: ArtifactKind },
+) => join(artifactsDir(artifactRoot, runId), artifactFileName(ref))
+/** Where a running scenario drops extra evidence; the executor sanitizes and registers it. */
+export const incomingDir = (artifactRoot: string, runId: string, scenarioId: string) =>
+	join(runDir(artifactRoot, runId), 'incoming', scenarioId)
 export const summaryPath = (summaryDir: string, runId: string) => join(summaryDir, `${runId}.json`)
 
 /** The mutable RUNNING record; it lives in the local Artifact root, never in Git. */

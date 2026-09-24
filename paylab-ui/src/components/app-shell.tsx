@@ -3,6 +3,7 @@
 import {
   Activity,
   BookOpen,
+  Gauge,
   LayoutDashboard,
   Menu,
   PanelsTopLeft,
@@ -25,6 +26,7 @@ const navigation = [
   { href: "/accounts", label: "Accounts", icon: WalletCards },
   { href: "/payments", label: "Payments", icon: PanelsTopLeft },
   { href: "/ledger", label: "Ledger", icon: BookOpen },
+  { href: "/benchmarks", label: "Benchmarks", icon: Gauge },
   { href: "/system-health", label: "System Health", icon: Activity },
 ] as const;
 

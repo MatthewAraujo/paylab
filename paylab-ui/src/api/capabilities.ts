@@ -4,12 +4,11 @@ type SchemaContainer = {
 };
 
 type Operation = {
-  requestBody?: SchemaContainer;
   responses?: Record<string | number, SchemaContainer>;
 };
 
 type OpenApiDocument = {
-  paths?: Record<string, Partial<Record<"get" | "post", Operation>>>;
+  paths?: Record<string, Partial<Record<string, Operation>>>;
 };
 
 export type Capabilities = {
@@ -28,17 +27,16 @@ function hasTypedResponse(operation: Operation | undefined): boolean {
   return Object.values(operation?.responses ?? {}).some(hasJsonSchema);
 }
 
-function hasTypedRequest(operation: Operation | undefined): boolean {
-  return hasJsonSchema(operation?.requestBody);
-}
-
+/**
+ * The console is read-only, so a capability is available when every GET it needs
+ * describes a JSON response. Write operations are never used and never required.
+ */
 export function deriveCapabilities(document: OpenApiDocument): Capabilities {
   const paths = document.paths ?? {};
-  const createAccount = paths["/v1/accounts"]?.post;
+  const listAccounts = paths["/v1/accounts"]?.get;
   const getAccount = paths["/v1/accounts/{id}"]?.get;
   const getBalance = paths["/v1/accounts/{id}/balance"]?.get;
   const getEntries = paths["/v1/accounts/{id}/entries"]?.get;
-  const createPayment = paths["/v1/payments"]?.post;
   const listPayments = paths["/v1/payments"]?.get;
   const getPayment = paths["/v1/payments/{id}"]?.get;
   const dailyReport = paths["/v1/reports/daily"]?.get;
@@ -47,15 +45,10 @@ export function deriveCapabilities(document: OpenApiDocument): Capabilities {
     health: Boolean(paths["/health"]?.get),
     dashboard: hasTypedResponse(dailyReport),
     accounts:
-      hasTypedRequest(createAccount) &&
-      hasTypedResponse(createAccount) &&
+      hasTypedResponse(listAccounts) &&
       hasTypedResponse(getAccount) &&
       hasTypedResponse(getBalance),
-    payments:
-      hasTypedRequest(createPayment) &&
-      hasTypedResponse(createPayment) &&
-      hasTypedResponse(listPayments) &&
-      hasTypedResponse(getPayment),
+    payments: hasTypedResponse(listPayments) && hasTypedResponse(getPayment),
     ledger: hasTypedResponse(getEntries),
   };
 }

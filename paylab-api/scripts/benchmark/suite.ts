@@ -10,6 +10,7 @@ import {
 	T14_CELLS,
 	T14_PROTOCOL,
 	T14_WORKLOAD,
+	cellTitle,
 } from '../../bench/scenarios/t14-matrix'
 import type { BenchmarkSuite, ScenarioSpec } from './executor'
 
@@ -81,7 +82,7 @@ export function t14Scenarios(database: BenchDatabase, options: T14Options = {}):
 			definition: {
 				id: cell.id,
 				group: 't14',
-				title: `Concurrency strategies: shape ${cell.shape}, ${cell.clients} clients, synchronous_commit=${cell.sync}`,
+				title: cellTitle(cell),
 				protocol: { ...protocol, aggregation: 'median' },
 				config: {
 					shape: cell.shape,

@@ -33,8 +33,8 @@ Deliver the API side of local benchmark observability: a terminal-only command t
 | [B2](tasks/B2.md) | Build the safe Run lifecycle and local publication shell | B1 | done | [context](task-runs/B2-CONTEXT.md) | [summary](task-runs/B2-summary.md) |
 | [B3](tasks/B3.md) | Register dataset, correctness gates, and T13 read scenarios | B1, B2 | done | [context](task-runs/B3-CONTEXT.md) | [summary](task-runs/B3-summary.md) |
 | [B4](tasks/B4.md) | Register the T14 correctness and load matrix | B1, B2, B3 | done | [context](task-runs/B4-CONTEXT.md) | [summary](task-runs/B4-summary.md) |
-| [B5](tasks/B5.md) | Import existing T13 and T14 evidence | B1 | ready | — | — |
-| [B6](tasks/B6.md) | Expose a development-only benchmark read API | B1, B2, B5 | planned | — | — |
+| [B5](tasks/B5.md) | Import existing T13 and T14 evidence | B1 | done | [context](task-runs/B5-CONTEXT.md) | [summary](task-runs/B5-summary.md) |
+| [B6](tasks/B6.md) | Expose a development-only benchmark read API | B1, B2, B5 | ready | — | — |
 | [B7](tasks/B7.md) | Add versioned Baseline selection | B1, B2, B6 | planned | — | — |
 | [B8](tasks/B8.md) | Validate the integrated workflow and document operation | B1–B7 | planned | — | — |
 

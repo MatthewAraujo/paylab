@@ -142,4 +142,13 @@ describe('selectDefaultComparison', () => {
 		expect(selectDefaultComparison([])).toBeNull()
 		expect(selectDefaultComparison([done('r1', 1, { status: 'INCOMPLETE', failure })])).toBeNull()
 	})
+
+	it('orders Runs that share a start time deterministically, by run id', () => {
+		const same = (id: string) => done(id, 1, { startedAt: at(1) })
+
+		const selection = selectDefaultComparison([same('r-a'), same('r-c'), same('r-b')])
+
+		expect(selection?.current.runId).toBe('r-c')
+		expect(selection?.reference?.runId).toBe('r-b')
+	})
 })

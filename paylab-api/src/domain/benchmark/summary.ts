@@ -44,11 +44,19 @@ export const scenarioSchema = z.object({
 	metrics: z.array(metricSchema),
 })
 
+// Imported Runs reference evidence that already lives in the repository instead of copying it.
+const LEGACY_FILE = /^docs\/experiments\/[A-Za-z0-9._-]+(\/[A-Za-z0-9._-]+)*$/
+
 export const artifactRefSchema = z.object({
 	id: safeId,
 	kind: z.enum(['LOG', 'QUERY_PLAN', 'RAW_DATA']),
 	label: z.string().min(1),
 	scenarioId: z.string().min(1).optional(),
+	legacyFile: z
+		.string()
+		.regex(LEGACY_FILE)
+		.refine((path) => !path.split('/').some((segment) => segment === '.' || segment === '..'))
+		.optional(),
 })
 
 export const failureSchema = z.object({
@@ -89,8 +97,12 @@ export const summarySchema = summaryShape.superRefine((summary, ctx) => {
 	if (summary.status === 'RUNNING' && summary.finishedAt) {
 		problem('a RUNNING Run cannot have finishedAt')
 	}
-	if (summary.status !== 'RUNNING' && !summary.finishedAt) {
+	// Legacy sources never stored when a measurement ended; an imported Run leaves it absent.
+	if (summary.status !== 'RUNNING' && !summary.finishedAt && summary.kind !== 'imported') {
 		problem('a terminal Run requires finishedAt')
+	}
+	if (summary.kind !== 'imported' && summary.artifacts.some((artifact) => artifact.legacyFile)) {
+		problem('only an imported Run can reference legacy evidence files')
 	}
 	if (
 		summary.status === 'COMPLETED' &&

@@ -59,6 +59,9 @@ export const T14_CELLS: CellDef[] = (['off', 'on'] as const).flatMap((sync, half
 	})),
 )
 
+export const cellTitle = (cell: Pick<CellDef, 'shape' | 'clients' | 'sync'>) =>
+	`Concurrency strategies: shape ${cell.shape}, ${cell.clients} clients, synchronous_commit=${cell.sync}`
+
 /** Latin-square rotation: the first strategy of a block differs in every repetition. */
 export function strategyOrder(cellIndex: number, rep: number): Strategy[] {
 	return STRATEGIES.map((_, i) => STRATEGIES[(i + cellIndex + rep) % STRATEGIES.length])

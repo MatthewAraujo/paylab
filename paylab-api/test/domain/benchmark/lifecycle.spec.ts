@@ -45,6 +45,46 @@ describe('Summary lifecycle rules', () => {
 		expect(parseSummary(buildSummary({ status: 'INCOMPLETE' })).isLeft()).toBe(true)
 	})
 
+	it('lets an imported terminal Summary omit the finish time that legacy sources never stored', () => {
+		const imported = {
+			kind: 'imported',
+			imported: { source: 'docs/experiments/raw/T14-load.jsonl' },
+			finishedAt: undefined,
+			durationMs: undefined,
+		}
+
+		expect(parseSummary(buildSummary(imported)).isRight()).toBe(true)
+	})
+
+	describe('legacy Artifact references', () => {
+		const imported = { kind: 'imported', imported: { source: 'docs/experiments/raw/x.txt' } }
+		const withFile = (legacyFile: string, extra: Record<string, unknown> = imported) =>
+			buildSummary({
+				...extra,
+				artifacts: [{ id: 'raw', kind: 'RAW_DATA', label: 'raw', legacyFile }],
+			})
+
+		it('points at an existing evidence file under docs/experiments of an imported Run', () => {
+			expect(parseSummary(withFile('docs/experiments/raw/T14-load.jsonl')).isRight()).toBe(true)
+		})
+
+		it('rejects a reference on a native Run', () => {
+			expect(parseSummary(withFile('docs/experiments/raw/T14-load.jsonl', {})).isLeft()).toBe(true)
+		})
+
+		it('rejects paths that leave the evidence directory', () => {
+			for (const path of [
+				'../secrets.txt',
+				'/etc/passwd',
+				'docs/experiments/../../.env',
+				'docs/other/file.txt',
+				'docs/experiments/raw/../../../x',
+			]) {
+				expect(parseSummary(withFile(path)).isLeft(), path).toBe(true)
+			}
+		})
+	})
+
 	it('requires imported provenance on imported Summaries only', () => {
 		const imported = { kind: 'imported', imported: { source: 'docs/experiments/T14-results.md' } }
 

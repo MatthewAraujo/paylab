@@ -60,12 +60,14 @@ export type DefaultComparison = {
 	reference: BenchmarkSummary | null
 }
 
+const compareText = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
+
 // The newest completed Run against the newest earlier completed Run that shares at least one
 // comparable scenario with it. Incomplete and running Runs never take part.
 export function selectDefaultComparison(runs: BenchmarkSummary[]): DefaultComparison | null {
 	const completed = runs
 		.filter((run) => run.status === 'COMPLETED')
-		.sort((a, b) => (a.startedAt < b.startedAt ? 1 : a.startedAt > b.startedAt ? -1 : 0))
+		.sort((a, b) => compareText(b.startedAt, a.startedAt) || compareText(b.runId, a.runId))
 
 	const [current, ...earlier] = completed
 	if (!current) {

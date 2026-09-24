@@ -38,14 +38,14 @@ System Health is functional immediately through `GET /health`. Financial areas r
 20. As a PayLab operator, I want Dashboard metrics hidden behind honest unavailable states before the report contract exists, so that placeholder numbers are never confused with real data.
 21. As a PayLab operator, I want to browse Wallets when the Accounts endpoints exist, so that I can inspect PayLab Accounts.
 22. As a PayLab operator, I want to open a Wallet and see its identity, currency, and derived Balance, so that I can understand its current financial position.
-23. As a PayLab operator, I want to create a BRL Wallet when the API supports it, so that Account creation can be performed from the console.
+23. As a PayLab operator, I want a paginated list of the Merchant's Wallets, so that I can find an Account without knowing its id in advance.
 24. As a PayLab operator, I want Account data scoped by the authenticated Merchant, so that the UI never implies cross-Merchant access.
 25. As a PayLab operator, I want to browse Payments newest first when the list endpoint exists, so that recent activity is easiest to inspect.
 26. As a PayLab operator, I want to filter Payments by Account, status, and period when supported by the API, so that I can investigate a specific flow.
 27. As a PayLab operator, I want cursor-based pagination to follow the API contract, so that deep history remains stable and performant.
-28. As a PayLab operator, I want to create a Payment with source Account, destination Account, Amount, currency, and a generated Idempotency Key, so that repeated submissions remain safe.
-29. As a PayLab operator, I want submission disabled while the Payment request is in flight, so that accidental duplicate interaction is minimized without replacing backend idempotency.
-30. As a PayLab operator, I want a successful creation to show the backend's final Payment state, so that synchronous September Settlement is represented accurately.
+28. As a PayLab operator, I want the console to be read-only, so that no interaction can create or change financial state.
+29. As a PayLab operator, I want Payments to show the backend's final state, so that synchronous September Settlement is represented accurately.
+30. As a PayLab operator, I want each Payment's failure reason and linked Ledger Transaction id shown when present, so that outcome and ledger fact are connected.
 31. As a PayLab operator, I want insufficient funds shown as a `FAILED` Payment with reason `INSUFFICIENT_FUNDS`, so that a business outcome is not presented as a transport error.
 32. As a PayLab operator, I want validation and API errors rendered from the backend error model, so that corrective action is clear.
 33. As a PayLab operator, I want to open a Payment and inspect its source, destination, Amount, status, failure reason, timestamps, and linked Ledger Transaction when provided, so that intent and outcome are connected.
@@ -60,7 +60,7 @@ System Health is functional immediately through `GET /health`. Financial areas r
 42. As a developer, I want lint, type-check, unit/component tests, build, and API generation commands documented, so that contributors can validate changes consistently.
 43. As a developer, I want the project handbook to explain how frontend capabilities map to backend tasks T8, T9, and T11, so that integration work follows backend readiness.
 44. As a developer, I want no API keys or other credentials committed or bundled by default, so that the UI foundation does not normalize unsafe secret handling.
-45. As a developer, I want authentication-dependent financial requests blocked until a supported credential flow is configured, so that the browser does not silently embed a Merchant API key.
+45. As a developer, I want financial reads authenticated with a Merchant API key held only in a server-side environment variable, so that the browser never receives a credential and the console needs no login.
 
 ## Implementation Decisions
 
@@ -77,7 +77,9 @@ System Health is functional immediately through `GET /health`. Financial areas r
 - Money remains integer centavos at boundaries and is formatted for display with `Intl.NumberFormat`; calculations are not performed with formatted decimal strings.
 - Server state is managed by TanStack Query. Local component state is limited to presentation and forms.
 - Runtime configuration contains the API base URL only. No Merchant API key is committed, persisted, or placed in a default frontend environment file.
-- Financial operations remain capability-unavailable until the backend provides both the endpoint and a browser-appropriate authentication configuration. September API-key provisioning remains a backend concern.
+- The console is read-only and has no login. Financial reads run on the Next server (Server Components or route handlers) and authenticate as one Merchant with `Authorization: Bearer $PAYLAB_API_KEY`. The variable has no `NEXT_PUBLIC_` prefix, so it is never bundled; a missing key is an explicit error, not a fallback. The console therefore shows the data of that one Merchant. September API-key provisioning remains a backend concern.
+- Payment and Account creation are out of scope, so the Idempotency Key, request bodies and the related CORS headers are irrelevant to the UI. Server-side reads also do not depend on CORS.
+- Ledger inspection is Ledger Entry history per Wallet. No Ledger Transaction lookup is planned.
 - The UI uses English copy and canonical domain names from `CONTEXT.md`.
 - Reconciliation, Webhooks/processing, queue depth, DLQ, retries, and provider timelines remain future navigation candidates, not disabled menu clutter in this MVP.
 
@@ -97,7 +99,8 @@ System Health is functional immediately through `GET /health`. Financial areas r
 - Runtime mock data, mock mode, demo seed data, localStorage persistence, or automatic fallback from API errors.
 - Implementing or changing backend tasks T6–T11 from the frontend project.
 - Handwritten speculative DTOs for Accounts, Payments, Ledger history, or reports before OpenAPI exposes them.
-- User login, Merchant self-service, role-based access control, or embedding a Merchant API key in the browser.
+- User login, Merchant self-service, role-based access control, or exposing a Merchant API key to the browser.
+- Creating Wallets or Payments, or any other write operation, from the console.
 - FakeBank integration, provider transactions, webhooks, reconciliation, queues, workers, Outbox, retries, DLQ, cache, and asynchronous status streaming.
 - Refunds, reversals, cancellations, multi-currency, or future Payment states.
 - Charts whose metrics are not backed by a real report endpoint.
@@ -107,6 +110,6 @@ System Health is functional immediately through `GET /health`. Financial areas r
 ## Further Notes
 
 - The inspected backend integration branch contains T1–T9 and the T11 read routes. These provide real Accounts, Payments, Ledger Entry history, and daily-report paths.
-- The backend OpenAPI document currently omits financial request bodies, query parameters, response content, and component schemas. Financial UI remains unavailable until those contracts are described; routes alone are not treated as safe generated DTOs.
-- The current backend CORS configuration does not yet allow `Idempotency-Key`, and T7 has not selected the Merchant API-key header. Those contracts must be completed before browser-based Payment creation can be enabled.
+- Backend T16 added `GET /v1/accounts` (Wallet list) and T17 described every read route in OpenAPI (responses, query parameters, `{ code, message }` errors, Bearer auth). The snapshot was refreshed and `capabilities` now depend on typed GET responses only.
+- The Merchant API key header is `Authorization: Bearer <key>`.
 - The frontend is intentionally evolutionary: it should reveal new backend sophistication when that sophistication becomes real, without implementing future architecture ahead of the roadmap.

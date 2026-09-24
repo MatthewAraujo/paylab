@@ -10,6 +10,12 @@ _Avoid_: Customer portal, banking app, admin CRUD
 Whether a backend capability is present in the generated OpenAPI contract and can be used by the Operational Console. An unavailable capability is shown honestly; it is never replaced by invented production data.
 _Avoid_: Mock mode, fake fallback
 
+## Access model
+
+**Operational Console access**:
+The console has no login and is read-only. It reads one Merchant's data through a Merchant API key held in a server-only environment variable, so the browser never sees a credential. Creating Wallets or Payments is done through the API, not the console.
+_Avoid_: User login, customer session, admin CRUD
+
 ## Accounts
 
 **Merchant**:

@@ -48,17 +48,6 @@ export function formatReport(result: RunResult): string {
 
 export const exitCodeFor = (result: RunResult) => (result.summary.status === 'COMPLETED' ? 0 : 1)
 
-const SENSITIVE_NAME = /(password|passwd|secret|token|api[_-]?key|credential|private[_-]?key)/i
-
-/** Values that must be redacted from every stored log, whatever form they appear in. */
-export function collectSecrets(env: Record<string, string | undefined>): string[] {
-	return Object.entries(env)
-		.filter(
-			([name, value]) => value && (name.endsWith('DATABASE_URL') || SENSITIVE_NAME.test(name)),
-		)
-		.map(([, value]) => value as string)
-}
-
 /**
  * Artifact files must not show up as worktree changes, or they would block the next Run.
  * An Artifact root outside the repository needs no ignore rule.

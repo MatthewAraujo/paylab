@@ -1,4 +1,4 @@
-import { createSanitizer } from '../../scripts/benchmark/sanitize'
+import { createSanitizer } from '@/domain/benchmark/sanitize'
 
 describe('createSanitizer', () => {
 	const sanitize = createSanitizer({ secrets: ['hunter2-private-value'] })

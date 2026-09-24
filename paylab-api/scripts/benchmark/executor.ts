@@ -4,6 +4,7 @@ import { dirname, join, relative, sep } from 'node:path'
 import { createInterface } from 'node:readline'
 import { artifactIdForFile, artifactKindOfFile } from '@/domain/benchmark/artifact'
 import { scenarioFingerprint } from '@/domain/benchmark/canonical'
+import { createSanitizer } from '@/domain/benchmark/sanitize'
 import {
 	type BenchmarkMetric,
 	type BenchmarkScenario,
@@ -16,7 +17,6 @@ import { captureEnvironment } from './environment'
 import { assertCleanWorktree } from './git'
 import { acquireLock } from './lock'
 import { recoverAbandonedRun } from './recovery'
-import { createSanitizer } from './sanitize'
 import {
 	appendArtifactLine,
 	artifactPath,

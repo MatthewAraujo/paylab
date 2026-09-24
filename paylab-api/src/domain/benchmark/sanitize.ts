@@ -33,3 +33,14 @@ export function createSanitizer(options: { secrets?: string[] } = {}) {
 		return result.replace(JSON_ASSIGNMENT, '$1[REDACTED]$2').replace(ENV_ASSIGNMENT, '$1[REDACTED]')
 	}
 }
+
+const SENSITIVE_ENV_NAME = /(password|passwd|secret|token|api[_-]?key|credential|private[_-]?key)/i
+
+/** Values that must be redacted from every stored log, whatever form they appear in. */
+export function collectSecrets(env: Record<string, string | undefined>): string[] {
+	return Object.entries(env)
+		.filter(
+			([name, value]) => value && (name.endsWith('DATABASE_URL') || SENSITIVE_ENV_NAME.test(name)),
+		)
+		.map(([, value]) => value as string)
+}

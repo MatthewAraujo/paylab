@@ -1,12 +1,12 @@
 import 'dotenv/config'
 import { execFileSync } from 'node:child_process'
 import { resolve } from 'node:path'
+import { collectSecrets } from '@/domain/benchmark/sanitize'
 import { checkPrerequisites, loadBenchDatabase } from '../bench/lib/preflight'
 import {
 	CliUsageError,
 	EXECUTOR_VERSION,
 	assertArtifactRootIgnored,
-	collectSecrets,
 	exitCodeFor,
 	formatReport,
 	parseCliArgs,

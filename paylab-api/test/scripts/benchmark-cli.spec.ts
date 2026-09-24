@@ -1,8 +1,8 @@
 import { join } from 'node:path'
+import { collectSecrets } from '@/domain/benchmark/sanitize'
 import {
 	CliUsageError,
 	assertArtifactRootIgnored,
-	collectSecrets,
 	exitCodeFor,
 	formatReport,
 	parseCliArgs,

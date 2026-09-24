@@ -41,6 +41,7 @@ PayLab UI is the English-language Operational Console for the PayLab learning pl
 ## Environment
 
 - `NEXT_PUBLIC_PAYLAB_API_URL` is the API base URL (also used by the browser for `GET /health`). It defaults to `http://localhost:3333`.
+- Demo data: in `paylab-api` run `pnpm demo:seed`, then `pnpm demo:dev`, and set `PAYLAB_API_KEY` to the printed "Demo Store" key ("Demo Rival" shows another Merchant's isolated data).
 - `PAYLAB_API_KEY` is the server-only Merchant API key used by Server Components for financial reads (`src/api/server-client.ts`). Provision one with `pnpm merchant:provision` in `paylab-api`. Never place API keys or secrets in `NEXT_PUBLIC_*` variables.
 
 ## Current capability boundary

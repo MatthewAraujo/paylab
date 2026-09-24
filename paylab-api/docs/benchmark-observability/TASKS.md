@@ -36,7 +36,7 @@ Deliver the API side of local benchmark observability: a terminal-only command t
 | [B5](tasks/B5.md) | Import existing T13 and T14 evidence | B1 | done | [context](task-runs/B5-CONTEXT.md) | [summary](task-runs/B5-summary.md) |
 | [B6](tasks/B6.md) | Expose a development-only benchmark read API | B1, B2, B5 | done | [context](task-runs/B6-CONTEXT.md) | [summary](task-runs/B6-summary.md) |
 | [B7](tasks/B7.md) | Add versioned Baseline selection | B1, B2, B6 | done | [context](task-runs/B7-CONTEXT.md) | [summary](task-runs/B7-summary.md) |
-| [B8](tasks/B8.md) | Validate the integrated workflow and document operation | B1–B7 | ready | — | — |
+| [B8](tasks/B8.md) | Validate the integrated workflow and document operation | B1–B7 | done | [context](task-runs/B8-CONTEXT.md) | [summary](task-runs/B8-summary.md) |
 
 ## Acceptance Criteria Mapping
 
@@ -99,7 +99,11 @@ Deliver the API side of local benchmark observability: a terminal-only command t
 
 ## Open Questions
 
-No blocking open questions. Assumption to confirm at B1: the contract lives under a new benchmark area separate from `src/domain/paylab`, so financial and benchmark code stay decoupled.
+No blocking open questions. Pending, and not for the agent to decide alone:
+
+- **First native full Benchmark Run** (part of B8's completion signal): manual, drops and recreates the developer's `paylab_bench` from a template and takes about two hours. It waits for an explicit go-ahead; the procedure and checklist are in `../benchmark.md`.
+- **Size of versioned Summaries**: a full T14 Summary is about 555 KB. Options: one metric per line, a shared metric catalog per Summary, or only headline metrics in Git. Decide before several full Runs are committed.
+- UI-side items of the original cross-project plan (client regeneration, pages, Playwright smoke) belong to the UI plan.
 
 ## Handoff
 

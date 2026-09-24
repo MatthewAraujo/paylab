@@ -18,12 +18,76 @@ pnpm bench:validate             # statistics plus the global invariant check, an
 ```
 
 Connection string (default): `postgresql://paylab:paylab@localhost:5433/paylab_bench`.
-Reset by running `pnpm bench:seed` again (it empties the benchmark database first); remove the
+Reset by running `pnpm bench:seed` again (it empties the benchmark database first); `pnpm benchmark:run` restores it from the template instead (see below); remove the
 container and data with `docker compose down && rm -rf data/pg-bench`.
 
 The runner refuses any database whose name does not contain `bench`, because seeding empties
 the database it connects to. The benchmark database never shares a container, port, volume or
 environment variable with development (`DATABASE_URL`, port 5432) or tests (Testcontainers).
+
+## Publishing benchmark Runs
+
+The dataset above feeds an explicit, manual workflow that runs the **complete** Benchmark Suite (the T13 read scenarios, then the T14 correctness gate and concurrency matrix) from a clean commit and publishes the result. It is never started by a page visit, a push, a schedule, or CI, and the console cannot start it.
+
+### One-time setup
+
+```bash
+pnpm bench:up && pnpm bench:migrate && pnpm bench:seed   # the full dataset (see Quick start)
+pnpm bench:template                                      # freeze it as the pristine copy every Run restores from
+pnpm benchmark:import                                    # import the T13 and T14 evidence as history (idempotent)
+```
+
+`bench:template` validates the dataset first and records its digest on the template. To reuse a template that already exists (for example `paylab_bench_adopted` from the T13 work) set `BENCH_TEMPLATE_DATABASE=paylab_bench_adopted`; a hand-made template has no recorded digest, so the drift check is skipped for it. `benchmark:import` writes three Summaries to `bench/results/` (`imported-t13-step1-baseline`, `imported-t13-step2-adopted`, `imported-t14-load-v2`) from the files under `docs/experiments/`; commit them.
+
+### Running
+
+```bash
+pnpm benchmark:run --note "after the payments index change"
+```
+
+Requirements: a clean Git worktree (tracked and untracked changes both count; `.benchmark/` is ignored), the benchmark PostgreSQL container running, an existing template, and no other Run in progress (a second invocation reports the active Run and its stage). The command checks these before it opens a Run, so an unprepared machine publishes nothing.
+
+What it does to your machine, in order: it **drops and recreates `paylab_bench` from the template** and applies pending migrations (once at the start, and once per repetition inside every T14 cell), validates the dataset and the ledger invariants, runs the T13 read scenarios (1 warm-up and 7 measured executions each, median), then the T14 correctness gate and the matrix (2 s warm-up, 10 s window, 3 repetitions, Latin-square strategy order). Expect roughly two hours end to end: the correctness gate alone took about 16 minutes in the original experiment and the matrix about 75. Use an otherwise idle machine; timings drift between sessions, so compare Runs from the same environment.
+
+Progress is written continuously: while it runs, `.benchmark/runs/<runId>/state.json` holds the `RUNNING` record and each scenario log grows under `artifacts/`. Ctrl+C stops the running scenario and publishes an `INCOMPLETE` Run; a killed process is recovered as `INCOMPLETE` by the next invocation.
+
+### After a Run
+
+The command lists the generated files and a suggested commit message, and **commits nothing**. Review `bench/results/<runId>.json`, then commit it. Until every generated change (a Summary, a Baseline selection) is committed or discarded, the next `benchmark:run` refuses to start. A failed or interrupted Run is published as `INCOMPLETE`: it keeps the completed measurements and the failure evidence, is excluded from comparisons, and cannot become the Baseline. A failed preparation step (PostgreSQL down, missing template, invariant violation) names its step and how to fix it.
+
+### Where things live
+
+| What | Where | In Git |
+| --- | --- | --- |
+| Run Summaries (small, normalized, deterministic JSON) | `bench/results/<runId>.json` | yes, committed by hand |
+| The Baseline pointer | `bench/baseline.json` | yes, committed by hand |
+| Logs, query plans, raw samples, the running state | `.benchmark/runs/<runId>/` (`BENCH_ARTIFACT_ROOT`) | no, kept without expiry |
+| Evidence of Imported Runs | `docs/experiments/` (referenced in place) | yes |
+
+Logs and plans are sanitized (database URLs, credentials, configured secrets) before they are stored and again before the API serves them.
+
+### Reading the evidence
+
+The API serves it under `/v1/benchmarks` (all `GET` except the Baseline selection): `status`, `runs`, `runs/:runId`, `runs/:runId/progress`, `runs/:runId/artifacts/:artifactId` (with `/content` and `/download`), `comparisons/default`, `comparisons`, `trends`, and `baseline`. It is a local developer surface: on by default only with `NODE_ENV=development` (`BENCHMARK_ENABLED` overrides it outside production), the API refuses to start with it enabled in production, every route answers 404 when it is off, and it needs neither a Merchant API key nor the benchmark database. It reads only these files; clients never send a path.
+
+- **Comparisons** are per scenario. A scenario is *comparable* only when its definition, the dataset, and the environment match; otherwise it is labelled `new`, `removed`, `changed`, `environment-incompatible`, or `dataset-incompatible` and no delta is computed. A change within 5% is *stable*, a presentation tolerance and not statistical significance. By default the newest completed Run is compared with the previous compatible one.
+- **The Baseline** is one deliberately chosen completed Run. `PUT /v1/benchmarks/baseline` with `{ "runId": "..." }` writes only the small pointer file and reports the pending Git change; commit it like any other generated change.
+
+### Known limitations
+
+- A full T14 Summary is large (about 555 KB) because label, unit, and direction repeat for every strategy in every cell; versioning many Runs grows the repository. A compact form is an open decision.
+- Imported and native scenarios never share a definition, so native-versus-imported shows `changed`; an imported Run's environment facts are quoted from documents, so a native Run on the same machine may show `environment-incompatible` until a native reference exists.
+- Only the executor's own preflight guards the database: never point `BENCH_DATABASE_URL` at data you care about (the name must contain `bench`, the host must be local, and it must differ from `DATABASE_URL`).
+
+### First full Run: manual validation checklist
+
+Automated tests cover the executor, the gates, the API, and a reduced end-to-end Run on a small dataset. The exact production protocol is validated by hand once:
+
+1. Confirm the checklist above (clean worktree, container up, template exists).
+2. `pnpm benchmark:run --note "first native full run"`; watch `.benchmark/runs/<runId>/state.json` and `GET /v1/benchmarks/runs/<runId>/progress` update.
+3. When it finishes, check the printed report, that `bench/results/<runId>.json` is `COMPLETED`, that no secret or URL with credentials appears in the logs, that `git status` shows only the Summary, and that `.benchmark/` stays out of Git.
+4. Compare it with the imported Runs (`GET /v1/benchmarks/comparisons?current=<runId>&reference=imported-t14-load-v2`) and expect honest `changed` / `environment-incompatible` states, not deltas.
+5. Commit the Summary, then select a Baseline if wanted and commit `bench/baseline.json`.
 
 ## What gets generated
 

@@ -42,6 +42,10 @@ pnpm merchant:provision "Acme Ltda"
 
 The API key is printed once and only its hash is stored. Use it as `Authorization: Bearer <key>` on Merchant endpoints.
 
+## 4. Benchmarks (optional)
+
+Publishing benchmark Runs is a separate, manual workflow with its own database and a long, destructive run. It is never part of the test gates or CI. See [benchmark.md](benchmark.md) for the setup, the `pnpm benchmark:run` workflow, and how to read the results.
+
 ## Working on a change
 
 1. Read the task spec in `docs/tasks/` and the linked PRD stories.

@@ -21,6 +21,8 @@
   --accent: oklch(0.28 0.04 220);
   --accent-foreground: oklch(0.95 0.015 220);
   --destructive: oklch(0.64 0.17 25);
+  /* Improved and completed benchmark evidence; no existing token expresses a favorable change. */
+  --success: oklch(0.82 0.09 160);
   --border: oklch(0.31 0.025 225);
   --input: oklch(0.31 0.025 225);
   --ring: oklch(0.76 0.09 210);
@@ -43,6 +45,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

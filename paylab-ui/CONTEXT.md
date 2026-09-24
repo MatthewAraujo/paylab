@@ -16,6 +16,8 @@ _Avoid_: Mock mode, fake fallback
 The console has no login and is read-only. It reads one Merchant's data through a Merchant API key held in a server-only environment variable, so the browser never sees a credential. Creating Wallets or Payments is done through the API, not the console.
 _Avoid_: User login, customer session, admin CRUD
 
+## Benchmarks
+
 **Benchmark Run**:
 An immutable, explicitly initiated execution of a defined backend performance scenario from a clean source revision on the approved local benchmark environment, identified by that revision and an optional intent note. Once published automatically, the Operational Console observes Benchmark Runs but does not create or alter their measurements.
 _Avoid_: Benchmark report, latest metrics, editable result

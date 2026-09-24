@@ -37,6 +37,7 @@ React front end, FakeBank and provider integration, webhooks, reconciliation, qu
 | [T15](tasks/T15.md) | Project handbook, CI and developer documentation | T9 | done | [context](task-runs/T15-CONTEXT.md) | [summary](task-runs/T15-summary.md) |
 | [T16](tasks/T16.md) | List the Merchant's Wallets (`GET /v1/accounts`) | T8, T11 | done | — | — |
 | [T17](tasks/T17.md) | Describe the read endpoints in OpenAPI | T16 | done | — | — |
+| [T18](tasks/T18.md) | Demo database and seed | T7, T8, T9, T16 | done | — | — |
 
 ## Acceptance Criteria Mapping
 

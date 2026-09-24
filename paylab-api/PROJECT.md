@@ -40,6 +40,9 @@ Domain language and accumulated decisions live in [CONTEXT.md](CONTEXT.md) and [
 | `pnpm prisma:migrate` | Create/apply a migration in development |
 | `pnpm prisma:migrate:deploy` | Apply existing migrations |
 | `pnpm merchant:provision "<name>"` | Create a Merchant and print its API key once |
+| `pnpm demo:seed` | Create the separate `paylab_demo` database, migrate it and fill it with demo data (insert-only, refuses to run twice); prints two Merchant API keys once |
+| `pnpm demo:dev` | Run the API against the demo database |
+| `pnpm demo:reset -- --yes` | Drop the demo database (the only destructive demo command) |
 | `pnpm bench:up` / `bench:migrate` / `bench:seed` / `bench:validate` | Separate benchmark database (port 5433): start, migrate, load the skewed dataset, check it |
 | `pnpm bench:targets` / `bench:explain` | Pick hot and cold ids; capture `EXPLAIN (ANALYZE, BUFFERS)` plans |
 
@@ -65,6 +68,7 @@ Validated at boot by `src/infra/env/env.ts`; defaults in `.env.example`. Real `.
 | `NODE_ENV` | `development`, `test` or `production` |
 | `APP_NAME`, `LOG_ENABLED`, `LOG_LEVEL` | Structured logging (`basic` or `debug`) |
 | `FRONTEND_URL` | Comma-separated CORS origins; required in production |
+| `DEMO_DATABASE_URL` | Used only by the `demo:*` commands. Must be a local host and a database name containing `demo`; never `DATABASE_URL` |
 
 Tests ignore a developer `.env`: they apply their own defaults and the Testcontainers URL.
 

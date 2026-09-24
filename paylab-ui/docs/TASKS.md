@@ -223,7 +223,7 @@ Every enabled Account interaction is backed by a generated operation and route-l
 
 ## T6 — Activate Payments (read-only)
 
-Status: the list is live (`/payments`): server-rendered from `createServerApiClient`, GET-form filters (status, Account id, period) kept in the URL, cursor paging ("Older Payments"), UTC timestamps, BRL amounts, status with icon and text, `FAILED`/`INSUFFICIENT_FUNDS` shown as an outcome, and explicit states for missing key, rejected key, unreachable API and validation errors. The detail (`/payments/[id]`) shows every field of the Payment, links each Account to its filtered list, shows the Ledger Transaction id as plain evidence (or that none was written for a failed Payment), and treats an unknown id as a not-found state. T6 is done.
+Status: the list is live (`/payments`): server-rendered from `createServerApiClient`, GET-form filters (status, Account id, period) kept in the URL, standard Previous / numbered pages / Next pagination over the cursor-only API (the URL carries the trail of visited cursors as `?pages=c1,c2`, so Previous and visited pages work without offset; there is no total or jump-ahead), UTC timestamps, BRL amounts, status with icon and text, `FAILED`/`INSUFFICIENT_FUNDS` shown as an outcome, and explicit states for missing key, rejected key, unreachable API and validation errors. The detail (`/payments/[id]`) shows every field of the Payment, links each Account to its filtered list, shows the Ledger Transaction id as plain evidence (or that none was written for a failed Payment), and treats an unknown id as a not-found state. T6 is done.
 
 Objective:
 

@@ -26,12 +26,12 @@ describe("Accounts page", () => {
     fetchStub.mockReset();
   });
 
-  it("lists the Merchant's Wallets and forwards the cursor", async () => {
+  it("lists the Merchant's Wallets and forwards the page trail's cursor", async () => {
     fetchStub.mockResolvedValue(
       Response.json({ items: [wallet], nextCursor: null }),
     );
 
-    await renderPage({ cursor: "C1" });
+    await renderPage({ pages: "C1" });
 
     expect(
       screen.getByRole("heading", { name: "Accounts", level: 1 }),

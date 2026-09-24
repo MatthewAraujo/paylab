@@ -9,6 +9,7 @@ import { CapabilityUnavailable } from "@/components/capability-unavailable";
 import { PageHeader } from "@/components/page-header";
 import { EntriesList } from "@/features/ledger/entries-list";
 import { loadEntries } from "@/features/ledger/ledger-api";
+import { currentCursor, parseTrail, withTrail } from "@/lib/pagination";
 
 export const metadata: Metadata = { title: "Ledger" };
 
@@ -37,8 +38,8 @@ export default async function LedgerAccountPage({
   }
 
   const { id } = await params;
-  const cursor = [(await searchParams).cursor].flat()[0]?.trim() || undefined;
-  const result = await loadEntries(id, cursor);
+  const trail = parseTrail((await searchParams).pages);
+  const result = await loadEntries(id, currentCursor(trail));
   const here = `/ledger/${encodeURIComponent(id)}`;
 
   return (
@@ -53,16 +54,11 @@ export default async function LedgerAccountPage({
         </Link>
       </nav>
       {result.ok ? (
-        <EntriesList page={result.data} accountId={id} />
+        <EntriesList page={result.data} accountId={id} trail={trail} />
       ) : (
         <ApiErrorAlert title={result.title} message={result.message}>
           {result.notFound ? null : (
-            <a
-              href={
-                cursor ? `${here}?cursor=${encodeURIComponent(cursor)}` : here
-              }
-              className={linkClass}
-            >
+            <a href={withTrail(here, trail)} className={linkClass}>
               Retry
             </a>
           )}

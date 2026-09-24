@@ -1,5 +1,5 @@
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { Pagination } from "@/components/pagination";
 import { ShortId } from "@/components/short-id";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatTimestamp } from "@/lib/datetime";
@@ -32,7 +32,12 @@ function AccountLink({
 export function PaymentsList({
   page,
   filters,
-}: Readonly<{ page: PaymentPage; filters: PaymentFilters }>) {
+  trail,
+}: Readonly<{
+  page: PaymentPage;
+  filters: PaymentFilters;
+  trail: string[];
+}>) {
   const filtered = hasActiveFilters(filters);
 
   if (page.items.length === 0) {
@@ -127,16 +132,13 @@ export function PaymentsList({
           </tbody>
         </table>
       </div>
-      {page.nextCursor ? (
-        <div className="flex justify-end border-t px-4 py-3">
-          <Link
-            href={paymentsHref(filters, page.nextCursor)}
-            className="inline-flex items-center gap-2 text-sm text-primary underline-offset-4 hover:underline"
-          >
-            Older Payments <ArrowRight aria-hidden="true" className="size-4" />
-          </Link>
-        </div>
-      ) : null}
+      <div className="border-t px-4 py-3">
+        <Pagination
+          trail={trail}
+          nextCursor={page.nextCursor}
+          hrefFor={(next) => paymentsHref(filters, next)}
+        />
+      </div>
     </Card>
   );
 }

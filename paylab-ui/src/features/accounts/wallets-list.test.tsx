@@ -15,6 +15,7 @@ describe("WalletsList", () => {
       <WalletsList
         page={{ items: [wallet], nextCursor: null }}
         basePath="/accounts"
+        trail={[]}
       />,
     );
 
@@ -27,11 +28,12 @@ describe("WalletsList", () => {
     expect(row.getByText("2026-09-01 10:05:30 UTC")).toBeInTheDocument();
   });
 
-  it("points Ledger rows at the Ledger and pages with the cursor", () => {
+  it("points Ledger rows at the Ledger and paginates", () => {
     render(
       <WalletsList
         page={{ items: [wallet], nextCursor: "NEXT" }}
         basePath="/ledger"
+        trail={[]}
       />,
     );
 
@@ -39,9 +41,10 @@ describe("WalletsList", () => {
       "href",
       `/ledger/${wallet.id}`,
     );
-    expect(
-      screen.getByRole("link", { name: /older wallets/i }),
-    ).toHaveAttribute("href", "/ledger?cursor=NEXT");
+    expect(screen.getByRole("link", { name: /next page/i })).toHaveAttribute(
+      "href",
+      "/ledger?pages=NEXT",
+    );
   });
 
   it("explains an empty Merchant", () => {
@@ -49,6 +52,7 @@ describe("WalletsList", () => {
       <WalletsList
         page={{ items: [], nextCursor: null }}
         basePath="/accounts"
+        trail={[]}
       />,
     );
 

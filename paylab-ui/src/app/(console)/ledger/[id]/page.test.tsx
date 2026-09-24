@@ -38,7 +38,7 @@ describe("Wallet Ledger page", () => {
       Response.json({ items: [entry], nextCursor: null }),
     );
 
-    await renderPage({ cursor: "C1" });
+    await renderPage({ pages: "C1" });
 
     expect(fetchStub.mock.calls[0][0].url).toBe(
       `http://api.test/v1/accounts/${id}/entries?cursor=C1`,

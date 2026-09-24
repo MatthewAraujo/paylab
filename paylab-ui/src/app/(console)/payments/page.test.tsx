@@ -46,10 +46,10 @@ describe("Payments page", () => {
     expect(fetchStub.mock.calls[0][0].url).toBe("http://api.test/v1/payments");
   });
 
-  it("forwards filters and the cursor to the API", async () => {
+  it("forwards the filters and the last cursor of the page trail to the API", async () => {
     fetchStub.mockResolvedValue(Response.json({ items: [], nextCursor: null }));
 
-    await renderPage({ status: "FAILED", from: "2026-09-01", cursor: "C1" });
+    await renderPage({ status: "FAILED", from: "2026-09-01", pages: "C0,C1" });
 
     const url = new URL(fetchStub.mock.calls[0][0].url);
     expect(Object.fromEntries(url.searchParams)).toEqual({

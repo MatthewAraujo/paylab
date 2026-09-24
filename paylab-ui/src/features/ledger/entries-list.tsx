@@ -1,10 +1,11 @@
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
-import { NextPageLink } from "@/components/next-page-link";
+import { Pagination } from "@/components/pagination";
 import { ShortId } from "@/components/short-id";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatTimestamp } from "@/lib/datetime";
 import { formatBrl } from "@/lib/money";
+import { withTrail } from "@/lib/pagination";
 import type { EntryPage } from "./ledger-api";
 
 // Direction is text plus an icon, never color alone. The Amount stays unsigned: the ledger
@@ -21,7 +22,8 @@ const DIRECTION = {
 export function EntriesList({
   page,
   accountId,
-}: Readonly<{ page: EntryPage; accountId: string }>) {
+  trail,
+}: Readonly<{ page: EntryPage; accountId: string; trail: string[] }>) {
   if (page.items.length === 0) {
     return (
       <Card className="border-border/90 bg-card/75 shadow-none">
@@ -94,13 +96,13 @@ export function EntriesList({
           </tbody>
         </table>
       </div>
-      {page.nextCursor ? (
-        <NextPageLink
-          href={`/ledger/${accountId}?cursor=${encodeURIComponent(page.nextCursor)}`}
-        >
-          Older Entries
-        </NextPageLink>
-      ) : null}
+      <div className="border-t px-4 py-3">
+        <Pagination
+          trail={trail}
+          nextCursor={page.nextCursor}
+          hrefFor={(next) => withTrail(`/ledger/${accountId}`, next)}
+        />
+      </div>
     </Card>
   );
 }

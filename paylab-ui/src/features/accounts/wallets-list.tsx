@@ -1,14 +1,20 @@
 import Link from "next/link";
-import { NextPageLink } from "@/components/next-page-link";
+import { Pagination } from "@/components/pagination";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatTimestamp } from "@/lib/datetime";
+import { withTrail } from "@/lib/pagination";
 import type { WalletPage } from "./accounts-api";
 
 /** The Merchant's Wallets. `basePath` decides where a row leads: the Account view or the Ledger view. */
 export function WalletsList({
   page,
   basePath,
-}: Readonly<{ page: WalletPage; basePath: "/accounts" | "/ledger" }>) {
+  trail,
+}: Readonly<{
+  page: WalletPage;
+  basePath: "/accounts" | "/ledger";
+  trail: string[];
+}>) {
   if (page.items.length === 0) {
     return (
       <Card className="border-border/90 bg-card/75 shadow-none">
@@ -62,13 +68,13 @@ export function WalletsList({
           </tbody>
         </table>
       </div>
-      {page.nextCursor ? (
-        <NextPageLink
-          href={`${basePath}?cursor=${encodeURIComponent(page.nextCursor)}`}
-        >
-          Older Wallets
-        </NextPageLink>
-      ) : null}
+      <div className="border-t px-4 py-3">
+        <Pagination
+          trail={trail}
+          nextCursor={page.nextCursor}
+          hrefFor={(next) => withTrail(basePath, next)}
+        />
+      </div>
     </Card>
   );
 }

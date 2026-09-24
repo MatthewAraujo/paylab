@@ -5,6 +5,7 @@ import {
 import { ApiErrorAlert } from "@/components/api-error-alert";
 import { CapabilityUnavailable } from "@/components/capability-unavailable";
 import { PageHeader } from "@/components/page-header";
+import { currentCursor, parseTrail, withTrail } from "@/lib/pagination";
 import { loadWallets } from "./accounts-api";
 import { WalletsList } from "./wallets-list";
 
@@ -37,23 +38,19 @@ export async function WalletsView({
     );
   }
 
-  const cursor = [(await searchParams).cursor].flat()[0]?.trim() || undefined;
-  const result = await loadWallets(cursor);
+  const trail = parseTrail((await searchParams).pages);
+  const result = await loadWallets(currentCursor(trail));
 
   return (
     <>
       <PageHeader title={title} description={description} />
       {result.ok ? (
-        <WalletsList page={result.data} basePath={basePath} />
+        <WalletsList page={result.data} basePath={basePath} trail={trail} />
       ) : (
         <ApiErrorAlert title={result.title} message={result.message}>
           {/* A plain anchor forces a fresh server render, which is what a retry needs. */}
           <a
-            href={
-              cursor
-                ? `${basePath}?cursor=${encodeURIComponent(cursor)}`
-                : basePath
-            }
+            href={withTrail(basePath, trail)}
             className="text-sm text-primary underline-offset-4 hover:underline"
           >
             Retry

@@ -23,6 +23,7 @@ describe("EntriesList", () => {
       <EntriesList
         page={{ items: [credit, debit], nextCursor: null }}
         accountId={accountId}
+        trail={[]}
       />,
     );
 
@@ -39,6 +40,7 @@ describe("EntriesList", () => {
       <EntriesList
         page={{ items: [credit], nextCursor: null }}
         accountId={accountId}
+        trail={[]}
       />,
     );
 
@@ -46,17 +48,19 @@ describe("EntriesList", () => {
     expect(screen.getByText("2026-09-01 10:05:30 UTC")).toBeInTheDocument();
   });
 
-  it("pages with the cursor under the Wallet's ledger URL", () => {
+  it("paginates under the Wallet's ledger URL", () => {
     render(
       <EntriesList
         page={{ items: [credit], nextCursor: "NEXT" }}
         accountId={accountId}
+        trail={[]}
       />,
     );
 
-    expect(
-      screen.getByRole("link", { name: /older entries/i }),
-    ).toHaveAttribute("href", `/ledger/${accountId}?cursor=NEXT`);
+    expect(screen.getByRole("link", { name: /next page/i })).toHaveAttribute(
+      "href",
+      `/ledger/${accountId}?pages=NEXT`,
+    );
   });
 
   it("explains an empty history", () => {
@@ -64,6 +68,7 @@ describe("EntriesList", () => {
       <EntriesList
         page={{ items: [], nextCursor: null }}
         accountId={accountId}
+        trail={[]}
       />,
     );
 

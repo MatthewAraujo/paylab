@@ -16,11 +16,12 @@ export type PaymentResult = { ok: true; payment: Payment } | ApiFailure;
 /** Loads one page of the Merchant's Payments. Every failure becomes a message the operator can act on. */
 export async function loadPayments(
   filters: PaymentFilters,
+  cursor?: string,
 ): Promise<PaymentsResult> {
   try {
     const { data, error, response } = await createServerApiClient().GET(
       "/v1/payments",
-      { params: { query: filters } },
+      { params: { query: { ...filters, cursor } } },
     );
 
     return data

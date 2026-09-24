@@ -13,14 +13,12 @@ describe("parsePaymentFilters", () => {
         accountId: " 5b0b6d0e-7c5e-4d3e-9d0a-000000000000 ",
         from: "2026-09-01",
         to: "2026-09-30",
-        cursor: "abc",
       }),
     ).toEqual({
       status: "FAILED",
       accountId: "5b0b6d0e-7c5e-4d3e-9d0a-000000000000",
       from: "2026-09-01",
       to: "2026-09-30",
-      cursor: "abc",
     });
   });
 
@@ -38,20 +36,21 @@ describe("parsePaymentFilters", () => {
 });
 
 describe("hasActiveFilters", () => {
-  it("ignores the cursor: paging is not filtering", () => {
-    expect(hasActiveFilters({ cursor: "abc" })).toBe(false);
+  it("is true when any filter is set and false when none is", () => {
+    expect(hasActiveFilters({})).toBe(false);
     expect(hasActiveFilters({ status: "FAILED" })).toBe(true);
+    expect(hasActiveFilters({ from: "2026-09-01" })).toBe(true);
   });
 });
 
 describe("paymentsHref", () => {
-  it("keeps the filters and sets the cursor of the requested page", () => {
-    expect(paymentsHref({ status: "FAILED", from: "2026-09-01" }, "next")).toBe(
-      "/payments?status=FAILED&from=2026-09-01&cursor=next",
-    );
+  it("keeps the filters and sets the page trail", () => {
+    expect(
+      paymentsHref({ status: "FAILED", from: "2026-09-01" }, ["next"]),
+    ).toBe("/payments?status=FAILED&from=2026-09-01&pages=next");
   });
 
-  it("is the bare route without filters or cursor", () => {
+  it("is the bare route without filters or trail", () => {
     expect(paymentsHref({})).toBe("/payments");
   });
 });

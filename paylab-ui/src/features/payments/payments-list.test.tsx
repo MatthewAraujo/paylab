@@ -33,6 +33,7 @@ describe("PaymentsList", () => {
       <PaymentsList
         page={{ items: [succeeded, failed], nextCursor: null }}
         filters={{}}
+        trail={[]}
       />,
     );
 
@@ -51,6 +52,7 @@ describe("PaymentsList", () => {
       <PaymentsList
         page={{ items: [succeeded], nextCursor: null }}
         filters={{ status: "SUCCEEDED" }}
+        trail={[]}
       />,
     );
 
@@ -68,6 +70,7 @@ describe("PaymentsList", () => {
       <PaymentsList
         page={{ items: [succeeded], nextCursor: null }}
         filters={{}}
+        trail={[]}
       />,
     );
 
@@ -82,6 +85,7 @@ describe("PaymentsList", () => {
       <PaymentsList
         page={{ items: [failed], nextCursor: null }}
         filters={{}}
+        trail={[]}
       />,
     );
 
@@ -90,35 +94,45 @@ describe("PaymentsList", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("links to the next page with the cursor and keeps the active filters", () => {
+  it("paginates with Previous, page numbers and Next, keeping the active filters", () => {
     render(
       <PaymentsList
         page={{ items: [succeeded], nextCursor: "CURSOR" }}
         filters={{ status: "SUCCEEDED" }}
+        trail={["C1"]}
       />,
     );
 
+    expect(screen.getByText("2")).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: /next page/i })).toHaveAttribute(
+      "href",
+      "/payments?status=SUCCEEDED&pages=C1,CURSOR",
+    );
     expect(
-      screen.getByRole("link", { name: /older payments/i }),
-    ).toHaveAttribute("href", "/payments?status=SUCCEEDED&cursor=CURSOR");
+      screen.getByRole("link", { name: /previous page/i }),
+    ).toHaveAttribute("href", "/payments?status=SUCCEEDED");
+    expect(screen.queryByText(/older/i)).not.toBeInTheDocument();
   });
 
-  it("has no next-page link on the last page", () => {
+  it("shows no pagination when everything fits on one page", () => {
     render(
       <PaymentsList
         page={{ items: [succeeded], nextCursor: null }}
         filters={{}}
+        trail={[]}
       />,
     );
 
-    expect(
-      screen.queryByRole("link", { name: /older payments/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
   });
 
   it("explains an empty Merchant differently from an empty filter result", () => {
     const { rerender } = render(
-      <PaymentsList page={{ items: [], nextCursor: null }} filters={{}} />,
+      <PaymentsList
+        page={{ items: [], nextCursor: null }}
+        filters={{}}
+        trail={[]}
+      />,
     );
     expect(screen.getByText("No Payments yet")).toBeInTheDocument();
 
@@ -126,6 +140,7 @@ describe("PaymentsList", () => {
       <PaymentsList
         page={{ items: [], nextCursor: null }}
         filters={{ status: "FAILED" }}
+        trail={[]}
       />,
     );
     expect(

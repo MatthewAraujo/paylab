@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { BenchmarkFrame } from "@/components/benchmarks/benchmark-frame";
-import { PendingView } from "@/components/benchmarks/pending-view";
+import { BenchmarkLoading } from "@/components/benchmarks/states";
+import { TrendsView } from "@/features/benchmarks/trends/trends-view";
 
 export const metadata: Metadata = { title: "Historical trends" };
 
@@ -10,7 +12,9 @@ const description =
 export default async function TrendsPage() {
   return (
     <BenchmarkFrame title="Historical trends" description={description}>
-      <PendingView name="Historical trends view" />
+      <Suspense fallback={<BenchmarkLoading label="Loading trends" />}>
+        <TrendsView />
+      </Suspense>
     </BenchmarkFrame>
   );
 }

@@ -11,5 +11,5 @@ Approved partition: F1 alone; then {F2, F3, F4}; then {F5 to F6, F7 to F9, F8 to
 | F5, F6 | A (phase 3) | done (`46156fa`, `f1e0d6e`, merged) | overview and active-Run panel. Interrupted once by a rate limit and resumed |
 | F7, F9 | B (phase 3) | done (`70a8bd9`, `c3e7803`, merged) | Run detail and Comparison; slots `renderArtifactAction`, `baselineAction`. Interrupted once by a rate limit and resumed |
 | F8, F11 | C (phase 3) | done (`9cea405`, `eab66b1`, merged) | viewer exports `ArtifactViewerDialog`; local `ui/dialog.tsx`; trends view. Interrupted once by a rate limit and resumed |
-| F10 | — | runnable (F6, F8, F9 done); phase 3 integrated, gates green |  Starts with the F8 wiring (open the viewer from the Run detail inventory and the active-Run panel), then the Baseline action |
+| F10 | 4 | dispatched | brief `frontend-lane-4.md`, runs in the integration worktree; starts with the F8 wiring |
 | F12 | — | waiting on all | |

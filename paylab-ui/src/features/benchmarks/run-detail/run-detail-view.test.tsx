@@ -439,13 +439,30 @@ describe("the Run detail", () => {
       ).toBeInTheDocument();
     });
 
-    it("leaves a disabled Baseline action until the selection is wired", async () => {
+    it("offers the Baseline selection with its confirmation", async () => {
+      const user = userEvent.setup();
       renderView(NATIVE_RUN_ID);
 
-      const button = await screen.findByRole("button", {
-        name: /Make this Run the Baseline/,
-      });
-      expect(button).toBeDisabled();
+      await user.click(
+        await screen.findByRole("button", {
+          name: /Make this Run the Baseline/,
+        }),
+      );
+
+      const dialog = await screen.findByRole("dialog");
+      expect(dialog).toHaveTextContent(NATIVE_RUN_ID);
+      expect(dialog).toHaveTextContent(/reviewable Git change/i);
+    });
+
+    it("explains that the selection is unavailable when the contract lacks the write", async () => {
+      renderView(NATIVE_RUN_ID, { baselineWrite: false });
+
+      expect(
+        await screen.findByText(/not available on this API/i),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /Make this Run the Baseline/ }),
+      ).toBeNull();
     });
 
     it("renders the Baseline action it is given instead", async () => {

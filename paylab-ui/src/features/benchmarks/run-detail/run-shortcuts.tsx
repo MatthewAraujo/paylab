@@ -2,26 +2,8 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
 import { useBaseline } from "../api/hooks";
-
-/**
- * Shown in place of a Baseline action until the selection is wired: present, plainly disabled,
- * and behaving like nothing.
- */
-export function DisabledBaselineAction() {
-  return (
-    <Button
-      type="button"
-      variant="outline"
-      size="sm"
-      disabled
-      title="Baseline selection is not available in this build yet"
-    >
-      Make this Run the Baseline
-    </Button>
-  );
-}
+import { BaselineAction } from "../baseline/baseline-action";
 
 /**
  * Entry points from a completed Run to its comparisons, and the Baseline action slot. Only a
@@ -32,10 +14,14 @@ export function RunShortcuts({
   runId,
   baseUrl,
   baselineAction,
+  baselineWrite = true,
 }: Readonly<{
   runId: string;
   baseUrl?: string;
+  /** Replaces the Baseline selection, for callers that render their own. */
   baselineAction?: ReactNode;
+  /** False when the API contract has no Baseline write. */
+  baselineWrite?: boolean;
 }>) {
   const baseline = useBaseline({ baseUrl });
   const current = encodeURIComponent(runId);
@@ -85,9 +71,14 @@ export function RunShortcuts({
         </li>
         <li>{baselineEntry}</li>
       </ul>
-      {baselineRunId === runId
-        ? null
-        : (baselineAction ?? <DisabledBaselineAction />)}
+      {baselineAction ?? (
+        <BaselineAction
+          runId={runId}
+          status="COMPLETED"
+          enabled={baselineWrite}
+          baseUrl={baseUrl}
+        />
+      )}
     </section>
   );
 }

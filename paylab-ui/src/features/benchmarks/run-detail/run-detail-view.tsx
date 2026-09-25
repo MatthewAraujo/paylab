@@ -21,10 +21,12 @@ export type RunDetailViewProps = {
   runId: string;
   baseUrl?: string;
   /**
-   * The Baseline action for a completed Run, wired by the Baseline task. Absent, a disabled
-   * placeholder stands in; an Incomplete or running Run never shows one.
+   * Replaces the Baseline selection for a completed Run. An Incomplete or running Run never
+   * shows one.
    */
   baselineAction?: ReactNode;
+  /** False when the API contract has no Baseline write; the selection then explains itself. */
+  baselineWrite?: boolean;
   /** One action per Artifact row. Defaults to the Artifact viewer for files on this machine. */
   renderArtifactAction?: (artifact: Artifact) => ReactNode;
 };
@@ -102,6 +104,7 @@ export function RunDetailView({
   runId,
   baseUrl,
   baselineAction,
+  baselineWrite,
   renderArtifactAction,
 }: Readonly<RunDetailViewProps>) {
   const query = useRun(runId, { baseUrl });
@@ -163,6 +166,7 @@ export function RunDetailView({
               runId={run.runId}
               baseUrl={baseUrl}
               baselineAction={baselineAction}
+              baselineWrite={baselineWrite}
             />
           ) : null}
         </>

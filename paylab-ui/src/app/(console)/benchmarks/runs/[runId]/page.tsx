@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { currentCapabilities } from "@/api/current-capabilities";
 import { BenchmarkFrame } from "@/components/benchmarks/benchmark-frame";
 import { RunDetailView } from "@/features/benchmarks/run-detail/run-detail-view";
 
@@ -14,7 +15,10 @@ export default async function RunPage({
 
   return (
     <BenchmarkFrame title="Benchmark Run" description={description}>
-      <RunDetailView runId={runId} />
+      <RunDetailView
+        runId={runId}
+        baselineWrite={currentCapabilities.benchmarkBaselineWrite}
+      />
     </BenchmarkFrame>
   );
 }

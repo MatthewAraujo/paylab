@@ -5,6 +5,7 @@ import { BenchmarkSection } from "@/components/benchmarks/benchmark-section";
 import { ChangeBadge } from "@/components/benchmarks/change-badge";
 import { MetricValue } from "@/components/benchmarks/metric-value";
 import { useBaseline } from "@/features/benchmarks/api/hooks";
+import { BaselineGitNotice } from "@/features/benchmarks/baseline/baseline-git-notice";
 import {
   defaultHeadlineScenario,
   formatNumber,
@@ -38,6 +39,11 @@ export function BaselineSection({ latest }: Readonly<{ latest: RunListItem }>) {
       ) : (
         <BaselineIndication latest={latest} run={baseline.data.run} />
       )}
+      {baseline.data ? (
+        <div className="mt-3">
+          <BaselineGitNotice git={baseline.data.git} />
+        </div>
+      ) : null}
     </BenchmarkSection>
   );
 }

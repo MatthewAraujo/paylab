@@ -233,8 +233,33 @@ describe("the Benchmark Comparison", () => {
       );
     });
 
-    it("has no Baseline action of its own", async () => {
+    it("offers to make either compared Run the Baseline", async () => {
+      const user = userEvent.setup();
       renderView({ current: CURRENT_RUN_ID, reference: REFERENCE_RUN_ID });
+
+      await screen.findByRole("heading", { name: "Compatibility" });
+      expect(
+        screen.getByRole("button", {
+          name: "Make the reference Run the Baseline",
+        }),
+      ).toBeInTheDocument();
+      await user.click(
+        screen.getByRole("button", {
+          name: "Make the current Run the Baseline",
+        }),
+      );
+
+      const dialog = await screen.findByRole("dialog");
+      expect(within(dialog).getByText(CURRENT_RUN_ID)).toBeInTheDocument();
+      expect(dialog).toHaveTextContent(/reviewable Git change/i);
+    });
+
+    it("does not offer the selection when the contract has no Baseline write", async () => {
+      renderView({
+        current: CURRENT_RUN_ID,
+        reference: REFERENCE_RUN_ID,
+        baselineWrite: false,
+      });
 
       await screen.findByRole("heading", { name: "Compatibility" });
       expect(

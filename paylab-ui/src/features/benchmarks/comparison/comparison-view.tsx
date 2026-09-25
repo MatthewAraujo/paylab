@@ -3,6 +3,7 @@
 import { BenchmarkFailureState } from "@/components/benchmarks/benchmark-failure-state";
 import { BenchmarkLoading } from "@/components/benchmarks/states";
 import { BenchmarkRequestError } from "../api/results";
+import { BaselineAction } from "../baseline/baseline-action";
 import { ComparisonBody } from "./comparison-body";
 import { RunSelectors } from "./run-selectors";
 import { useComparisonData } from "./use-comparison-data";
@@ -12,17 +13,20 @@ export type ComparisonViewProps = {
   current?: string;
   reference?: string;
   baseUrl?: string;
+  /** False when the API contract has no Baseline write. */
+  baselineWrite?: boolean;
 };
 
 /**
  * Two completed Runs compared: selectors backed by the address, then compatibility, summary
- * and scenarios. The Baseline action is not offered here; choosing the Baseline as the
+ * and scenarios. Either compared Run can be made the Baseline; choosing the Baseline as the
  * reference only reads it.
  */
 export function ComparisonView({
   current,
   reference,
   baseUrl,
+  baselineWrite,
 }: Readonly<ComparisonViewProps>) {
   const { mode, query } = useComparisonData({ current, reference, baseUrl });
   const data = query.data;
@@ -44,6 +48,24 @@ export function ComparisonView({
           reference={data?.reference?.runId ?? reference}
           baseUrl={baseUrl}
         />
+      ) : null}
+      {data?.comparison && data.current && data.reference ? (
+        <div className="mb-6 flex flex-wrap gap-3">
+          <BaselineAction
+            runId={data.current.runId}
+            status={data.current.status}
+            label="Make the current Run the Baseline"
+            enabled={baselineWrite}
+            baseUrl={baseUrl}
+          />
+          <BaselineAction
+            runId={data.reference.runId}
+            status={data.reference.status}
+            label="Make the reference Run the Baseline"
+            enabled={baselineWrite}
+            baseUrl={baseUrl}
+          />
+        </div>
       ) : null}
       {query.isPending ? (
         <BenchmarkLoading label="Loading the comparison" />

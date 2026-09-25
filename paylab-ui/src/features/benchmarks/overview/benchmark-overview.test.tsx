@@ -251,6 +251,28 @@ describe("Benchmarks overview", () => {
       expect(within(baseline).getByText("Improved")).toBeInTheDocument();
     });
 
+    it("shows the pending Baseline change from Git in the Baseline section", async () => {
+      serveOverview(stub, {
+        baseline: baselineView({
+          baseline: { runId: PREVIOUS_ID, selectedAt: "2026-09-24T09:00:00Z" },
+          run: previousItem(),
+          git: {
+            available: true,
+            baselineChangePending: true,
+            dirtyFiles: ["bench/baseline.json"],
+            dirtyCount: 1,
+          },
+        }),
+      });
+      renderOverview();
+
+      const baseline = await screen.findByRole("region", { name: "Baseline" });
+      expect(
+        await within(baseline).findByText("bench/baseline.json"),
+      ).toBeInTheDocument();
+      expect(baseline).toHaveTextContent(/uncommitted changes/);
+    });
+
     it("says no Baseline is selected when there is none", async () => {
       renderOverview();
 

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { currentCapabilities } from "@/api/current-capabilities";
 import { BenchmarkFrame } from "@/components/benchmarks/benchmark-frame";
 import { ComparisonView } from "@/features/benchmarks/comparison/comparison-view";
 
@@ -22,6 +23,7 @@ export default async function ComparePage({
       <ComparisonView
         current={first(params.current)}
         reference={first(params.reference)}
+        baselineWrite={currentCapabilities.benchmarkBaselineWrite}
       />
     </BenchmarkFrame>
   );

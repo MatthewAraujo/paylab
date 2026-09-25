@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { BenchmarkFrame } from "@/components/benchmarks/benchmark-frame";
-import { PendingView } from "@/components/benchmarks/pending-view";
+import { BenchmarkOverview } from "@/features/benchmarks/overview/benchmark-overview";
 
 export const metadata: Metadata = { title: "Benchmarks" };
 
@@ -10,7 +10,7 @@ const description =
 export default async function BenchmarksOverviewPage() {
   return (
     <BenchmarkFrame title="Benchmarks" description={description}>
-      <PendingView name="Benchmarks overview" />
+      <BenchmarkOverview />
     </BenchmarkFrame>
   );
 }

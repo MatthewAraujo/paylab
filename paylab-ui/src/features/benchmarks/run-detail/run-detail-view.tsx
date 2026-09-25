@@ -8,6 +8,7 @@ import {
 } from "@/components/benchmarks/states";
 import { useRun } from "../api/hooks";
 import { BenchmarkRequestError } from "../api/results";
+import { ArtifactViewerDialog } from "../artifacts/artifact-viewer-dialog";
 import { formatInstant } from "../rules";
 import { ArtifactInventory } from "./artifact-inventory";
 import { DiagnosticMeasurements, FailureEvidence } from "./failure-evidence";
@@ -24,9 +25,30 @@ export type RunDetailViewProps = {
    * placeholder stands in; an Incomplete or running Run never shows one.
    */
   baselineAction?: ReactNode;
-  /** One action per Artifact row (the viewer), wired by the Artifact task. */
+  /** One action per Artifact row. Defaults to the Artifact viewer for files on this machine. */
   renderArtifactAction?: (artifact: Artifact) => ReactNode;
 };
+
+function ViewArtifactAction({
+  runId,
+  artifact,
+  baseUrl,
+}: Readonly<{ runId: string; artifact: Artifact; baseUrl?: string }>) {
+  if (!artifact.available) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+  return (
+    <ArtifactViewerDialog
+      runId={runId}
+      artifactId={artifact.id}
+      label={artifact.label}
+      baseUrl={baseUrl}
+    >
+      <span aria-hidden="true">View</span>
+      <span className="sr-only">View {artifact.label}</span>
+    </ArtifactViewerDialog>
+  );
+}
 
 function Scenarios({ run }: Readonly<{ run: RunDetail }>) {
   return (
@@ -104,6 +126,15 @@ export function RunDetailView({
   }
 
   const run = query.data;
+  const artifactAction =
+    renderArtifactAction ??
+    ((artifact: Artifact) => (
+      <ViewArtifactAction
+        runId={run.runId}
+        artifact={artifact}
+        baseUrl={baseUrl}
+      />
+    ));
 
   return (
     <div className="space-y-8">
@@ -121,12 +152,12 @@ export function RunDetailView({
             <FailureEvidence failure={run.failure} scenarios={run.scenarios} />
           ) : null}
           <DiagnosticMeasurements scenarios={run.scenarios} />
-          <Artifacts run={run} renderAction={renderArtifactAction} />
+          <Artifacts run={run} renderAction={artifactAction} />
         </>
       ) : (
         <>
           <Scenarios run={run} />
-          <Artifacts run={run} renderAction={renderArtifactAction} />
+          <Artifacts run={run} renderAction={artifactAction} />
           {run.status === "COMPLETED" ? (
             <RunShortcuts
               runId={run.runId}

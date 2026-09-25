@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import type { RunProgress } from "../api/benchmark-api";
 import { useRunProgress } from "../api/hooks";
 import { PROGRESS_POLL_MS } from "../api/policy";
+import { ArtifactViewerDialog } from "../artifacts/artifact-viewer-dialog";
 import { formatDuration, formatInstant } from "../rules";
 import { RecentLog } from "./recent-log";
 
@@ -163,11 +164,20 @@ export function ActiveRunPanel({
         </p>
 
         {!stopped && data.current ? (
-          <RecentLog
-            runId={runId}
-            scenarioId={data.current}
-            refreshedAt={progress.dataUpdatedAt}
-          />
+          <div className="space-y-2">
+            <RecentLog
+              runId={runId}
+              scenarioId={data.current}
+              refreshedAt={progress.dataUpdatedAt}
+            />
+            <ArtifactViewerDialog
+              runId={runId}
+              artifactId={`${data.current}-log`}
+              label={`${data.current} log`}
+            >
+              Open full log
+            </ArtifactViewerDialog>
+          </div>
         ) : null}
 
         <Link

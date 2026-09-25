@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   type BenchmarkApiStub,
@@ -89,6 +90,23 @@ describe("ActiveRunPanel", () => {
     expect(
       within(panel).getByRole("link", { name: "Open Run detail" }),
     ).toHaveAttribute("href", `/benchmarks/runs/${RUN}`);
+  });
+
+  it("opens the full log of the active scenario in the Artifact viewer", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    renderPanel();
+
+    const panel = await screen.findByRole("region", { name: "Active Run" });
+    await user.click(
+      await within(panel).findByRole("button", { name: /open full log/i }),
+    );
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText(`${CURRENT} log`)).toBeInTheDocument();
+    const requested = stub.requests.map((request) => request.path);
+    expect(requested).toContain(
+      `/v1/benchmarks/runs/${RUN}/artifacts/${CURRENT}-log/content`,
+    );
   });
 
   it("says polling, never live, and shows the last successful refresh", async () => {

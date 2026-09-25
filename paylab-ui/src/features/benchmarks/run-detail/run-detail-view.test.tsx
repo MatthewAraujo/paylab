@@ -10,6 +10,7 @@ import {
   networkFailure,
 } from "@/test/benchmark-api-stub";
 import {
+  artifactContent,
   baselineView,
   capabilityOffBody,
   notFoundBody,
@@ -308,8 +309,39 @@ describe("the Run detail", () => {
       expect(
         within(table).getByText("Not available on this machine"),
       ).toBeInTheDocument();
-      // no viewer is wired here, so there is no action column
-      expect(within(table).queryByText("Action")).toBeNull();
+    });
+
+    it("opens the Artifact viewer from an available row and offers none for a missing file", async () => {
+      stub.on(
+        "GET",
+        "/v1/benchmarks/runs/:runId/artifacts/:artifactId/content",
+        json(artifactContent({ content: "block rep=1/3\n" })),
+      );
+      const user = userEvent.setup();
+      renderView(NATIVE_RUN_ID);
+
+      const table = await screen.findByRole("table", {
+        name: "Artifacts of this Run",
+      });
+      expect(within(table).getByText("Action")).toBeInTheDocument();
+      const available = nativeCompletedRun().artifacts.filter(
+        (a) => a.available,
+      );
+      const missing = nativeCompletedRun().artifacts.filter(
+        (a) => !a.available,
+      );
+      expect(
+        within(table).getAllByRole("button", { name: /^View / }),
+      ).toHaveLength(available.length);
+      expect(missing.length).toBeGreaterThan(0);
+
+      await user.click(
+        within(table).getByRole("button", {
+          name: `View ${available[0].label}`,
+        }),
+      );
+      const dialog = await screen.findByRole("dialog");
+      expect(await within(dialog).findByText(/block rep=1\/3/)).toBeVisible();
     });
 
     it("renders the action slot for every row when one is provided", async () => {

@@ -20,9 +20,11 @@ Domain language and accumulated decisions live in [CONTEXT.md](CONTEXT.md) and [
 | `src/domain/paylab` | Domain (`enterprise`) and use cases with ports (`application`) |
 | `src/infra` | Nest composition: `app.module.ts`, `env`, `database` (Prisma and raw SQL adapters), `auth`, `http` (controllers, presenters, pipes, error translation), `observability` |
 | `prisma/` | `schema.prisma` and hand-written SQL migrations (migrations are the source of truth) |
-| `scripts/` | Operational scripts (`provision-merchant.ts`) |
+| `scripts/` | Operational scripts: `provision-merchant.ts`, the demo database, and the benchmark executor and importer (`benchmark-run.ts`, `benchmark-import.ts`, `benchmark/`) |
+| `bench/` | Benchmark dataset generator and helpers (`lib/`), the registered scenario suite (`scenarios/`), T13/T14 experiment helpers (`exp/`), and the versioned evidence: `results/` (Run Summaries) and `baseline.json` (the Baseline pointer) |
 | `test/` | `domain`, `core`, `infra` (unit), `integration`, `e2e`, `concurrency`, and `support` (Testcontainers setup, invariant helper) |
-| `docs/` | PRD, task plan, task specs, task run records, ADRs |
+| `docs/` | PRD, task plan, task specs, task run records, ADRs; `docs/benchmark-observability/` holds the benchmark observability PRD and plan |
+| `.benchmark/` | Local, gitignored benchmark Artifacts and running state (`runs/<runId>/`); never committed |
 
 ## Commands
 
@@ -44,9 +46,12 @@ Domain language and accumulated decisions live in [CONTEXT.md](CONTEXT.md) and [
 | `pnpm demo:dev` | Run the API against the demo database |
 | `pnpm demo:reset -- --yes` | Drop the demo database (the only destructive demo command) |
 | `pnpm bench:up` / `bench:migrate` / `bench:seed` / `bench:validate` | Separate benchmark database (port 5433): start, migrate, load the skewed dataset, check it |
+| `pnpm bench:template` | Snapshot the validated benchmark database as the pristine template every Run restores from |
 | `pnpm bench:targets` / `bench:explain` | Pick hot and cold ids; capture `EXPLAIN (ANALYZE, BUFFERS)` plans |
+| `pnpm benchmark:run [--note "<why>"]` | Run the complete Benchmark Suite from a clean commit and publish a Run Summary. Destructive to the benchmark database; long (about two hours); never in CI |
+| `pnpm benchmark:import` | One-time, idempotent import of the T13 and T14 evidence as Imported Benchmark Runs |
 
-Benchmark guide: [docs/benchmark.md](docs/benchmark.md). Results: [docs/experiments/T13-results.md](docs/experiments/T13-results.md) and [docs/experiments/T14-results.md](docs/experiments/T14-results.md).
+Benchmark guide (dataset, publishing Runs, reading them): [docs/benchmark.md](docs/benchmark.md). Results: [docs/experiments/T13-results.md](docs/experiments/T13-results.md) and [docs/experiments/T14-results.md](docs/experiments/T14-results.md).
 
 ## Local setup
 
@@ -68,6 +73,11 @@ Validated at boot by `src/infra/env/env.ts`; defaults in `.env.example`. Real `.
 | `NODE_ENV` | `development`, `test` or `production` |
 | `APP_NAME`, `LOG_ENABLED`, `LOG_LEVEL` | Structured logging (`basic` or `debug`) |
 | `FRONTEND_URL` | Comma-separated CORS origins; required in production |
+| `BENCH_DATABASE_URL` | Benchmark database (default port 5433). Must be local, its name must contain `bench`, and it is never `DATABASE_URL`; `benchmark:run` drops and recreates it |
+| `BENCH_TEMPLATE_DATABASE` | Optional. Pristine copy the benchmark database is restored from (default `<database>_template`) |
+| `BENCH_SUMMARY_DIR`, `BENCH_BASELINE_FILE` | Optional. Versioned Run Summaries (default `bench/results`) and the Baseline pointer (default `bench/baseline.json`) |
+| `BENCH_ARTIFACT_ROOT` | Optional. Local, gitignored Artifacts and running state (default `.benchmark`) |
+| `BENCHMARK_ENABLED` | Benchmark read API (`/v1/benchmarks`): on by default only when `NODE_ENV=development`; the API refuses to start with it enabled in production |
 | `DEMO_DATABASE_URL` | Used only by the `demo:*` commands. Must be a local host and a database name containing `demo`; never `DATABASE_URL` |
 
 Tests ignore a developer `.env`: they apply their own defaults and the Testcontainers URL.
@@ -96,3 +106,4 @@ Unit, integration, e2e and concurrency, each with its own Vitest config (`vitest
 - Plan and progress ledger: [docs/TASKS.md](docs/TASKS.md); specs in `docs/tasks/`, run records in `docs/task-runs/`
 - Domain language and project memory: [CONTEXT.md](CONTEXT.md)
 - Decisions: [docs/adr/](docs/adr/)
+- Benchmark observability: [PRD](docs/benchmark-observability/PRD.md), [plan](docs/benchmark-observability/TASKS.md), storage decision [ADR 0011](docs/adr/0011-version-benchmark-summaries-and-retain-artifacts-locally.md); operating guide in [docs/benchmark.md](docs/benchmark.md)

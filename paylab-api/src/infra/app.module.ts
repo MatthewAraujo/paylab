@@ -4,6 +4,7 @@ import { LedgerModule } from '@/infra/database/ledger.module'
 import { buildEnv } from '@/infra/env/env'
 import { EnvModule } from '@/infra/env/env.module'
 import { AccountsModule } from '@/infra/http/accounts.module'
+import { BenchmarksModule } from '@/infra/http/benchmarks.module'
 import { HealthModule } from '@/infra/http/health.module'
 import { PaymentsModule } from '@/infra/http/payments.module'
 import { ReportsModule } from '@/infra/http/reports.module'
@@ -23,6 +24,7 @@ import { ConfigModule } from '@nestjs/config'
 		AccountsModule,
 		PaymentsModule,
 		ReportsModule,
+		BenchmarksModule,
 		HealthModule,
 		EnvModule,
 		ObservabilityModule,

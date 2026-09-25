@@ -1,12 +1,17 @@
 import { AppModule } from '@/infra/app.module'
 import { INestApplication } from '@nestjs/common'
-import { Test } from '@nestjs/testing'
+import { Test, TestingModuleBuilder } from '@nestjs/testing'
 
 // Boots the real AppModule against the Testcontainers database. The caller closes it.
-export async function buildTestApp(): Promise<INestApplication> {
-	const moduleRef = await Test.createTestingModule({
-		imports: [AppModule],
-	}).compile()
+// `configure` can override providers, e.g. the benchmark configuration.
+export async function buildTestApp(
+	configure: (builder: TestingModuleBuilder) => TestingModuleBuilder = (builder) => builder,
+): Promise<INestApplication> {
+	const moduleRef = await configure(
+		Test.createTestingModule({
+			imports: [AppModule],
+		}),
+	).compile()
 	const app = moduleRef.createNestApplication()
 
 	await app.init()

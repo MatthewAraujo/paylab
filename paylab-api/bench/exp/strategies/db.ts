@@ -1,11 +1,12 @@
 // EXPERIMENT ONLY (T14). Connection and fixture helpers for the strategy experiments.
 import { Client } from 'pg'
 
-export const BENCH_URL =
+/** Resolved when called, so a caller (or a test) can point it at another benchmark database. */
+export const benchUrl = () =>
 	process.env.BENCH_DATABASE_URL ?? 'postgresql://paylab:paylab@localhost:5433/paylab_bench'
 
-export async function connect(options?: string): Promise<Client> {
-	const client = new Client({ connectionString: BENCH_URL, options })
+export async function connect(options?: string, url: string = benchUrl()): Promise<Client> {
+	const client = new Client({ connectionString: url, options })
 	await client.connect()
 	return client
 }

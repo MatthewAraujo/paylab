@@ -1,0 +1,923 @@
+{
+  "artifacts": [
+    {
+      "id": "query-table",
+      "kind": "RAW_DATA",
+      "label": "T13 query timings (baseline)",
+      "legacyFile": "docs/experiments/raw/final-base.txt"
+    },
+    {
+      "id": "depth-table",
+      "kind": "RAW_DATA",
+      "label": "T13 pagination depth timings (baseline)",
+      "legacyFile": "docs/experiments/raw/depth-baseline.txt"
+    },
+    {
+      "id": "query-plans",
+      "kind": "QUERY_PLAN",
+      "label": "T13 query plans (baseline)",
+      "legacyFile": "docs/experiments/plans/final-baseline.txt"
+    },
+    {
+      "id": "depth-plans",
+      "kind": "QUERY_PLAN",
+      "label": "T13 pagination depth plans (baseline)",
+      "legacyFile": "docs/experiments/plans/depth-baseline.txt"
+    }
+  ],
+  "dataset": {
+    "description": "1001000 payments, 1000 wallets, 50 merchants",
+    "fingerprint": "f827ada9033d9ffa27971798ff908eff"
+  },
+  "environment": {
+    "details": {
+      "cpuCount": "16",
+      "cpuModel": "AMD Ryzen 7 5825U",
+      "effective_cache_size": "3GB",
+      "memoryGb": "15",
+      "platform": "linux",
+      "postgres": "16.15",
+      "random_page_cost": "4",
+      "shared_buffers": "1GB",
+      "synchronous_commit": "on",
+      "work_mem": "32MB"
+    },
+    "fingerprint": "31b9ae0ae2393eb80b2b64569a5c2e266ab16b3159677851d79afa7441770d5c"
+  },
+  "executor": {
+    "version": "legacy-import-1"
+  },
+  "imported": {
+    "source": "docs/experiments/T13-results.md"
+  },
+  "kind": "imported",
+  "note": "Imported from the T13 results (schema state: baseline, constraint-provided indexes only). The measurement time was not stored, so the start time is the date the evidence was recorded. Commit, branch and finish time were not recorded. Only the median latency per query was recorded.",
+  "runId": "imported-t13-step1-baseline",
+  "scenarios": [
+    {
+      "config": {
+        "legacyLabel": "history first page (hot wallet)",
+        "origin": "imported"
+      },
+      "fingerprint": "6eddb9396b678675ddfa33e623a76684b059d707186100a667c1e1523e34a560",
+      "group": "t13",
+      "id": "t13.history.first-page.hot-wallet",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 57.742
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Ledger Entry history, first page (hot Wallet)"
+    },
+    {
+      "config": {
+        "legacyLabel": "history next page, mid (hot wallet)",
+        "origin": "imported"
+      },
+      "fingerprint": "2a85a7ddbd2fc0452fc0bf2407442824fe09875f2624f032ef40ca1671baf854",
+      "group": "t13",
+      "id": "t13.history.next-page.hot-wallet",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 58.679
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Ledger Entry history, next page in the middle (hot Wallet)"
+    },
+    {
+      "config": {
+        "legacyLabel": "balance (hot wallet)",
+        "origin": "imported"
+      },
+      "fingerprint": "87f43e67dbaf892601ccc01c35472d1ce3b460e96b2a6fb581100a04506b971b",
+      "group": "t13",
+      "id": "t13.balance.hot-wallet",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 54.856
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Balance (hot Wallet)"
+    },
+    {
+      "config": {
+        "legacyLabel": "history first page (cold wallet)",
+        "origin": "imported"
+      },
+      "fingerprint": "d254f2a94448b375982713b87d3ed81862c3fad2a3da2d178cdcd8275a066e3c",
+      "group": "t13",
+      "id": "t13.history.first-page.cold-wallet",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 51.618
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Ledger Entry history, first page (cold Wallet)"
+    },
+    {
+      "config": {
+        "legacyLabel": "history next page, mid (cold wallet)",
+        "origin": "imported"
+      },
+      "fingerprint": "a3343d4af465c2e04aa2a05da49fcc8bba8da3fa35734558f11d5518defb84b0",
+      "group": "t13",
+      "id": "t13.history.next-page.cold-wallet",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 55.058
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Ledger Entry history, next page in the middle (cold Wallet)"
+    },
+    {
+      "config": {
+        "legacyLabel": "balance (cold wallet)",
+        "origin": "imported"
+      },
+      "fingerprint": "c1758a67ba2ade3f63b47010e8d9085dc143c391ceb794a4fbf1f868964e24b3",
+      "group": "t13",
+      "id": "t13.balance.cold-wallet",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 51.647
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Balance (cold Wallet)"
+    },
+    {
+      "config": {
+        "legacyLabel": "list first page (hot merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "831cb085d1e1820f89d4df1d356b332583c5ba27455133dab2c416e5bcfee38c",
+      "group": "t13",
+      "id": "t13.payments.first-page.hot-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 52.106
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Payment list, first page (hot Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "list next page, deep (hot merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "d14b4fb870f95a5f80578f090e21dc07e5828bb1cb8dd41104ff4dcc5d2c6cde",
+      "group": "t13",
+      "id": "t13.payments.next-page-deep.hot-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 53.95
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Payment list, deep next page (hot Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "list status=CREATED (hot merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "01c1611895c0086af435911ba395bd0c1a4a55c76d45c2f75b2a0415141ba355",
+      "group": "t13",
+      "id": "t13.payments.status-created.hot-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 43.362
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Payment list, status CREATED (hot Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "list status=FAILED (hot merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "57bef5c52bb85ed549404399ac55191bed131428fab94a82cf7983a942ec52dd",
+      "group": "t13",
+      "id": "t13.payments.status-failed.hot-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 44.168
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Payment list, status FAILED (hot Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "list account filter (hot merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "9f9f8d611329a8c844c63b1d633d6d649f4d7879737c5a3f401f4bfd48d8049b",
+      "group": "t13",
+      "id": "t13.payments.account-filter.hot-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 59.535
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Payment list, account filter (hot Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "list period 30d (hot merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "eafca7e0308116bf302d3a33b4462d6815d7e9491f79f2ea08630f931496bb9a",
+      "group": "t13",
+      "id": "t13.payments.period-30d.hot-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 51.033
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Payment list, 30-day period (hot Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "report 30d (hot merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "5a39bc637304bc7112ffc3d3ecfc0940e1a8b43ba7a2ae8f1fdea4d371d75c57",
+      "group": "t13",
+      "id": "t13.report.30d.hot-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 59.911
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Daily report, 30d (hot Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "report 90d (hot merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "0f89ee6d221cf46aa5e5a51bd074ee7d29ddbae91518e30be7082b07394f17a4",
+      "group": "t13",
+      "id": "t13.report.90d.hot-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 89.916
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Daily report, 90d (hot Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "list first page (cold merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "15a6bc221378802afc7cd2f4b6daea4d8427c8218932e0795b5ff758d1885136",
+      "group": "t13",
+      "id": "t13.payments.first-page.cold-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 25.171
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Payment list, first page (cold Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "list next page, deep (cold merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "82b4fd3bdc64271ed8a98d93900666431d3a0717f7280f46ca3b1016b1c332f7",
+      "group": "t13",
+      "id": "t13.payments.next-page-deep.cold-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 24.389
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Payment list, deep next page (cold Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "list status=CREATED (cold merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "34939194c92c73dcbe4c61a8b3998e5499b47a34de43ddb67ab45d0e4cae6956",
+      "group": "t13",
+      "id": "t13.payments.status-created.cold-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 21.881
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Payment list, status CREATED (cold Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "list status=FAILED (cold merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "631b8dc7bc30faa10945fc33039dc00ecf8c08264e7824551bd8149308eb11fa",
+      "group": "t13",
+      "id": "t13.payments.status-failed.cold-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 21.93
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Payment list, status FAILED (cold Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "list account filter (cold merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "df7d58f4094940acc448d39daa8dbd8dcd3c0a4930eec25d99393e4bebb36b3c",
+      "group": "t13",
+      "id": "t13.payments.account-filter.cold-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 22.136
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Payment list, account filter (cold Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "list period 30d (cold merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "7eb2ebd605181d22cc53a39264cea53687fc57acdb431e3d41b6ac248851c2d7",
+      "group": "t13",
+      "id": "t13.payments.period-30d.cold-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 23.211
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Payment list, 30-day period (cold Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "report 30d (cold merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "a8363e5a8606046ca74c3ff6aa5caa32b9a4afd1882030d428065684fbf56498",
+      "group": "t13",
+      "id": "t13.report.30d.cold-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 24.743
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Daily report, 30d (cold Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "report 90d (cold merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "af63e0a589fb6d3b94ffe57ac105e4ae502cb31a35f5867cbdaceb0ea06e4c66",
+      "group": "t13",
+      "id": "t13.report.90d.cold-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 30.455
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Daily report, 90d (cold Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "list account filter, rare match (cold merchant)",
+        "origin": "imported"
+      },
+      "fingerprint": "1eaea3f306f3f6fecd37066729a00f1a0870dc169ea4e70d6eb6738c0d455759",
+      "group": "t13",
+      "id": "t13.payments.account-filter-rare.cold-merchant",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 22.068
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "Payment list, account filter with a rare match (cold Merchant)"
+    },
+    {
+      "config": {
+        "legacyLabel": "depth 0, keyset",
+        "origin": "imported"
+      },
+      "fingerprint": "fb01c2caee300f1464b13934a912f80150a81a5ab63144e2be53a031545705a5",
+      "group": "t13",
+      "id": "t13.depth.keyset.0",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 57.702
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "History at depth 0, keyset"
+    },
+    {
+      "config": {
+        "legacyLabel": "depth 0, offset",
+        "origin": "imported"
+      },
+      "fingerprint": "9ec01bb356d7dc6049487e875e9a3d759ca11520707bc7d6cf99d6fab034c32b",
+      "group": "t13",
+      "id": "t13.depth.offset.0",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 57.768
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "History at depth 0, offset"
+    },
+    {
+      "config": {
+        "legacyLabel": "depth 1000, keyset",
+        "origin": "imported"
+      },
+      "fingerprint": "a3276993f988ac744c39e8f80976f699ccd81a95464d6032c8a5bbec8144ca86",
+      "group": "t13",
+      "id": "t13.depth.keyset.1000",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 61.492
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "History at depth 1000, keyset"
+    },
+    {
+      "config": {
+        "legacyLabel": "depth 1000, offset",
+        "origin": "imported"
+      },
+      "fingerprint": "d4cd7fe30279261b811f8dcc439806884cce1ccfd5aa231005bb2da89920d25c",
+      "group": "t13",
+      "id": "t13.depth.offset.1000",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 61.913
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "History at depth 1000, offset"
+    },
+    {
+      "config": {
+        "legacyLabel": "depth 10000, keyset",
+        "origin": "imported"
+      },
+      "fingerprint": "1ee1bea95b98c58b68de32425d985e0b54159fec0534f53ab733c9f0a04319f7",
+      "group": "t13",
+      "id": "t13.depth.keyset.10000",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 61.159
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "History at depth 10000, keyset"
+    },
+    {
+      "config": {
+        "legacyLabel": "depth 10000, offset",
+        "origin": "imported"
+      },
+      "fingerprint": "778386ffbd11bad740109d3f2133e799b83c9dd86f408bcf2eec37d808569bd8",
+      "group": "t13",
+      "id": "t13.depth.offset.10000",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 64.904
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "History at depth 10000, offset"
+    },
+    {
+      "config": {
+        "legacyLabel": "depth 50000, keyset",
+        "origin": "imported"
+      },
+      "fingerprint": "0c52705b1bfd73d7fa6e7cb999a374887a1844d061ad40280c0ef3a0d0ef297c",
+      "group": "t13",
+      "id": "t13.depth.keyset.50000",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 58.853
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "History at depth 50000, keyset"
+    },
+    {
+      "config": {
+        "legacyLabel": "depth 50000, offset",
+        "origin": "imported"
+      },
+      "fingerprint": "fa2f5ae9a74d57903aa4ad25059bc63e09ef1bdcb7188d028dcb216f5b4c1183",
+      "group": "t13",
+      "id": "t13.depth.offset.50000",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 68.077
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "History at depth 50000, offset"
+    },
+    {
+      "config": {
+        "legacyLabel": "depth 90000, keyset",
+        "origin": "imported"
+      },
+      "fingerprint": "5d9d437f05ad613b2460f441b8704544ceabc3e47c2128bce03602fe14d0c922",
+      "group": "t13",
+      "id": "t13.depth.keyset.90000",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 56.359
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "History at depth 90000, keyset"
+    },
+    {
+      "config": {
+        "legacyLabel": "depth 90000, offset",
+        "origin": "imported"
+      },
+      "fingerprint": "1faeb8e3d739c5460ca12f298b69ce3048491e71da456ce5ee55e7e7e4ce3cac",
+      "group": "t13",
+      "id": "t13.depth.offset.90000",
+      "metrics": [
+        {
+          "aggregation": "median",
+          "direction": "LOWER_IS_BETTER",
+          "key": "query_latency_median_ms",
+          "label": "Query latency (median)",
+          "unit": "ms",
+          "value": 73.021
+        }
+      ],
+      "protocol": {
+        "aggregation": "median",
+        "repetitions": 7,
+        "warmupRuns": 1
+      },
+      "status": "COMPLETED",
+      "title": "History at depth 90000, offset"
+    }
+  ],
+  "schemaVersion": 1,
+  "source": {
+    "branch": "unknown",
+    "commit": "unknown"
+  },
+  "startedAt": "2026-09-23T20:14:51.000Z",
+  "status": "COMPLETED"
+}

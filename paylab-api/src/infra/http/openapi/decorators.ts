@@ -54,3 +54,25 @@ export function ApiPageQuery() {
 		}),
 	)
 }
+
+/** A benchmark route: typed 200, and optionally 404 and 422. There is no authentication: the whole surface is a local developer tool. */
+export function ApiBenchmarkRoute(
+	response: Type<unknown>,
+	options: { notFound?: boolean; validated?: boolean } = {},
+) {
+	return applyDecorators(
+		ApiOkResponse({ type: response }),
+		...(options.notFound
+			? [
+					ApiResponse({
+						status: 404,
+						type: ErrorResponse,
+						description: 'Unknown Run or Artifact, or the capability is off.',
+					}),
+				]
+			: []),
+		...(options.validated
+			? [ApiResponse({ status: 422, type: ValidationErrorResponse, description: 'Invalid input.' })]
+			: []),
+	)
+}

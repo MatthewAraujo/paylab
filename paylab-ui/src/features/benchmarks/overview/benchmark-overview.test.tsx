@@ -12,7 +12,9 @@ import {
   baselineView,
   capabilityOffBody,
   metric,
+  notFoundBody,
   runPage,
+  runProgress,
   scenario,
 } from "@/test/benchmark-fixtures";
 import {
@@ -454,6 +456,31 @@ describe("Benchmarks overview", () => {
         screen.queryByRole("region", {
           name: "Difference from the previous compatible Run",
         }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("a running latest Run", () => {
+    it("shows the active-Run panel and no headline classification", async () => {
+      serveOverview(stub, {
+        pages: {
+          "": runPage({
+            items: [latestItem({ status: "RUNNING", finishedAt: undefined })],
+          }),
+        },
+      });
+      stub.on("GET", "/v1/benchmarks/runs/:runId/progress", () =>
+        json(runProgress({ runId: LATEST_ID })),
+      );
+      stub.on("GET", "/v1/benchmarks/runs/:runId/artifacts/:artifactId", () =>
+        json(notFoundBody("BENCHMARK_ARTIFACT_NOT_FOUND"), 404),
+      );
+      renderOverview();
+
+      const panel = await screen.findByRole("region", { name: "Active Run" });
+      expect(within(panel).getByText("3 of 17 scenarios (18%)")).toBeVisible();
+      expect(
+        screen.queryByRole("region", { name: "Headline measurements" }),
       ).not.toBeInTheDocument();
     });
   });

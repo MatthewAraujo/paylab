@@ -52,11 +52,6 @@ export function LatestRun({ run, importedSource }: Readonly<LatestRunProps>) {
             {run.failure.summary}
           </p>
         ) : null}
-        {run.status === "RUNNING" ? (
-          <p className="text-sm text-muted-foreground">
-            This Run is still running.
-          </p>
-        ) : null}
 
         <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Fact label="Started">

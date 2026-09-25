@@ -8,6 +8,7 @@ import {
   RefreshFailedNotice,
   SkippedRecordsNotice,
 } from "@/components/benchmarks/states";
+import { ActiveRunPanel } from "../active-run/active-run-panel";
 import { useDefaultComparison, useRun, useRuns } from "../api/hooks";
 import { BenchmarkRequestError } from "../api/results";
 import { formatInstant, type RunListItem } from "../rules";
@@ -56,7 +57,12 @@ export function BenchmarkOverview() {
         <BenchmarkEmpty />
       ) : (
         <>
-          <LatestSection latest={items[0]} />
+          <LatestSection
+            latest={items[0]}
+            onActiveRunSettled={() => {
+              void runs.refetch();
+            }}
+          />
           <RunHistory
             runs={items}
             hasMore={runs.hasNextPage}
@@ -70,7 +76,10 @@ export function BenchmarkOverview() {
 }
 
 /** Everything about the newest Run; what is shown depends on how that Run ended. */
-function LatestSection({ latest }: Readonly<{ latest: RunListItem }>) {
+function LatestSection({
+  latest,
+  onActiveRunSettled,
+}: Readonly<{ latest: RunListItem; onActiveRunSettled: () => void }>) {
   const settled = latest.status === "COMPLETED";
   const imported = useRun(latest.runId);
 
@@ -80,6 +89,13 @@ function LatestSection({ latest }: Readonly<{ latest: RunListItem }>) {
         run={latest}
         importedSource={imported.data?.imported?.source}
       />
+      {latest.status === "RUNNING" ? (
+        <ActiveRunPanel
+          runId={latest.runId}
+          startedAt={latest.startedAt}
+          onSettled={onActiveRunSettled}
+        />
+      ) : null}
       {settled ? <SettledSections latest={latest} /> : null}
       {latest.status === "RUNNING" ? null : (
         <ScenarioGroups runId={latest.runId} />

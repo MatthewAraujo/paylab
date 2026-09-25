@@ -62,6 +62,15 @@ _Avoid_: Synthetic run, inferred measurement, native run
 Sanitized diagnostic evidence attached to a Benchmark Run, such as execution logs, query plans, and failure output. Artifacts have no automatic expiration; the console may display or download them but does not treat them as normalized measurements.
 _Avoid_: Benchmark Summary, unsanitized process output, dashboard metric
 
+### Benchmark console decisions
+
+- **Browser-direct reads.** Benchmark data is non-financial and unauthenticated, so the browser reads `/v1/benchmarks/*` directly (like System Health) instead of a server proxy. The Merchant key never travels to these routes, and financial routes stay server-only.
+- **Local-only boundary.** The API exposes the benchmark routes only in development (or `BENCHMARK_ENABLED=true`). A disabled capability, an unreachable API and a missing Run are different states with different wording; none is replaced by invented data.
+- **Observe, with one write.** The console never runs, pauses or cancels a Benchmark Run. Selecting the Benchmark Baseline is the only write; it changes a pointer file that appears as a reviewable Git change, and the console never commits or pushes.
+- **Zero reference.** Following the design, 0 to 0 is Stable; a move away from zero is classified by metric direction and shown without a percentage. This intentionally differs from the API's unused `classifyChange`.
+- **Error rate.** Shown as "not declared" when a Run's scenario declares no error-rate measurement; it is never computed or defaulted to zero.
+- **Trends.** Points follow Run order, not calendar time, and the chart is plain SVG with no charting dependency. Timestamps are UTC.
+
 ## Accounts
 
 **Merchant**:

@@ -30,11 +30,11 @@ Add a Benchmarks area to the Operational Console that observes the API's benchma
 | [F2](tasks/F2.md) | Typed benchmark client, failure taxonomy, and test support | F1 | done | [context](task-runs/F2-CONTEXT.md) | [summary](task-runs/F2-summary.md) |
 | [F3](tasks/F3.md) | Pure benchmark presentation rules | F1 | done | [context](task-runs/F3-CONTEXT.md) | [summary](task-runs/F3-summary.md) |
 | [F4](tasks/F4.md) | Navigation, route frames, design-system pieces, and shared states | F1 | done | [context](task-runs/F4-CONTEXT.md) | [summary](task-runs/F4-summary.md) |
-| [F5](tasks/F5.md) | Overview of the latest Benchmark Run | F2, F3, F4 | in_progress | — | — |
-| [F6](tasks/F6.md) | Active Run: progress and recent log | F5 | planned | — | — |
-| [F7](tasks/F7.md) | Run detail | F2, F3, F4 | in_progress | — | — |
+| [F5](tasks/F5.md) | Overview of the latest Benchmark Run | F2, F3, F4 | done | [context](task-runs/F5-CONTEXT.md) | [summary](task-runs/F5-summary.md) |
+| [F6](tasks/F6.md) | Active Run: progress and recent log | F5 | done | [context](task-runs/F6-CONTEXT.md) | [summary](task-runs/F6-summary.md) |
+| [F7](tasks/F7.md) | Run detail | F2, F3, F4 | done | [context](task-runs/F7-CONTEXT.md) | [summary](task-runs/F7-summary.md) |
 | [F8](tasks/F8.md) | Artifact viewer | F2, F4 | done | [context](task-runs/F8-CONTEXT.md) | [summary](task-runs/F8-summary.md) |
-| [F9](tasks/F9.md) | Benchmark Comparison | F2, F3, F4, F7 | planned | — | — |
+| [F9](tasks/F9.md) | Benchmark Comparison | F2, F3, F4, F7 | done | [context](task-runs/F9-CONTEXT.md) | [summary](task-runs/F9-summary.md) |
 | [F10](tasks/F10.md) | Baseline selection | F7, F9 | planned | — | — |
 | [F11](tasks/F11.md) | Historical trends | F2, F3, F4 | done | [context](task-runs/F11-CONTEXT.md) | [summary](task-runs/F11-summary.md) |
 | [F12](tasks/F12.md) | Accessibility, responsive polish, browser smoke, and documentation | F1–F11 | planned | — | — |

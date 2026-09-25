@@ -262,8 +262,11 @@ describe("ArtifactViewerDialog", () => {
     const user = userEvent.setup();
     renderViewer();
     const dialog = await open(user);
+    // The hook's own policy retries an unreachable API once, after the default backoff.
     expect(
-      await within(dialog).findByText(/api unreachable/i),
+      await within(dialog).findByText(/api unreachable/i, undefined, {
+        timeout: 4000,
+      }),
     ).toBeInTheDocument();
 
     stub.on("GET", contentPath, json(artifactContent()));

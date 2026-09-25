@@ -19,7 +19,7 @@ const STATUS_LABELS: Record<Scenario["status"], string> = {
   FAILED: "Failed",
 };
 
-function Disclosure({
+export function Disclosure({
   open,
   onToggle,
   controls,

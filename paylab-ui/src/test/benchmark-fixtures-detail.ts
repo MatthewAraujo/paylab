@@ -1,9 +1,11 @@
 import {
   type Artifact,
   artifact,
+  type Metric,
   metric,
   type RunDetail,
   runDetail,
+  runListItem,
   type Scenario,
   scenario,
 } from "./benchmark-fixtures";
@@ -223,3 +225,82 @@ export function importedRun(kind: ImportedKind): RunDetail {
 }
 
 export type { Artifact };
+
+export const CURRENT_RUN_ID = "2026-09-23T14-08-12Z-8a2c91f";
+export const REFERENCE_RUN_ID = "2026-09-16T18-30-00Z-3f9d0aa";
+
+const m = (
+  key: string,
+  direction: Metric["direction"],
+  value: number,
+  unit = "ms",
+): Metric => metric({ key, label: `Label ${key}`, unit, direction, value });
+
+/**
+ * Two Runs and the API's verdict on them, covering every scenario state and every kind of
+ * metric change: the exact +5% boundary, an improvement, a regression from zero, 0 to 0, an
+ * informational metric and a metric recorded on one side only.
+ */
+export function comparisonFixture() {
+  const sc = (id: string, group: string, metrics: Metric[]) =>
+    scenario({ id, group, title: `Title of ${id}`, metrics });
+
+  const current = runDetail({
+    runId: CURRENT_RUN_ID,
+    scenarios: [
+      sc("t14.a", "t14", [
+        m("tps", "HIGHER_IS_BETTER", 105, "tx/s"),
+        m("p99", "LOWER_IS_BETTER", 40),
+        m("errors", "LOWER_IS_BETTER", 3, "count"),
+        m("deadlocks", "LOWER_IS_BETTER", 0, "count"),
+        m("samples", "NEUTRAL", 100, "count"),
+        m("only_current", "LOWER_IS_BETTER", 9),
+      ]),
+      sc("t13.b", "t13", [m("b", "LOWER_IS_BETTER", 1)]),
+      sc("t14.d", "t14", [m("d", "LOWER_IS_BETTER", 1)]),
+      sc("t14.e", "t14", [m("e", "LOWER_IS_BETTER", 1)]),
+      sc("t14.f", "t14", [m("f", "LOWER_IS_BETTER", 1)]),
+    ],
+  });
+  const reference = runDetail({
+    runId: REFERENCE_RUN_ID,
+    scenarios: [
+      sc("t14.a", "t14", [
+        m("tps", "HIGHER_IS_BETTER", 100, "tx/s"),
+        m("p99", "LOWER_IS_BETTER", 50),
+        m("errors", "LOWER_IS_BETTER", 0, "count"),
+        m("deadlocks", "LOWER_IS_BETTER", 0, "count"),
+        m("samples", "NEUTRAL", 90, "count"),
+        m("only_reference", "LOWER_IS_BETTER", 8),
+      ]),
+      sc("t13.c", "t13", [m("c", "LOWER_IS_BETTER", 1)]),
+      sc("t14.d", "t14", [m("d", "LOWER_IS_BETTER", 2)]),
+      sc("t14.e", "t14", [m("e", "LOWER_IS_BETTER", 2)]),
+      sc("t14.f", "t14", [m("f", "LOWER_IS_BETTER", 2)]),
+    ],
+  });
+
+  return {
+    current,
+    reference,
+    response: {
+      current: runListItem({ runId: CURRENT_RUN_ID }),
+      reference: runListItem({
+        runId: REFERENCE_RUN_ID,
+        startedAt: "2026-09-16T18:30:00.000Z",
+      }),
+      comparison: {
+        environmentCompatible: true,
+        datasetCompatible: true,
+        scenarios: [
+          { scenarioId: "t14.a", state: "comparable" as const },
+          { scenarioId: "t13.b", state: "new" as const },
+          { scenarioId: "t13.c", state: "removed" as const },
+          { scenarioId: "t14.d", state: "changed" as const },
+          { scenarioId: "t14.e", state: "environment-incompatible" as const },
+          { scenarioId: "t14.f", state: "dataset-incompatible" as const },
+        ],
+      },
+    },
+  };
+}

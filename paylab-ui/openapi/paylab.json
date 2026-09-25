@@ -570,6 +570,591 @@
         ]
       }
     },
+    "/v1/benchmarks/status": {
+      "get": {
+        "operationId": "BenchmarksController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BenchmarkStatusResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Benchmarks"
+        ]
+      }
+    },
+    "/v1/benchmarks/runs": {
+      "get": {
+        "operationId": "BenchmarksController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "RUNNING",
+                "COMPLETED",
+                "INCOMPLETE"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Opaque `nextCursor` from the previous page.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunPageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Benchmarks"
+        ]
+      }
+    },
+    "/v1/benchmarks/runs/{runId}": {
+      "get": {
+        "operationId": "BenchmarksController_detail",
+        "parameters": [
+          {
+            "name": "runId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown Run or Artifact, or the capability is off.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Benchmarks"
+        ]
+      }
+    },
+    "/v1/benchmarks/runs/{runId}/progress": {
+      "get": {
+        "operationId": "BenchmarksController_progress",
+        "parameters": [
+          {
+            "name": "runId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunProgressResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown Run or Artifact, or the capability is off.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Benchmarks"
+        ]
+      }
+    },
+    "/v1/benchmarks/runs/{runId}/artifacts/{artifactId}": {
+      "get": {
+        "operationId": "BenchmarksController_artifact",
+        "parameters": [
+          {
+            "name": "runId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "artifactId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown Run or Artifact, or the capability is off.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Benchmarks"
+        ]
+      }
+    },
+    "/v1/benchmarks/runs/{runId}/artifacts/{artifactId}/content": {
+      "get": {
+        "operationId": "BenchmarksController_content",
+        "parameters": [
+          {
+            "name": "runId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "artifactId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 262144,
+              "default": 65536
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArtifactContentResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown Run or Artifact, or the capability is off.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Benchmarks"
+        ]
+      }
+    },
+    "/v1/benchmarks/runs/{runId}/artifacts/{artifactId}/download": {
+      "get": {
+        "operationId": "BenchmarksController_download",
+        "parameters": [
+          {
+            "name": "runId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "artifactId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown Run or Artifact, or the capability is off.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Benchmarks"
+        ]
+      }
+    },
+    "/v1/benchmarks/comparisons/default": {
+      "get": {
+        "operationId": "BenchmarksController_defaultComparison",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComparisonResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Benchmarks"
+        ]
+      }
+    },
+    "/v1/benchmarks/comparisons": {
+      "get": {
+        "operationId": "BenchmarksController_compare",
+        "parameters": [
+          {
+            "name": "reference",
+            "required": true,
+            "in": "query",
+            "description": "Run id to compare it with.",
+            "schema": {}
+          },
+          {
+            "name": "current",
+            "required": true,
+            "in": "query",
+            "description": "Run id of the Run being examined.",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComparisonResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown Run or Artifact, or the capability is off.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Benchmarks"
+        ]
+      }
+    },
+    "/v1/benchmarks/trends": {
+      "get": {
+        "operationId": "BenchmarksController_trend",
+        "parameters": [
+          {
+            "name": "dimension",
+            "required": false,
+            "in": "query",
+            "description": "Repeatable `key:value`, for example `strategy:nokey`.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "metric",
+            "required": true,
+            "in": "query",
+            "description": "Metric key, for example `tps`.",
+            "schema": {}
+          },
+          {
+            "name": "scenarioId",
+            "required": true,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrendResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Benchmarks"
+        ]
+      }
+    },
+    "/v1/benchmarks/baseline": {
+      "get": {
+        "operationId": "BenchmarksController_baseline",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaselineResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Benchmarks"
+        ]
+      },
+      "put": {
+        "operationId": "BenchmarksController_selectBaseline",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectBaselineRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaselineSelectionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown Run or Artifact, or the capability is off.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid body, or the Run is not eligible (code BENCHMARK_BASELINE_INELIGIBLE): only a completed Run can be the Baseline.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Benchmarks"
+        ]
+      }
+    },
     "/health": {
       "get": {
         "operationId": "HealthController_handle",
@@ -949,6 +1534,1103 @@
           "from",
           "to",
           "items"
+        ]
+      },
+      "BenchmarkStatusResponse": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "example": true
+          },
+          "runCount": {
+            "type": "number",
+            "description": "Runs found: published Summaries plus a Run still running."
+          },
+          "skippedRecords": {
+            "type": "number",
+            "description": "Records that could not be read and were ignored."
+          },
+          "activeRunId": {
+            "type": "string",
+            "nullable": true,
+            "description": "The Run being executed right now."
+          }
+        },
+        "required": [
+          "enabled",
+          "runCount",
+          "skippedRecords",
+          "activeRunId"
+        ]
+      },
+      "RunSourceResponse": {
+        "type": "object",
+        "properties": {
+          "commit": {
+            "type": "string",
+            "example": "abc1234def",
+            "description": "\"unknown\" for imported Runs."
+          },
+          "branch": {
+            "type": "string",
+            "example": "main"
+          }
+        },
+        "required": [
+          "commit",
+          "branch"
+        ]
+      },
+      "DatasetResponse": {
+        "type": "object",
+        "properties": {
+          "fingerprint": {
+            "type": "string",
+            "description": "Digest of the data the measurements were taken on."
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fingerprint"
+        ]
+      },
+      "ScenarioCountsResponse": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "pending": {
+            "type": "number"
+          },
+          "active": {
+            "type": "number"
+          },
+          "completed": {
+            "type": "number"
+          },
+          "failed": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total",
+          "pending",
+          "active",
+          "completed",
+          "failed"
+        ]
+      },
+      "HeadlineMetricResponse": {
+        "type": "object",
+        "properties": {
+          "scenarioId": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          },
+          "summaryRole": {
+            "type": "string",
+            "enum": [
+              "THROUGHPUT",
+              "LATENCY_P99",
+              "ERROR_RATE",
+              "DURATION"
+            ]
+          },
+          "dimensions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "What the value belongs to inside the scenario, for example { strategy: \"nokey\" }."
+          }
+        },
+        "required": [
+          "scenarioId",
+          "key",
+          "label",
+          "unit",
+          "value",
+          "summaryRole"
+        ]
+      },
+      "RunFailureResponse": {
+        "type": "object",
+        "properties": {
+          "scenarioId": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary"
+        ]
+      },
+      "RunListItemResponse": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "native",
+              "imported"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RUNNING",
+              "COMPLETED",
+              "INCOMPLETE"
+            ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/RunSourceResponse"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationMs": {
+            "type": "number"
+          },
+          "dataset": {
+            "$ref": "#/components/schemas/DatasetResponse"
+          },
+          "environmentFingerprint": {
+            "type": "string"
+          },
+          "scenarioCounts": {
+            "$ref": "#/components/schemas/ScenarioCountsResponse"
+          },
+          "headlineMetrics": {
+            "description": "Only the measurements a scenario explicitly featured with a summary role.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeadlineMetricResponse"
+            }
+          },
+          "failure": {
+            "$ref": "#/components/schemas/RunFailureResponse"
+          }
+        },
+        "required": [
+          "runId",
+          "kind",
+          "status",
+          "source",
+          "startedAt",
+          "dataset",
+          "environmentFingerprint",
+          "scenarioCounts",
+          "headlineMetrics"
+        ]
+      },
+      "SkippedRecordResponse": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "example": "broken.json"
+          },
+          "reason": {
+            "type": "string",
+            "example": "not valid JSON"
+          }
+        },
+        "required": [
+          "file",
+          "reason"
+        ]
+      },
+      "RunPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RunListItemResponse"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "description": "Pass as `cursor` to get the following page; null on the last page."
+          },
+          "skipped": {
+            "description": "Records that could not be read; they never break the history.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkippedRecordResponse"
+            }
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor",
+          "skipped"
+        ]
+      },
+      "ExecutorResponse": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "EnvironmentResponse": {
+        "type": "object",
+        "properties": {
+          "fingerprint": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "fingerprint",
+          "details"
+        ]
+      },
+      "ProtocolResponse": {
+        "type": "object",
+        "properties": {
+          "warmupMs": {
+            "type": "number"
+          },
+          "durationMs": {
+            "type": "number"
+          },
+          "warmupRuns": {
+            "type": "number"
+          },
+          "repetitions": {
+            "type": "number"
+          },
+          "aggregation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "repetitions",
+          "aggregation"
+        ]
+      },
+      "MetricResponse": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "HIGHER_IS_BETTER",
+              "LOWER_IS_BETTER",
+              "NEUTRAL"
+            ]
+          },
+          "aggregation": {
+            "type": "string"
+          },
+          "dimensions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "What the value belongs to inside the scenario, for example { strategy: \"nokey\" }."
+          },
+          "value": {
+            "type": "number"
+          },
+          "summaryRole": {
+            "type": "string",
+            "enum": [
+              "THROUGHPUT",
+              "LATENCY_P99",
+              "ERROR_RATE",
+              "DURATION"
+            ]
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "unit",
+          "direction",
+          "value"
+        ]
+      },
+      "ScenarioResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "fingerprint": {
+            "type": "string",
+            "description": "Definition fingerprint: equal only when the workload and protocol are."
+          },
+          "protocol": {
+            "$ref": "#/components/schemas/ProtocolResponse"
+          },
+          "config": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "ACTIVE",
+              "COMPLETED",
+              "FAILED"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationMs": {
+            "type": "number"
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetricResponse"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "group",
+          "title",
+          "fingerprint",
+          "protocol",
+          "config",
+          "status",
+          "metrics"
+        ]
+      },
+      "ArtifactResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "LOG",
+              "QUERY_PLAN",
+              "RAW_DATA"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "scenarioId": {
+            "type": "string"
+          },
+          "legacyFile": {
+            "type": "string",
+            "description": "Imported Runs: the evidence file, in place in the repository."
+          },
+          "available": {
+            "type": "boolean",
+            "description": "False when the local file is gone; the Summary stays valid."
+          },
+          "sizeBytes": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "available"
+        ]
+      },
+      "FailureDetailResponse": {
+        "type": "object",
+        "properties": {
+          "scenarioId": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "exitStatus": {
+            "type": "number"
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary"
+        ]
+      },
+      "ImportedResponse": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "example": "docs/experiments/T14-results.md"
+          }
+        },
+        "required": [
+          "source"
+        ]
+      },
+      "RunDetailResponse": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "type": "number",
+            "example": 1
+          },
+          "runId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "native",
+              "imported"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RUNNING",
+              "COMPLETED",
+              "INCOMPLETE"
+            ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/RunSourceResponse"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationMs": {
+            "type": "number"
+          },
+          "executor": {
+            "$ref": "#/components/schemas/ExecutorResponse"
+          },
+          "environment": {
+            "$ref": "#/components/schemas/EnvironmentResponse"
+          },
+          "dataset": {
+            "$ref": "#/components/schemas/DatasetResponse"
+          },
+          "scenarios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScenarioResponse"
+            }
+          },
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArtifactResponse"
+            }
+          },
+          "failure": {
+            "$ref": "#/components/schemas/FailureDetailResponse"
+          },
+          "imported": {
+            "$ref": "#/components/schemas/ImportedResponse"
+          },
+          "abandoned": {
+            "type": "boolean",
+            "description": "A RUNNING record whose owner process is gone (stop polling it)."
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "runId",
+          "kind",
+          "status",
+          "source",
+          "startedAt",
+          "executor",
+          "environment",
+          "dataset",
+          "scenarios",
+          "artifacts",
+          "abandoned"
+        ]
+      },
+      "ProgressScenarioResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "ACTIVE",
+              "COMPLETED",
+              "FAILED"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationMs": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "group",
+          "title",
+          "status"
+        ]
+      },
+      "RunProgressResponse": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RUNNING",
+              "COMPLETED",
+              "INCOMPLETE"
+            ]
+          },
+          "current": {
+            "type": "string",
+            "nullable": true,
+            "description": "The scenario running right now."
+          },
+          "completed": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "scenarios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProgressScenarioResponse"
+            }
+          },
+          "failure": {
+            "$ref": "#/components/schemas/RunFailureResponse"
+          },
+          "abandoned": {
+            "type": "boolean",
+            "description": "A RUNNING record whose owner process is gone (stop polling it)."
+          }
+        },
+        "required": [
+          "runId",
+          "status",
+          "current",
+          "completed",
+          "total",
+          "scenarios",
+          "abandoned"
+        ]
+      },
+      "ArtifactContentResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "Whole lines of the sanitized text; at most 256 KiB per request."
+          },
+          "offset": {
+            "type": "number",
+            "description": "Byte position this chunk starts at."
+          },
+          "nextOffset": {
+            "type": "number",
+            "nullable": true,
+            "description": "Pass as `offset` to read on; null at the end of the file."
+          },
+          "sizeBytes": {
+            "type": "number",
+            "description": "Size of the whole file in bytes."
+          }
+        },
+        "required": [
+          "content",
+          "offset",
+          "nextOffset",
+          "sizeBytes"
+        ]
+      },
+      "ScenarioComparisonResponse": {
+        "type": "object",
+        "properties": {
+          "scenarioId": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "comparable",
+              "new",
+              "removed",
+              "changed",
+              "environment-incompatible",
+              "dataset-incompatible"
+            ],
+            "description": "Only \"comparable\" scenarios may be compared numerically; \"new\" exists only in the current Run, \"removed\" only in the reference."
+          }
+        },
+        "required": [
+          "scenarioId",
+          "state"
+        ]
+      },
+      "ComparisonDetailResponse": {
+        "type": "object",
+        "properties": {
+          "environmentCompatible": {
+            "type": "boolean",
+            "description": "False when the machine or PostgreSQL facts differ."
+          },
+          "datasetCompatible": {
+            "type": "boolean",
+            "description": "False when the data the measurements were taken on differs."
+          },
+          "scenarios": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScenarioComparisonResponse"
+            }
+          }
+        },
+        "required": [
+          "environmentCompatible",
+          "datasetCompatible",
+          "scenarios"
+        ]
+      },
+      "ComparisonResponse": {
+        "type": "object",
+        "properties": {
+          "current": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RunListItemResponse"
+              }
+            ]
+          },
+          "reference": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RunListItemResponse"
+              }
+            ]
+          },
+          "comparison": {
+            "nullable": true,
+            "description": "Null when there is no reference to compare with.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ComparisonDetailResponse"
+              }
+            ]
+          }
+        },
+        "required": [
+          "current",
+          "reference",
+          "comparison"
+        ]
+      },
+      "TrendRunRefResponse": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "runId",
+          "startedAt"
+        ]
+      },
+      "TrendPointResponse": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "native",
+              "imported"
+            ]
+          },
+          "value": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "runId",
+          "startedAt",
+          "kind",
+          "value"
+        ]
+      },
+      "TrendExclusionResponse": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "changed",
+              "environment-incompatible",
+              "dataset-incompatible",
+              "metric-not-recorded"
+            ]
+          }
+        },
+        "required": [
+          "runId",
+          "startedAt",
+          "reason"
+        ]
+      },
+      "IncompleteRunMarkerResponse": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "failureSummary": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "runId",
+          "startedAt"
+        ]
+      },
+      "TrendResponse": {
+        "type": "object",
+        "properties": {
+          "scenarioId": {
+            "type": "string"
+          },
+          "metricKey": {
+            "type": "string"
+          },
+          "dimensions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true
+          },
+          "direction": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "HIGHER_IS_BETTER",
+              "LOWER_IS_BETTER",
+              "NEUTRAL"
+            ]
+          },
+          "reference": {
+            "nullable": true,
+            "description": "The newest completed Run with the scenario: the line follows its definition.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TrendRunRefResponse"
+              }
+            ]
+          },
+          "points": {
+            "description": "Chronological, comparable only.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrendPointResponse"
+            }
+          },
+          "excluded": {
+            "description": "Completed Runs left out of the line, each with its reason.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrendExclusionResponse"
+            }
+          },
+          "incompleteRuns": {
+            "description": "Incomplete Runs: timeline markers, never values.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IncompleteRunMarkerResponse"
+            }
+          },
+          "baselineRunId": {
+            "type": "string",
+            "nullable": true,
+            "description": "The Baseline Run, to mark on the line when it is one of the points."
+          }
+        },
+        "required": [
+          "scenarioId",
+          "metricKey",
+          "dimensions",
+          "label",
+          "unit",
+          "direction",
+          "reference",
+          "points",
+          "excluded",
+          "incompleteRuns",
+          "baselineRunId"
+        ]
+      },
+      "BaselinePointerResponse": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "description": "The Run every Benchmark Comparison against the Baseline uses."
+          },
+          "selectedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "runId",
+          "selectedAt"
+        ]
+      },
+      "GitStateResponse": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "description": "False outside a Git repository."
+          },
+          "baselineChangePending": {
+            "type": "boolean",
+            "description": "The Baseline pointer differs from what is committed."
+          },
+          "dirtyFiles": {
+            "description": "Files with uncommitted changes (at most 20).",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dirtyCount": {
+            "type": "number",
+            "description": "All files with uncommitted changes. While there are any, the next `benchmark:run` refuses to start."
+          }
+        },
+        "required": [
+          "available",
+          "baselineChangePending",
+          "dirtyFiles",
+          "dirtyCount"
+        ]
+      },
+      "BaselineResponse": {
+        "type": "object",
+        "properties": {
+          "baseline": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BaselinePointerResponse"
+              }
+            ]
+          },
+          "run": {
+            "nullable": true,
+            "description": "The Baseline Run; null when none is selected or the Run is no longer published.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RunListItemResponse"
+              }
+            ]
+          },
+          "problem": {
+            "type": "string",
+            "description": "Why an existing pointer file could not be used."
+          },
+          "git": {
+            "$ref": "#/components/schemas/GitStateResponse"
+          }
+        },
+        "required": [
+          "baseline",
+          "run",
+          "git"
+        ]
+      },
+      "SelectBaselineRequest": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "description": "A completed Run, native or imported."
+          }
+        },
+        "required": [
+          "runId"
+        ]
+      },
+      "BaselineSelectionResponse": {
+        "type": "object",
+        "properties": {
+          "baseline": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BaselinePointerResponse"
+              }
+            ]
+          },
+          "run": {
+            "nullable": true,
+            "description": "The Baseline Run; null when none is selected or the Run is no longer published.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RunListItemResponse"
+              }
+            ]
+          },
+          "problem": {
+            "type": "string",
+            "description": "Why an existing pointer file could not be used."
+          },
+          "git": {
+            "$ref": "#/components/schemas/GitStateResponse"
+          },
+          "changed": {
+            "type": "boolean",
+            "description": "False when the Run already was the Baseline: nothing was written."
+          }
+        },
+        "required": [
+          "baseline",
+          "run",
+          "git",
+          "changed"
         ]
       }
     }

@@ -33,10 +33,10 @@ Add a Benchmarks area to the Operational Console that observes the API's benchma
 | [F5](tasks/F5.md) | Overview of the latest Benchmark Run | F2, F3, F4 | in_progress | — | — |
 | [F6](tasks/F6.md) | Active Run: progress and recent log | F5 | planned | — | — |
 | [F7](tasks/F7.md) | Run detail | F2, F3, F4 | in_progress | — | — |
-| [F8](tasks/F8.md) | Artifact viewer | F2, F4 | in_progress | — | — |
+| [F8](tasks/F8.md) | Artifact viewer | F2, F4 | done | [context](task-runs/F8-CONTEXT.md) | [summary](task-runs/F8-summary.md) |
 | [F9](tasks/F9.md) | Benchmark Comparison | F2, F3, F4, F7 | planned | — | — |
 | [F10](tasks/F10.md) | Baseline selection | F7, F9 | planned | — | — |
-| [F11](tasks/F11.md) | Historical trends | F2, F3, F4 | ready | — | — |
+| [F11](tasks/F11.md) | Historical trends | F2, F3, F4 | done | [context](task-runs/F11-CONTEXT.md) | [summary](task-runs/F11-summary.md) |
 | [F12](tasks/F12.md) | Accessibility, responsive polish, browser smoke, and documentation | F1–F11 | planned | — | — |
 
 ## Acceptance Criteria Mapping

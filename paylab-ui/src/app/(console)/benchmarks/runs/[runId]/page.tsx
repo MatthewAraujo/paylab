@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { BenchmarkFrame } from "@/components/benchmarks/benchmark-frame";
-import { PendingView } from "@/components/benchmarks/pending-view";
+import { RunDetailView } from "@/features/benchmarks/run-detail/run-detail-view";
 
 export const metadata: Metadata = { title: "Benchmark Run" };
 
 const description =
-  "Complete provenance, protocols, metrics, failure evidence, and Artifacts of one Benchmark Run.";
+  "Every persisted state and normalized measurement of one Benchmark Run: provenance, scenarios, failure evidence, and Artifacts.";
 
 export default async function RunPage({
   params,
@@ -14,10 +14,7 @@ export default async function RunPage({
 
   return (
     <BenchmarkFrame title="Benchmark Run" description={description}>
-      <p className="mb-4 text-sm text-muted-foreground">
-        Run <code className="font-mono text-foreground">{runId}</code>
-      </p>
-      <PendingView name="Benchmark Run detail" />
+      <RunDetailView runId={runId} />
     </BenchmarkFrame>
   );
 }

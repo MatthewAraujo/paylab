@@ -16,27 +16,27 @@ Reverse proxy, TLS, public domain, login, remote deployment, registries, automat
 | [T2](tasks/T2.md) | Console production image | — | done | [Context](task-runs/T2-CONTEXT.md) | [Summary](task-runs/T2-summary.md) |
 | [T3](tasks/T3.md) | Production-local stack end to end | T1, T2 | done | [Context](task-runs/T3-CONTEXT.md) | [Summary](task-runs/T3-summary.md) |
 | [T4](tasks/T4.md) | Persistence, recovery and failure modes | T3 | done | [Context](task-runs/T4-CONTEXT.md) | [Summary](task-runs/T4-summary.md) |
-| [T5](tasks/T5.md) | Backup, restore, documentation and development regression | T3 | planned | — | — |
+| [T5](tasks/T5.md) | Backup, restore, documentation and development regression | T3 | done | [Context](task-runs/T5-CONTEXT.md) | [Summary](task-runs/T5-summary.md) |
 
 ## Acceptance Criteria Mapping
 | Acceptance Criterion | Task(s) | Test(s) | Status |
 | --- | --- | --- | --- |
-| AC-1 | T2, T5 | UI commands; dev Compose and reload check | planned |
-| AC-2 | T3 | Compose config, port bindings | planned |
-| AC-3 | T3 | Project/volume listing | planned |
-| AC-4 | T3 | Smoke: authenticated API and console | planned |
-| AC-5 | T4 | Smoke restart flag: Wallet ids | planned |
-| AC-6 | T4 | Throwaway mismatch run | planned |
-| AC-7 | T1, T3, T4 | Init ordering, failed migration run | planned |
-| AC-8 | T1, T2 | Image tool absence checks | planned |
-| AC-9 | T1, T2 | `id -u` checks | planned |
-| AC-10 | T3 | Compose health status | planned |
-| AC-11 | T4 | Smoke kill flag | planned |
-| AC-12 | T1, T3 | HTML/inspect/git checks | planned |
-| AC-13 | T3 | Missing env file run, git check-ignore | planned |
-| AC-14 | T5 | Backup command | planned |
-| AC-15 | T5 | Restore drill | planned |
-| AC-16 | T5 | Documentation review | planned |
+| AC-1 | T2, T5 | UI commands; dev Compose and reload check | done |
+| AC-2 | T3 | Compose config, port bindings | done |
+| AC-3 | T3 | Project/volume listing | done |
+| AC-4 | T3 | Smoke: authenticated API and console | done |
+| AC-5 | T4 | Smoke restart flag: Wallet ids | done |
+| AC-6 | T4 | Throwaway mismatch run | done |
+| AC-7 | T1, T3, T4 | Init ordering, failed migration run | done |
+| AC-8 | T1, T2 | Image tool absence checks | done |
+| AC-9 | T1, T2 | `id -u` checks | done |
+| AC-10 | T3 | Compose health status | done |
+| AC-11 | T4 | Smoke kill flag | done |
+| AC-12 | T1, T3 | HTML/inspect/git checks | done |
+| AC-13 | T3 | Missing env file run, git check-ignore | done |
+| AC-14 | T5 | Backup command | done |
+| AC-15 | T5 | Restore drill | done |
+| AC-16 | T5 | Documentation review | done |
 
 ## Test Strategy
 Container/Compose/HTTP boundary only; no tests asserting Dockerfile or Compose text. `scripts/check-production-stack.py` covers the running stack with opt-in restart/kill flags. Failure modes (missing env file, credential mismatch, failed migration) run in throwaway Compose projects and are recorded manually. Regression: dev `docker compose config --quiet`, `scripts/check-docker-reload.py`, existing API/UI typecheck, lint and tests.
@@ -56,4 +56,4 @@ T1 and T2 (independent), then T3, then T4 and T5.
 No blocking open questions.
 
 ## Handoff
-Ready for `task-runner`. Start with T1 (T2 can run in parallel).
+All tasks done; ready for `pr-review`.

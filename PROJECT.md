@@ -26,9 +26,49 @@ Financial server requests use `PAYLAB_INTERNAL_API_URL=http://api:3333`; browser
 
 Benchmark evidence already on disk is visible through bind mounts. The API reads host diagnostic Artifacts through a read-only repository mount, so Docker does not create or change ownership of the host `.benchmark` directory. The stack never starts a benchmark workload or a benchmark database. Existing standalone commands and Compose configuration inside `paylab-api` remain independent.
 
+## Production-local Docker
+
+Runs compiled, non-root images the way a release would, on this machine only. From this directory:
+
+```sh
+cp .env.production.example .env.production   # then replace every value; keep it private
+docker compose -f compose.production.yaml up --build -d
+```
+
+- Console: http://localhost:3000
+- API health: http://localhost:3333/health (no `/docs`: Swagger and the benchmark API are off in production, so the console's Benchmarks area shows them as unavailable)
+
+`.env.production` is gitignored and required; without it Compose stops before starting anything. It holds the PostgreSQL user and password and the matching `DATABASE_URL` (URL-encode the password there; host `postgres` and database `paylab_demo` are fixed by the demo initializer). Nothing secret is passed as a build argument.
+
+On every startup the one-shot `demo-init` applies versioned migrations, then seeds the Demo Store only when the database is empty. The API starts only after it succeeds, and the console only after the API is healthy, so a failed migration or initialization keeps both unavailable (`docker compose -f compose.production.yaml logs demo-init` shows why). PostgreSQL, API and console have healthchecks and `restart: unless-stopped`: Docker restarts a process that exits, but not one that is merely unhealthy.
+
+The `paylab-production` Compose project has its own `postgres-data` and `credentials` volumes, separate from development. The Merchant key stays in the credential volume, mounted read-only in the console. Keep the two volumes together; a mismatch fails initialization rather than resetting data.
+
+Logs: `docker compose -f compose.production.yaml logs -f api ui`. Stop: `docker compose -f compose.production.yaml stop`. Rebuild after code or dependency changes by rerunning the startup command. Both stacks publish 127.0.0.1:3000 and 127.0.0.1:3333, so stop one before starting the other. `python3 scripts/check-production-stack.py` verifies a running stack; `--restart` and `--kill` additionally check preservation across a restart and recovery after a crash.
+
+### Backup and restore
+
+Backups are manual compressed dumps in the gitignored `backups/` directory, taken while the stack runs:
+
+```sh
+mkdir -p backups
+docker compose -f compose.production.yaml exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d paylab_demo --format=custom' > backups/paylab-$(date +%Y%m%d-%H%M%S).dump
+```
+
+Restoring **replaces the current database contents** with the dump; anything written after it is lost. Take a fresh backup first, then stop the API and console before restoring, never restore into a running application:
+
+```sh
+docker compose -f compose.production.yaml stop ui api
+docker compose -f compose.production.yaml exec -T postgres sh -c 'pg_restore -U "$POSTGRES_USER" -d paylab_demo --clean --if-exists --single-transaction --no-owner' < backups/<file>.dump
+docker compose -f compose.production.yaml up -d --wait
+```
+
+A dump does not contain the Merchant key, only its hash. Restore a dump from this stack with its own credential volume; a dump from another stack also needs that stack's credential volume, or initialization refuses to start.
+
 ## Specifications
 
 - Local Docker: [PRD](docs/local-docker/PRD.md), [tasks](docs/local-docker/TASKS.md).
+- Production-local Docker: [PRD](docs/production-docker/PRD.md), [tasks](docs/production-docker/TASKS.md).
 - Benchmark observability: [PRD](docs/PRD.md), [tasks](docs/TASKS.md).
 
 ## Docker reload regression

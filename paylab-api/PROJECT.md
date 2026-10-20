@@ -110,4 +110,4 @@ Unit, integration, e2e and concurrency, each with its own Vitest config (`vitest
 
 ## Complete workspace with Docker
 
-From the parent workspace, `docker compose up --build` starts this API in watch mode, the console, and an isolated demo PostgreSQL database. No host Node.js installation or manual API key setup is needed. Existing standalone Compose services remain independent. See [workspace instructions](../PROJECT.md).
+From the parent workspace, `docker compose up --build` starts this API in watch mode, the console, and an isolated demo PostgreSQL database. No host Node.js installation or manual API key setup is needed. Existing standalone Compose services remain independent. `Dockerfile.production` builds the production-local image (`runtime`) and the migration/demo initializer (`init`) for `compose.production.yaml`. See [workspace instructions](../PROJECT.md).

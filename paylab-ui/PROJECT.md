@@ -63,4 +63,4 @@ Benchmarks (`/benchmarks`, `/benchmarks/compare`, `/benchmarks/runs/[runId]`, `/
 
 ## Complete workspace with Docker
 
-From the parent workspace, `docker compose up --build` starts the console and API in development with isolated demo data and automatic server-only Merchant credentials. Source edits reload automatically. `PAYLAB_INTERNAL_API_URL` optionally selects the API address used by server reads, preserving `NEXT_PUBLIC_PAYLAB_API_URL` for browser requests. See [workspace instructions](../PROJECT.md).
+From the parent workspace, `docker compose up --build` starts the console and API in development with isolated demo data and automatic server-only Merchant credentials. Source edits reload automatically. `PAYLAB_INTERNAL_API_URL` optionally selects the API address used by server reads, preserving `NEXT_PUBLIC_PAYLAB_API_URL` for browser requests. `Dockerfile.production` builds the production-local image from the Next.js standalone output, enabled only when `NEXT_OUTPUT=standalone` for `compose.production.yaml`. See [workspace instructions](../PROJECT.md).

@@ -1,5 +1,9 @@
 petagro-api/
 
+# Claude Code personal settings
+**/.claude/settings.local.json
+.claude/worktrees/
+
 # Production-local secrets and database dumps
 .env.production
 backups/

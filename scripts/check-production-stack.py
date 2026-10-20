@@ -17,6 +17,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 COMPOSE = ["docker", "compose", "-f", str(ROOT / "compose.production.yaml")]
 SERVICES = ("postgres", "api", "ui")
+# PID 1 is docker-init; its only child is the application (healthchecks are not its children).
+KILL_APPLICATION = "kill -KILL $(cut -d' ' -f1 /proc/1/task/1/children)"
 
 
 def compose(*args, check=True):
@@ -140,8 +142,9 @@ def check_kill():
         restarts = int(subprocess.run(
             ["docker", "inspect", before, "--format", "{{.RestartCount}}"], capture_output=True, text=True, check=True
         ).stdout)
-        # PID 1 is the init process; killing the node child makes the container exit.
-        compose("exec", "-T", service, "sh", "-c", "kill -KILL $(pgrep -o node || pidof node)")
+        # Killing the application makes the container exit. Slim images have no pgrep.
+        # The exec session dies with the container, so its exit status is not meaningful.
+        compose("exec", "-T", service, "sh", "-c", KILL_APPLICATION, check=False)
 
         def recovered():
             count = int(subprocess.run(

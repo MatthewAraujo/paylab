@@ -13,7 +13,7 @@ Reverse proxy, TLS, public domain, login, remote deployment, registries, automat
 | Task | Title | Depends on | Status | Context | Summary |
 | --- | --- | --- | --- | --- | --- |
 | [T1](tasks/T1.md) | API production image and initializer target | — | done | [Context](task-runs/T1-CONTEXT.md) | [Summary](task-runs/T1-summary.md) |
-| [T2](tasks/T2.md) | Console production image | — | ready | — | — |
+| [T2](tasks/T2.md) | Console production image | — | done | [Context](task-runs/T2-CONTEXT.md) | [Summary](task-runs/T2-summary.md) |
 | [T3](tasks/T3.md) | Production-local stack end to end | T1, T2 | planned | — | — |
 | [T4](tasks/T4.md) | Persistence, recovery and failure modes | T3 | planned | — | — |
 | [T5](tasks/T5.md) | Backup, restore, documentation and development regression | T3 | planned | — | — |

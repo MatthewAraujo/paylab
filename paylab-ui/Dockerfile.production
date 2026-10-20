@@ -1,0 +1,24 @@
+# Production-local image serving the Next.js standalone output. The development image is ./Dockerfile.
+FROM node:24-bookworm-slim AS deps
+WORKDIR /app
+RUN npm install --global pnpm@10.28.1
+COPY package.json pnpm-lock.yaml ./
+RUN --mount=type=cache,id=paylab-ui-pnpm,target=/var/cache/pnpm,sharing=locked \
+    pnpm install --frozen-lockfile --store-dir=/var/cache/pnpm \
+    --network-concurrency=8 --fetch-timeout=900000
+
+FROM deps AS build
+COPY . .
+ENV NEXT_OUTPUT=standalone NEXT_TELEMETRY_DISABLED=1
+RUN pnpm build
+
+FROM node:24-bookworm-slim AS runtime
+WORKDIR /app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
+COPY --from=build /app/.next/standalone ./
+COPY --from=build /app/.next/static ./.next/static
+# The server writes its runtime cache here; everything else stays read-only for `node`.
+RUN mkdir -p .next/cache && chown node:node .next/cache
+USER node
+EXPOSE 3000
+CMD ["node", "server.js"]

@@ -28,6 +28,7 @@ Benchmark evidence already on disk is visible through bind mounts. The API reads
 
 ## Specifications
 
+- FakeBank October MVP (standalone provider simulator): [PRD](fakebank-api/docs/PRD.md), [context](fakebank-api/CONTEXT.md).
 - Local Docker: [PRD](docs/local-docker/PRD.md), [tasks](docs/local-docker/TASKS.md).
 - Benchmark observability: [PRD](docs/PRD.md), [tasks](docs/TASKS.md).
 

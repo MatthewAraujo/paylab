@@ -35,7 +35,9 @@ export function createServerApiClient(options: ServerApiClientOptions = {}) {
   }
 
   return createClient<paths>({
-    baseUrl: options.baseUrl ?? getApiBaseUrl(),
+    baseUrl:
+      options.baseUrl ??
+      (process.env.PAYLAB_INTERNAL_API_URL?.trim() || getApiBaseUrl()),
     headers: { Authorization: `Bearer ${apiKey}` },
     cache: "no-store",
     ...(options.fetch ? { fetch: options.fetch } : {}),

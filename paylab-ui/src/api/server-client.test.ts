@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createServerApiClient, MissingApiKeyError } from "./server-client";
 
 function stubFetch(body: unknown = { items: [], nextCursor: null }) {
@@ -9,6 +9,23 @@ function stubFetch(body: unknown = { items: [], nextCursor: null }) {
 }
 
 describe("createServerApiClient", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("routes server reads through the internal API address while preserving explicit overrides", async () => {
+    vi.stubEnv("PAYLAB_INTERNAL_API_URL", "http://api:3333");
+    vi.stubEnv("NEXT_PUBLIC_PAYLAB_API_URL", "http://localhost:3333");
+    const fetch = stubFetch();
+    await createServerApiClient({ apiKey: "k", fetch }).GET("/v1/accounts");
+    expect(fetch.mock.calls[0][0].url).toBe("http://api:3333/v1/accounts");
+
+    await createServerApiClient({
+      apiKey: "k",
+      baseUrl: "http://explicit.test",
+      fetch,
+    }).GET("/v1/accounts");
+    expect(fetch.mock.calls[1][0].url).toBe("http://explicit.test/v1/accounts");
+  });
+
   it("sends the Merchant API key as a Bearer token", async () => {
     const fetch = stubFetch();
     const client = createServerApiClient({

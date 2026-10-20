@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+.git
+.env
+.env.*
+data
+.benchmark
+bench/results
+bench/exp

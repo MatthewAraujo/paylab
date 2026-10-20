@@ -1,0 +1,79 @@
+name: paylab-local
+
+x-api: &api
+  image: paylab-api-dev
+  build: ./paylab-api
+  init: true
+  environment:
+    NODE_ENV: development
+    DATABASE_URL: postgresql://paylab:paylab@postgres:5432/paylab_demo?schema=public
+    FRONTEND_URL: http://localhost:3000
+    PORT: "3333"
+    BENCH_ARTIFACT_ROOT: /workspace/.benchmark
+  volumes:
+    - ./paylab-api/src:/app/src
+    - ./paylab-api/scripts:/app/scripts
+    - ./paylab-api/prisma:/app/prisma
+    - ./paylab-api/bench:/app/bench
+    - ./paylab-api:/workspace:ro
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: paylab
+      POSTGRES_PASSWORD: paylab
+      POSTGRES_DB: paylab_demo
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paylab -d paylab_demo"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  demo-init:
+    <<: *api
+    command: ["sh", "-ec", "pnpm prisma:migrate:deploy && pnpm exec ts-node -r tsconfig-paths/register scripts/docker-demo.ts"]
+    volumes:
+      - ./paylab-api/scripts:/app/scripts:ro
+      - ./paylab-api/prisma:/app/prisma:ro
+      - demo-credentials:/run/paylab
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    <<: *api
+    ports:
+      - "127.0.0.1:3333:3333"
+    depends_on:
+      demo-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3333/health').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+      start_period: 15s
+
+  ui:
+    build: ./paylab-ui
+    init: true
+    environment:
+      NODE_ENV: development
+      PAYLAB_INTERNAL_API_URL: http://api:3333
+      NEXT_PUBLIC_PAYLAB_API_URL: http://localhost:3333
+    command: ["sh", "-ec", "PAYLAB_API_KEY=$$(cat /run/paylab/api-key); export PAYLAB_API_KEY; exec pnpm dev --hostname 0.0.0.0"]
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./paylab-ui/src:/app/src
+      - demo-credentials:/run/paylab:ro
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  demo-credentials:

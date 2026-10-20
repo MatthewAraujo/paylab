@@ -107,3 +107,7 @@ Unit, integration, e2e and concurrency, each with its own Vitest config (`vitest
 - Domain language and project memory: [CONTEXT.md](CONTEXT.md)
 - Decisions: [docs/adr/](docs/adr/)
 - Benchmark observability: [PRD](docs/benchmark-observability/PRD.md), [plan](docs/benchmark-observability/TASKS.md), storage decision [ADR 0011](docs/adr/0011-version-benchmark-summaries-and-retain-artifacts-locally.md); operating guide in [docs/benchmark.md](docs/benchmark.md)
+
+## Complete workspace with Docker
+
+From the parent workspace, `docker compose up --build` starts this API in watch mode, the console, and an isolated demo PostgreSQL database. No host Node.js installation or manual API key setup is needed. Existing standalone Compose services remain independent. See [workspace instructions](../PROJECT.md).

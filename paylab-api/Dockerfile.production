@@ -1,0 +1,40 @@
+# Production-local images. Targets: `runtime` (the API) and `init` (one-shot
+# migrations and Docker demo initialization). The development image is ./Dockerfile.
+FROM node:24-bookworm-slim AS base
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+FROM base AS deps
+RUN npm install --global pnpm@11.9.0
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY prisma ./prisma
+RUN --mount=type=cache,id=paylab-api-pnpm,target=/var/cache/pnpm,sharing=locked \
+    pnpm install --frozen-lockfile --store-dir=/var/cache/pnpm \
+    --network-concurrency=8 --fetch-timeout=900000
+
+FROM deps AS build
+COPY . .
+RUN pnpm build
+
+# Drops devDependencies but keeps the Prisma Client generated during install.
+FROM build AS prod-deps
+RUN --mount=type=cache,id=paylab-api-pnpm,target=/var/cache/pnpm,sharing=locked \
+    CI=true pnpm --config.store-dir=/var/cache/pnpm prune --prod --ignore-scripts
+
+# Keeps the install tooling: `prisma migrate deploy` and the TypeScript initializer need it.
+FROM build AS init
+# A new named volume mounted here inherits this ownership, so `node` can write the key.
+RUN mkdir -p /run/paylab && chown node:node /run/paylab
+ENV NODE_ENV=production
+USER node
+CMD ["sh", "-ec", "./node_modules/.bin/prisma migrate deploy && ./node_modules/.bin/ts-node -r tsconfig-paths/register scripts/docker-demo.ts"]
+
+FROM base AS runtime
+ENV NODE_ENV=production
+COPY --from=prod-deps /app/package.json ./
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+USER node
+EXPOSE 3333
+CMD ["node", "dist/infra/main"]

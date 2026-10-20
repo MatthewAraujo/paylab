@@ -1,0 +1,99 @@
+# Production-local stack: compiled non-root images, migrations on every startup,
+# loopback-only ports. Start: docker compose -f compose.production.yaml up --build -d
+# Shares ports 3000/3333 with the development stack (compose.yaml); run one at a time.
+name: paylab-production
+
+x-env-file: &env-file
+  env_file:
+    - path: .env.production
+      required: true
+
+x-api-build: &api-build
+  context: ./paylab-api
+  dockerfile: Dockerfile.production
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    <<: *env-file
+    environment:
+      # The demo initializer accepts only this database on the `postgres` service.
+      POSTGRES_DB: paylab_demo
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d paylab_demo"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  # One-shot release step: versioned migrations, then demo initialization (seeds only
+  # an empty database). A failure keeps the API and console from starting.
+  demo-init:
+    image: paylab-api-init:production
+    build:
+      <<: *api-build
+      target: init
+    <<: *env-file
+    init: true
+    volumes:
+      - credentials:/run/paylab
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    image: paylab-api:production
+    build:
+      <<: *api-build
+      target: runtime
+    <<: *env-file
+    init: true
+    environment:
+      FRONTEND_URL: http://localhost:3000
+      PORT: "3333"
+    ports:
+      - "127.0.0.1:3333:3333"
+    depends_on:
+      demo-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3333/health').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  ui:
+    image: paylab-ui:production
+    build:
+      context: ./paylab-ui
+      dockerfile: Dockerfile.production
+    init: true
+    environment:
+      HOSTNAME: 0.0.0.0
+      PAYLAB_INTERNAL_API_URL: http://api:3333
+    # The Merchant key is exported only to the server process; it never reaches the browser.
+    command: ["sh", "-ec", "PAYLAB_API_KEY=$$(cat /run/paylab/api-key); export PAYLAB_API_KEY; exec node server.js"]
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - credentials:/run/paylab:ro
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/', { redirect: 'manual' }).then(r => { if (r.status >= 400) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+# Distinct from the development volumes (project paylab-local). The credential volume
+# must always be kept, backed up and restored together with the database volume.
+volumes:
+  postgres-data:
+  credentials:

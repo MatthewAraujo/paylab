@@ -123,3 +123,5 @@ What is not obvious from the code; the operating guide is [docs/benchmark.md](do
 ## Local Docker development
 
 The Nest CLI discovers child processes with `ps` when restarting in watch mode. Debian slim lacks it; without `procps`, the previous application can keep port 3333 and reload fails with `EADDRINUSE`. The API development image includes `procps`. The workspace HTTP reload regression checks edits and restoration in both applications.
+
+The production runtime installs only `dependencies`. `dotenv` must stay there because the entrypoint imports `dotenv/config`; development tools such as Biome must stay in `devDependencies`, or they ship in the image. The production initializer target keeps the full install because `prisma migrate deploy` and the TypeScript initializer need the CLI and ts-node.

@@ -1,0 +1,14 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Migrations are the source of truth: they are hand-written SQL, and constraints or
+// triggers Prisma does not model live only there. Never regenerate a migration from
+// this schema without carrying them over.
+//
+// Amounts are 64-bit integers of the currency's smallest unit (BigInt here), never decimals.

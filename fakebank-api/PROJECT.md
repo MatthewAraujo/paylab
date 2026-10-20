@@ -1,0 +1,69 @@
+# FakeBank API
+
+A fictional external payment provider (PSP/partner bank) used as an adversarial test environment for PayLab. A standalone NestJS HTTP service with its own PostgreSQL database; PayLab sees it only over HTTP ([ADR 0001](docs/adr/0001-fakebank-as-an-independent-http-service.md)). It never imports code from `paylab-api`.
+
+Domain language and accumulated decisions live in [CONTEXT.md](CONTEXT.md); requirements in [docs/PRD.md](docs/PRD.md); the plan in [docs/TASKS.md](docs/TASKS.md). This file only covers how to work in the service.
+
+## Stack
+
+- Node.js 22+, pnpm 11 (pinned in `package.json`; `mise.toml` provides the same version), TypeScript.
+- NestJS 11, Zod for environment validation, `@nestjs/swagger` for the OpenAPI document.
+- PostgreSQL 16, Prisma 6 (client and migration runner; hand-written SQL migrations are the source of truth).
+- Vitest with SWC, Supertest, Testcontainers (a disposable PostgreSQL per test run).
+- Biome for lint and formatting.
+
+## Structure
+
+| Path | Contents |
+| --- | --- |
+| `src/infra/main.ts`, `app.factory.ts`, `app.module.ts` | Bootstrap; `configureApp` holds the HTTP configuration shared with the test app |
+| `src/infra/env` | Zod environment schema (`env.ts`), `EnvModule`, typed `EnvService` |
+| `src/infra/database` | `DatabaseModule` and `PrismaService` |
+| `src/infra/http` | Controllers, `request-id.ts` (X-Request-Id), `errors/` (error envelope and global filter), `openapi/` (Swagger setup and documentation shapes) |
+| `prisma/` | `schema.prisma` and `migrations/` |
+| `test/` | `infra` (unit), `integration`, `e2e`, `concurrency`, and `support` (Testcontainers setup, `buildTestApp`, database reset) |
+| `docs/` | PRD, task plan, task specs, task run records, ADRs |
+
+## Commands
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm install` | Install dependencies (postinstall runs `prisma generate`) |
+| `pnpm dev` | Run the API in watch mode (port 4000) |
+| `pnpm build` / `pnpm start:prod` | Compile to `dist/` and run the build |
+| `pnpm lint` / `pnpm lint:fix` | Biome check / autofix |
+| `pnpm typecheck` | `tsc --noEmit` |
+| `pnpm test` | Unit tests (no database, no Docker) |
+| `pnpm test:integration` | Real PostgreSQL: schema and trigger tests |
+| `pnpm test:e2e` | HTTP API against the Testcontainers database (the main seam) |
+| `pnpm test:concurrency` | Parallel-request suite, run separately from the fast gate |
+| `pnpm prisma:migrate` | Create/apply a migration in development |
+| `pnpm prisma:migrate:deploy` | Apply existing migrations |
+
+Docker is required for every database test layer (integration, e2e, concurrency); each run starts one `postgres:16-alpine` container and applies the migrations with `prisma migrate deploy`. Unit tests need no Docker.
+
+## Conventions
+
+- **Errors.** Every error response is `{ code, message, retryable, requestId }`, produced only by `ErrorEnvelopeFilter`. Throw an `HttpException` whose body is `{ code, message }` for business errors; anything that is not an `HttpException` becomes a generic `500 PROVIDER_INTERNAL_ERROR` and is logged, never exposed. `retryable` is decided only in `src/infra/http/errors/error-envelope.ts` (true for 429, 500, 503).
+- **Request id.** `X-Request-Id` is echoed when it is printable ASCII of at most 128 characters, otherwise a UUID is generated; it is on every response header and in every error body.
+- **Migrations** are hand-written SQL; the Prisma schema follows them, never the other way around. Amounts are integer minor units (`BIGINT`), never decimals.
+- **Tests** boot the real `AppModule` through `test/support/app.ts` (`buildTestApp`), which applies the same `configureApp` as production. Test-only routes go in `buildTestApp({ controllers })`; provider overrides in `buildTestApp({ configure })`.
+
+## Local setup
+
+1. `pnpm install`
+2. `cp .env.example .env`
+3. Start a PostgreSQL matching `DATABASE_URL` (the example uses port 5434, so it does not collide with PayLab's 5432/5433), e.g. `docker run -d --name fakebank-postgres -e POSTGRES_USER=fakebank -e POSTGRES_PASSWORD=fakebank -e POSTGRES_DB=fakebank -p 127.0.0.1:5434:5432 postgres:16-alpine`, then `pnpm prisma:migrate:deploy`
+4. `pnpm dev`, then `curl localhost:4000/health` and open http://localhost:4000/docs
+
+## Environment variables
+
+Validated at boot by `src/infra/env/env.ts` (the service refuses to start with an invalid value and names it); defaults in `.env.example`. Real `.env` files are gitignored, and secrets are never committed.
+
+| Variable | Notes |
+| --- | --- |
+| `DATABASE_URL` | Required PostgreSQL URL; FakeBank's own database, never PayLab's |
+| `PORT` | Default 4000 |
+| `NODE_ENV` | `development`, `test` or `production` |
+| `APP_NAME` | Default `fakebank-api`; reported by `/health` |
+| `LOG_ENABLED`, `LOG_LEVEL` | Errors and warnings are always logged; `LOG_ENABLED=true` adds the regular log, `LOG_LEVEL=debug` the debug and verbose levels |

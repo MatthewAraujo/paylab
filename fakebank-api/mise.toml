@@ -1,0 +1,3 @@
+[tools]
+# Same version as `packageManager` in package.json; pnpm refuses to run otherwise.
+pnpm = "11.9.0"

@@ -1,1 +1,5 @@
 petagro-api/
+
+# Production-local secrets and database dumps
+.env.production
+backups/

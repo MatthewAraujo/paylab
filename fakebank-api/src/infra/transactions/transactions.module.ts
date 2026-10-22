@@ -15,5 +15,7 @@ import { TransactionsController } from './transactions.controller'
 		ProviderTransactionRepository,
 		{ provide: DOMAIN_CLOCK, useValue: systemClock },
 	],
+	// The lab's advance endpoint decides PROCESSING transactions with the same repository and clock.
+	exports: [ProviderTransactionRepository, DOMAIN_CLOCK],
 })
 export class TransactionsModule {}

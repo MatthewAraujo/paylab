@@ -4,18 +4,20 @@ import { OUTCOMES } from './outcome'
 
 export const MAX_DELAY_MS = 120_000
 
+/** A Failure Code: trimmed, never blank, at most 64 characters, no closed list. */
+export const failureCode = z
+	.string()
+	.max(64)
+	.transform((value) => value.trim())
+	.refine((value) => value.length > 0, 'Must not be blank')
+
 // AC-13: impossible combinations are refused (400) instead of stored. Unknown fields are stripped.
 export const registerScenarioBody = z
 	.object({
 		externalReference,
 		outcome: z.enum(OUTCOMES),
 		delayMs: z.number().int().min(0).max(MAX_DELAY_MS).default(0),
-		failureCode: z
-			.string()
-			.max(64)
-			.transform((value) => value.trim())
-			.refine((value) => value.length > 0, 'Must not be blank')
-			.optional(),
+		failureCode: failureCode.optional(),
 		retryAfterSeconds: z.number().int().min(1).max(3600).optional(),
 		times: z.number().int().min(1).max(100).default(1),
 	})

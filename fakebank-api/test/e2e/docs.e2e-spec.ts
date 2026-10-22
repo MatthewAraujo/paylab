@@ -112,4 +112,23 @@ describe('OpenAPI documentation', () => {
 			'ERROR_AFTER_COMMIT',
 		])
 	})
+
+	// AC-12/AC-24/AC-25: catches the advance route missing from the lab contract or documented
+	// without its errors and bearer auth.
+	it('documents the lab advance when the lab is enabled', async () => {
+		const { body } = await request(app.getHttpServer()).get('/docs-json')
+		const advance = body.paths['/__test/transactions/{providerTransactionId}/advance'].post
+
+		expect(Object.keys(advance.responses).sort()).toEqual(['200', '400', '401', '404', '409'])
+		expect(advance.security).toEqual([{ bearer: [] }])
+		expect(advance.responses['200'].content['application/json'].schema.$ref).toBe(
+			'#/components/schemas/ProviderTransactionResponse',
+		)
+		expect(advance.responses['409'].content['application/json'].schema.$ref).toBe(
+			'#/components/schemas/ErrorEnvelopeResponse',
+		)
+		expect(
+			body.components.schemas.AdvanceProviderTransactionRequest.properties.status.enum,
+		).toEqual(['SUCCEEDED', 'FAILED'])
+	})
 })

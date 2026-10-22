@@ -1,4 +1,8 @@
-import { ProviderTransactionEvent } from '@/domain/provider-transaction'
+import {
+	ProviderTransactionChange,
+	ProviderTransactionEvent,
+	ProviderTransactionState,
+} from '@/domain/provider-transaction'
 import { PrismaService } from '@/infra/database/prisma.service'
 import { Injectable } from '@nestjs/common'
 import { Prisma, type ProviderTransaction } from '@prisma/client'
@@ -52,18 +56,40 @@ export class ProviderTransactionRepository {
 			const { transaction, events } = await build(tx)
 			const created = await tx.providerTransaction.create({ data: transaction })
 			for (const event of events) {
-				await tx.providerTransactionEvent.create({
-					data: {
-						id: event.id,
-						providerTransactionId: event.providerTransactionId,
-						type: event.type,
-						status: event.status,
-						failureCode: event.failureCode,
-						occurredAt: event.occurredAt,
-					},
-				})
+				await tx.providerTransactionEvent.create({ data: eventData(event) })
 			}
 			return created
+		})
+	}
+
+	/**
+	 * AC-24/AC-27: applies a decided change of a PROCESSING Provider Transaction (its new state and
+	 * its event) in one database transaction.
+	 *
+	 * AC-25: the update only matches while the row is still PROCESSING, so of two concurrent
+	 * decisions the second (blocked on the row lock, then re-evaluating the condition) matches
+	 * nothing. It then returns `null`, writes no event, and the row keeps the first decision.
+	 */
+	async applyDecision(
+		clientId: string,
+		change: ProviderTransactionChange<ProviderTransactionState>,
+	): Promise<ProviderTransaction | null> {
+		const { transaction, event } = change
+		return this.prisma.$transaction(async (tx) => {
+			const { count } = await tx.providerTransaction.updateMany({
+				where: { id: transaction.id, clientId, status: 'PROCESSING' },
+				data: {
+					status: transaction.status,
+					failureCode: transaction.failureCode,
+					completedAt: transaction.completedAt,
+					updatedAt: transaction.completedAt ?? event.occurredAt,
+				},
+			})
+			if (count === 0) {
+				return null
+			}
+			await tx.providerTransactionEvent.create({ data: eventData(event) })
+			return tx.providerTransaction.findUniqueOrThrow({ where: { id: transaction.id } })
 		})
 	}
 
@@ -86,6 +112,19 @@ export class ProviderTransactionRepository {
 			where: { clientId, externalReference },
 			orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
 		})
+	}
+}
+
+function eventData(
+	event: ProviderTransactionEvent,
+): Prisma.ProviderTransactionEventUncheckedCreateInput {
+	return {
+		id: event.id,
+		providerTransactionId: event.providerTransactionId,
+		type: event.type,
+		status: event.status,
+		failureCode: event.failureCode,
+		occurredAt: event.occurredAt,
 	}
 }
 

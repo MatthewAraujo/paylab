@@ -19,8 +19,8 @@ PayLab consuming FakeBank or any change to PayLab services; webhooks; reconcilia
 | Task | Title | Depends on | Status | Context | Summary |
 | --- | --- | --- | --- | --- | --- |
 | [T1](tasks/T1.md) | Service skeleton | — | done | [context](task-runs/T1-CONTEXT.md) | [summary](task-runs/T1-summary.md) |
-| [T2](tasks/T2.md) | Provider Transaction state machine | — | ready | — | — |
-| [T3](tasks/T3.md) | Create and read a Provider Transaction (immediate success) | T1, T2 | planned | — | — |
+| [T2](tasks/T2.md) | Provider Transaction state machine | — | done | [context](task-runs/T2-CONTEXT.md) | [summary](task-runs/T2-summary.md) |
+| [T3](tasks/T3.md) | Create and read a Provider Transaction (immediate success) | T1, T2 | in_progress | — | — |
 | [T4](tasks/T4.md) | Idempotency | T3 | planned | — | — |
 | [T5](tasks/T5.md) | Lookup by External Reference | T3 | planned | — | — |
 | [T6](tasks/T6.md) | Lab surface and business Outcomes | T3 | planned | — | — |

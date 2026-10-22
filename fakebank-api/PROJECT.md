@@ -21,7 +21,9 @@ Domain language and accumulated decisions live in [CONTEXT.md](CONTEXT.md); requ
 | `src/domain` | Pure domain rules with no Nest or Prisma dependency (the Provider Transaction state machine) |
 | `src/infra/database` | `DatabaseModule` and `PrismaService` |
 | `src/infra/auth` | Client API key hashing, `ClientAuthGuard` (Bearer key → Client) and `@CurrentClient()` |
-| `src/infra/transactions` | Public `/v1/transactions` API: controller, Zod schemas, representation, creation service (the attempt pipeline), repository |
+| `src/infra/transactions` | Public `/v1/transactions` API: controller, Zod schemas, representation, creation service (the full attempt pipeline: pre-persistence Outcomes, idempotency, scenario decision, post-commit delay and error), repository (`applyDecision` is the only path that changes an existing transaction) |
+| `src/infra/scenarios` | Simulation Scenarios: repository (atomic `consumeAttempt`) and `ScenarioAttempts` (Outcome decision) |
+| `src/infra/lab` | Lab surface, loaded only when `FAKEBANK_LAB_ENABLED=true`: `POST /__test/scenarios` and the advance use case (`POST /__test/transactions/:id/advance`) |
 | `src/infra/http` | Controllers, `request-id.ts` (X-Request-Id), `errors/` (error envelope and global filter), `openapi/` (Swagger setup and documentation shapes) |
 | `prisma/` | `schema.prisma` and `migrations/` |
 | `scripts/` | Small operator scripts (`hash-client-key.mjs`) |
@@ -49,12 +51,12 @@ Docker is required for every database test layer (integration, e2e, concurrency)
 
 ## Conventions
 
-- **Errors.** Every error response is `{ code, message, retryable, requestId }`, produced only by `ErrorEnvelopeFilter`. Throw an `HttpException` whose body is `{ code, message }` for business errors; anything that is not an `HttpException` becomes a generic `500 PROVIDER_INTERNAL_ERROR` and is logged, never exposed. `retryable` is decided only in `src/infra/http/errors/error-envelope.ts` (true for 429, 500, 503).
+- **Errors.** Every error response is `{ code, message, retryable, requestId }`, produced only by `ErrorEnvelopeFilter`. Throw an `HttpException` whose body is `{ code, message }` for business errors; anything that is not an `HttpException` becomes a generic `500 PROVIDER_INTERNAL_ERROR` and is logged, never exposed. `retryable` is decided only in `src/infra/http/errors/error-envelope.ts` (true for 429, 500, 503). Errors that need response headers (such as `Retry-After`) throw `HttpExceptionWithHeaders`; the filter writes its headers.
 - **Request id.** `X-Request-Id` is echoed when it is printable ASCII of at most 128 characters, otherwise a UUID is generated; it is on every response header and in every error body.
 - **Migrations** are hand-written SQL; the Prisma schema follows them, never the other way around. Amounts are integer minor units (`BIGINT`), never decimals.
 - **Authentication.** Public routes use `@UseGuards(ClientAuthGuard)` and read the Client with `@CurrentClient()`; every query is scoped by its `clientId`, so another Client's data answers like an unknown id. Keys are never logged.
 - **Validation.** Request parts are parsed with Zod through `ZodValidationPipe` (`src/infra/http/zod-validation.pipe.ts`), which answers `400 VALIDATION_ERROR`.
-- **Tests** authenticate with the plaintext keys in `test/support/clients.ts` (`bearer(TEST_CLIENTS.paylab)`); `setup-env.ts` configures only their hashes. Tests boot the real `AppModule` through `test/support/app.ts` (`buildTestApp`), which applies the same `configureApp` as production. Test-only routes go in `buildTestApp({ controllers })`; provider overrides in `buildTestApp({ configure })`.
+- **Tests** authenticate with the plaintext keys in `test/support/clients.ts` (`bearer(TEST_CLIENTS.paylab)`); `setup-env.ts` configures only their hashes. Tests boot the real `AppModule` through `test/support/app.ts` (`buildTestApp`), which applies the same `configureApp` as production. Test-only routes go in `buildTestApp({ controllers })`; provider overrides in `buildTestApp({ configure })`. Every test layer runs with the lab on; `bootWithEnv` (`test/support/fresh-app.ts`) boots an app with another environment (e.g. lab off). Concurrency tests use `buildListeningApp` and `inParallel` from `test/support/concurrency.ts`.
 
 ## Local setup
 
@@ -62,7 +64,8 @@ Docker is required for every database test layer (integration, e2e, concurrency)
 2. `cp .env.example .env`
 3. Start a PostgreSQL matching `DATABASE_URL` (the example uses port 5434, so it does not collide with PayLab's 5432/5433), e.g. `docker run -d --name fakebank-postgres -e POSTGRES_USER=fakebank -e POSTGRES_PASSWORD=fakebank -e POSTGRES_DB=fakebank -p 127.0.0.1:5434:5432 postgres:16-alpine`, then `pnpm prisma:migrate:deploy`
 4. `pnpm dev`, then `curl localhost:4000/health` and open http://localhost:4000/docs
-5. Create a transaction with the development key from `.env.example`: `curl -X POST localhost:4000/v1/transactions -H 'Authorization: Bearer fakebank-dev-key-paylab-not-a-secret' -H 'Idempotency-Key: demo-1' -H 'Content-Type: application/json' -d '{"externalReference":"payment-1","amountMinor":1500,"currency":"BRL"}'`
+5. Create a transaction with the development key from `.env.example`: `curl -X POST localhost:4000/v1/transactions -H 'Authorization: Bearer fakebank-dev-key-paylab-not-a-secret' -H 'Idempotency-Key: demo-1' -H 'Content-Type: application/json' -d '{"externalReference":"payment-1","amountMinor":1500,"currency":"BRL"}'`. Repeating it returns `200` with `Idempotent-Replayed: true`; the same key with a different body returns `409 IDEMPOTENCY_KEY_REUSED`. List by reference with `GET /v1/transactions?externalReference=payment-1`.
+6. Simulate a provider behavior (lab on) before creating a transaction for that reference: `curl -X POST localhost:4000/__test/scenarios -H 'Authorization: Bearer fakebank-dev-key-paylab-not-a-secret' -H 'Content-Type: application/json' -d '{"externalReference":"payment-2","outcome":"RATE_LIMIT","retryAfterSeconds":5,"times":1}'`. Outcomes: `SUCCEED`, `FAIL` (needs `failureCode`), `DEFERRED`, `RATE_LIMIT`, `ERROR_BEFORE_COMMIT`, `ERROR_AFTER_COMMIT`; `delayMs` waits after commit. Decide a deferred transaction with `POST /__test/transactions/<id>/advance` and `{"status":"FAILED","failureCode":"ACCOUNT_BLOCKED"}` or `{"status":"SUCCEEDED"}`.
 
 ## Docker
 
@@ -84,5 +87,5 @@ Validated at boot by `src/infra/env/env.ts` (the service refuses to start with a
 | `NODE_ENV` | `development`, `test` or `production` |
 | `APP_NAME` | Default `fakebank-api`; reported by `/health` |
 | `FAKEBANK_CLIENTS` | Required. Comma-separated `clientId:sha256-hex-of-key`; malformed, duplicated ids or duplicated hashes refuse the boot. `.env.example` holds a public, fake development key and its hash |
-| `FAKEBANK_LAB_ENABLED` | Lab surface switch (read by the service once T6 lands; ignored before). Default `false`; `true` exposes the lab surface (`/__test/...`). The development Compose files set it to `true`; never enable it outside development |
+| `FAKEBANK_LAB_ENABLED` | Lab surface switch. Default `false`; `true` exposes the lab surface (`/__test/...`). The development Compose files set it to `true`; never enable it outside development; the boot refuses it with `NODE_ENV=production` |
 | `LOG_ENABLED`, `LOG_LEVEL` | Errors and warnings are always logged; `LOG_ENABLED=true` adds the regular log, `LOG_LEVEL=debug` the debug and verbose levels |

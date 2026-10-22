@@ -48,6 +48,9 @@ describe('OpenAPI documentation', () => {
 			'401',
 			'409',
 			'422',
+			'429',
+			'500',
+			'503',
 		])
 		expect(Object.keys(read.responses).sort()).toEqual(['200', '401', '404'])
 		expect(create.responses['400'].content['application/json'].schema.$ref).toBe(
@@ -62,6 +65,13 @@ describe('OpenAPI documentation', () => {
 		expect(create.responses['409'].content['application/json'].schema.$ref).toBe(
 			'#/components/schemas/ErrorEnvelopeResponse',
 		)
+		// AC-12/AC-16..18: the transport errors a Client must handle, and the backoff hint.
+		for (const status of ['429', '500', '503']) {
+			expect(create.responses[status].content['application/json'].schema.$ref).toBe(
+				'#/components/schemas/ErrorEnvelopeResponse',
+			)
+		}
+		expect(create.responses['429'].headers).toHaveProperty('Retry-After')
 		expect(body.components.schemas.ProviderTransactionResponse.required).toEqual(
 			expect.arrayContaining(['providerTransactionId', 'status', 'amountMinor', 'completedAt']),
 		)

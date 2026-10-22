@@ -1,12 +1,15 @@
 import { createHash } from 'node:crypto'
+import { setTimeout as sleep } from 'node:timers/promises'
 import {
 	DomainClock,
 	createProviderTransaction,
 	transitionProviderTransaction,
 } from '@/domain/provider-transaction'
+import { HttpExceptionWithHeaders } from '@/infra/http/errors/http-exception-with-headers'
 import {
 	IMMEDIATE_SUCCESS,
 	NewTransactionDecision,
+	PrePersistenceDecision,
 	ScenarioAttempts,
 } from '@/infra/scenarios/scenario-attempts.service'
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
@@ -35,14 +38,16 @@ export type CreateProviderTransactionResult =
  * The creation attempt pipeline (authentication and schema validation already happened in the
  * HTTP layer), in PRD order:
  *   1. business validation (currency);
- *   2. pre-persistence Outcomes (T8: RATE_LIMIT, ERROR_BEFORE_COMMIT), which apply even when the
- *      key already has a Provider Transaction, so they belong before step 3;
+ *   2. pre-persistence Outcomes (RATE_LIMIT, ERROR_BEFORE_COMMIT), which apply even when the
+ *      key already has a Provider Transaction, so they belong before step 3: one attempt is
+ *      consumed (autocommitted), then `delayMs`, then the 429/503 with nothing persisted;
  *   3. idempotency: insert, and on a (client, key) conflict load the existing row and compare
  *      fingerprints (409 on mismatch, replay on match). A replay returns here and skips every
  *      later step (no scenario consumption, no delay);
  *      For a new row, a scenario attempt is consumed and its Outcome decided (FAIL, DEFERRED, ...)
  *      inside the insert's database transaction;
- *   4. new row only: post-persistence behavior (T8: delay, ERROR_AFTER_COMMIT).
+ *   4. new row only, after commit: wait `delayMs`, then answer (500 for ERROR_AFTER_COMMIT).
+ *      No delay ever runs inside an open database transaction.
  */
 @Injectable()
 export class CreateProviderTransactionService {
@@ -62,8 +67,14 @@ export class CreateProviderTransactionService {
 			)
 		}
 
-		// Step 2 (T8) hooks here: pre-persistence Outcomes, consumed with
-		// `SimulationScenarioRepository.consumeAttempt` restricted to RATE_LIMIT/ERROR_BEFORE_COMMIT.
+		const prePersistence = await this.scenarioAttempts.decideBeforePersistence(
+			command.clientId,
+			command.externalReference,
+		)
+		if (prePersistence) {
+			await sleep(prePersistence.delayMs)
+			throw transportError(prePersistence)
+		}
 
 		const fingerprint = requestFingerprint(command)
 		let decision: NewTransactionDecision = IMMEDIATE_SUCCESS
@@ -78,8 +89,16 @@ export class CreateProviderTransactionService {
 			return this.decidedTransaction(command, fingerprint, decision)
 		})
 		if (inserted) {
-			// Step 4 (T8) hooks here: post-persistence behavior of a new row only
-			// (`decision.delayMs`, `decision.appliedOutcome === 'ERROR_AFTER_COMMIT'`).
+			// Step 4, new row only: the database transaction has committed, so a Client that gives
+			// up during the delay leaves this Provider Transaction behind (AC-19).
+			await sleep(decision.delayMs)
+			if (decision.appliedOutcome === 'ERROR_AFTER_COMMIT') {
+				// AC-18: the work is persisted; only the response fails.
+				throw new HttpException(
+					{ code: 'PROVIDER_INTERNAL_ERROR', message: 'The provider failed to respond.' },
+					HttpStatus.INTERNAL_SERVER_ERROR,
+				)
+			}
 			return { kind: 'created', transaction: inserted }
 		}
 
@@ -151,6 +170,21 @@ export class CreateProviderTransactionService {
 		}
 		return { kind: 'replayed', transaction: existing }
 	}
+}
+
+/** The error answering a pre-persistence Outcome; nothing was persisted. */
+function transportError(decision: PrePersistenceDecision): HttpException {
+	if (decision.outcome === 'ERROR_BEFORE_COMMIT') {
+		return new HttpException(
+			{ code: 'PROVIDER_UNAVAILABLE', message: 'The provider is temporarily unavailable.' },
+			HttpStatus.SERVICE_UNAVAILABLE,
+		)
+	}
+	return new HttpExceptionWithHeaders(
+		{ code: 'PROVIDER_RATE_LIMIT', message: 'Too many requests; retry after the indicated delay.' },
+		HttpStatus.TOO_MANY_REQUESTS,
+		{ 'Retry-After': String(decision.retryAfterSeconds) },
+	)
 }
 
 /** What an idempotent retry must repeat exactly: External Reference, Amount and currency. */

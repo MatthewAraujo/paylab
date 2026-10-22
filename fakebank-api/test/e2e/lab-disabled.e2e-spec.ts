@@ -46,22 +46,26 @@ describe('lab surface switch', () => {
 	})
 
 	// AC-29: catches scenarios left in the database still injecting Outcomes once the lab is off.
-	it('ignores registered scenarios when off', async () => {
-		const lab = await bootWithEnv({ FAKEBANK_LAB_ENABLED: 'true' })
-		await request(lab.getHttpServer())
-			.post('/__test/scenarios')
-			.set('Authorization', bearer(TEST_CLIENTS.paylab))
-			.send({ externalReference: 'PAY-1', outcome: 'FAIL', failureCode: 'INSUFFICIENT_FUNDS' })
-			.expect(201)
-		await lab.close()
-		app = await bootWithEnv({ FAKEBANK_LAB_ENABLED: 'false' })
+	// Covers both consumption points: inside the insert (FAIL) and before persistence (RATE_LIMIT).
+	it.each([{ outcome: 'FAIL', failureCode: 'INSUFFICIENT_FUNDS' }, { outcome: 'RATE_LIMIT' }])(
+		'ignores a registered $outcome scenario when off',
+		async (scenario) => {
+			const lab = await bootWithEnv({ FAKEBANK_LAB_ENABLED: 'true' })
+			await request(lab.getHttpServer())
+				.post('/__test/scenarios')
+				.set('Authorization', bearer(TEST_CLIENTS.paylab))
+				.send({ externalReference: 'PAY-1', ...scenario })
+				.expect(201)
+			await lab.close()
+			app = await bootWithEnv({ FAKEBANK_LAB_ENABLED: 'false' })
 
-		const response = await request(app.getHttpServer())
-			.post('/v1/transactions')
-			.set('Authorization', bearer(TEST_CLIENTS.paylab))
-			.set('Idempotency-Key', 'key-1')
-			.send({ externalReference: 'PAY-1', amountMinor: 1500, currency: 'BRL' })
+			const response = await request(app.getHttpServer())
+				.post('/v1/transactions')
+				.set('Authorization', bearer(TEST_CLIENTS.paylab))
+				.set('Idempotency-Key', 'key-1')
+				.send({ externalReference: 'PAY-1', amountMinor: 1500, currency: 'BRL' })
 
-		expect([response.status, response.body.status]).toEqual([201, 'SUCCEEDED'])
-	})
+			expect([response.status, response.body.status]).toEqual([201, 'SUCCEEDED'])
+		},
+	)
 })

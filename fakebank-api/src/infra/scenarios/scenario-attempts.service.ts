@@ -1,7 +1,13 @@
+import { PrismaService } from '@/infra/database/prisma.service'
 import { EnvService } from '@/infra/env/env.service'
 import { Injectable } from '@nestjs/common'
 import type { Prisma } from '@prisma/client'
-import { type Outcome, PERSISTED_OUTCOMES } from './outcome'
+import {
+	type Outcome,
+	PERSISTED_OUTCOMES,
+	PRE_PERSISTENCE_OUTCOMES,
+	type PrePersistenceOutcome,
+} from './outcome'
 import {
 	type ConsumedScenario,
 	SimulationScenarioRepository,
@@ -16,9 +22,20 @@ export interface NewTransactionDecision {
 	appliedOutcome: Outcome | null
 	/** The terminal transition to apply now, or null to leave it `PROCESSING` (`DEFERRED`). */
 	transition: NewTransactionTransition | null
-	/** Wait after commit before answering (T8). */
+	/** Wait after commit before answering. */
 	delayMs: number
 }
+
+/** A transport error to answer before anything is persisted (RATE_LIMIT, ERROR_BEFORE_COMMIT). */
+export interface PrePersistenceDecision {
+	outcome: PrePersistenceOutcome
+	/** Wait before answering the error. */
+	delayMs: number
+	/** `Retry-After` for RATE_LIMIT: the scenario's value, or 1. */
+	retryAfterSeconds: number
+}
+
+const DEFAULT_RETRY_AFTER_SECONDS = 1
 
 export const IMMEDIATE_SUCCESS: NewTransactionDecision = {
 	appliedOutcome: null,
@@ -36,7 +53,36 @@ export class ScenarioAttempts {
 	constructor(
 		private readonly scenarios: SimulationScenarioRepository,
 		private readonly env: EnvService,
+		private readonly prisma: PrismaService,
 	) {}
+
+	/**
+	 * Consumes an attempt of a pre-persistence scenario, if one applies, before the idempotency
+	 * step. One autocommitted conditional statement: no database transaction stays open while
+	 * the caller waits `delayMs`, and parallel attempts never share one (AC-22).
+	 */
+	async decideBeforePersistence(
+		clientId: string,
+		externalReference: string,
+	): Promise<PrePersistenceDecision | null> {
+		if (!this.env.get('FAKEBANK_LAB_ENABLED')) {
+			return null
+		}
+		const consumed = await this.scenarios.consumeAttempt(
+			this.prisma,
+			clientId,
+			externalReference,
+			PRE_PERSISTENCE_OUTCOMES,
+		)
+		if (!consumed) {
+			return null
+		}
+		return {
+			outcome: consumed.outcome as PrePersistenceOutcome,
+			delayMs: consumed.delayMs,
+			retryAfterSeconds: consumed.retryAfterSeconds ?? DEFAULT_RETRY_AFTER_SECONDS,
+		}
+	}
 
 	/** Consumes an attempt for a new Provider Transaction, inside its database transaction. */
 	async decideNewTransaction(
@@ -66,7 +112,7 @@ function decide(scenario: ConsumedScenario): NewTransactionDecision {
 		case 'DEFERRED':
 			return { ...base, transition: null }
 		default:
-			// SUCCEED, and ERROR_AFTER_COMMIT: the work is done, only the response fails (T8).
+			// SUCCEED, and ERROR_AFTER_COMMIT: the work is done, only the response fails.
 			return { ...base, transition: { to: 'SUCCEEDED' } }
 	}
 }

@@ -2,6 +2,7 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@n
 import type { Response } from 'express'
 import { requestIdOf } from '../request-id'
 import { ErrorEnvelope, defaultCodeFor, isRetryable } from './error-envelope'
+import { HttpExceptionWithHeaders } from './http-exception-with-headers'
 
 const INTERNAL_ERROR_MESSAGE = 'An unexpected error occurred.'
 
@@ -25,6 +26,9 @@ export class ErrorEnvelopeFilter implements ExceptionFilter {
 			requestId: requestIdOf(response),
 		}
 
+		if (exception instanceof HttpExceptionWithHeaders) {
+			response.set(exception.headers)
+		}
 		response.status(status).json(body)
 	}
 

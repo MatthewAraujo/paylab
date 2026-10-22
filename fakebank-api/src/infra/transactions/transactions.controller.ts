@@ -23,10 +23,13 @@ import {
 	ApiConflictResponse,
 	ApiCreatedResponse,
 	ApiHeader,
+	ApiInternalServerErrorResponse,
 	ApiNotFoundResponse,
 	ApiOkResponse,
 	ApiQuery,
+	ApiServiceUnavailableResponse,
 	ApiTags,
+	ApiTooManyRequestsResponse,
 	ApiUnauthorizedResponse,
 	ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger'
@@ -105,6 +108,31 @@ export class TransactionsController {
 	})
 	@ApiUnprocessableEntityResponse({
 		description: 'Currency other than BRL (UNSUPPORTED_CURRENCY); nothing is persisted.',
+		type: ErrorEnvelopeResponse,
+	})
+	@ApiTooManyRequestsResponse({
+		description:
+			'Rate limited (PROVIDER_RATE_LIMIT); nothing is persisted. Retry after `Retry-After` ' +
+			'seconds, with the same Idempotency-Key.',
+		type: ErrorEnvelopeResponse,
+		headers: {
+			'Retry-After': {
+				description: 'Seconds to wait before retrying.',
+				schema: { type: 'integer', minimum: 1 },
+			},
+		},
+	})
+	@ApiInternalServerErrorResponse({
+		description:
+			'The provider failed to respond (PROVIDER_INTERNAL_ERROR). The Provider Transaction may ' +
+			'have been persisted: retry with the same Idempotency-Key, or look it up by External ' +
+			'Reference, before sending a new one.',
+		type: ErrorEnvelopeResponse,
+	})
+	@ApiServiceUnavailableResponse({
+		description:
+			'The provider is temporarily unavailable (PROVIDER_UNAVAILABLE); nothing is persisted. ' +
+			'Retry with the same Idempotency-Key.',
 		type: ErrorEnvelopeResponse,
 	})
 	async create(

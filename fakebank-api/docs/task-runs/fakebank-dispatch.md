@@ -9,8 +9,8 @@ Orchestrator: main session. One fresh subagent per task, `task-runner` in lane m
 | T3 | A | done (7b0cfb9) |
 | T4 | A | done (15d4464) |
 | T5 | A | done (e1256b5) |
-| T6 | A | dispatched |
-| T7 | A | waiting (T6) |
+| T6 | A | done (9f8fd29) |
+| T7 | A | dispatched |
 | T8 | A | waiting (T7) |
 | T9 | B | done (20713ba); re-check live worktree in the workspace stack after T8 |
 

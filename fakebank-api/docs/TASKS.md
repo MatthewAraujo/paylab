@@ -24,7 +24,7 @@ PayLab consuming FakeBank or any change to PayLab services; webhooks; reconcilia
 | [T4](tasks/T4.md) | Idempotency | T3 | done | [context](task-runs/T4-CONTEXT.md) | [summary](task-runs/T4-summary.md) |
 | [T5](tasks/T5.md) | Lookup by External Reference | T3 | done | [context](task-runs/T5-CONTEXT.md) | [summary](task-runs/T5-summary.md) |
 | [T6](tasks/T6.md) | Lab surface and business Outcomes | T3 | done | [context](task-runs/T9-CONTEXT.md) | [summary](task-runs/T9-summary.md) |
-| [T7](tasks/T7.md) | Advance a deferred Provider Transaction | T6 | planned | — | — |
+| [T7](tasks/T7.md) | Advance a deferred Provider Transaction | T6 | in_progress | — | — |
 | [T8](tasks/T8.md) | Transport Outcomes and delay | T4, T6 | planned | — | — |
 | [T9](tasks/T9.md) | Docker Compose (standalone and workspace) and documentation | T3 | done | [context](task-runs/T9-CONTEXT.md) | [summary](task-runs/T9-summary.md) |
 

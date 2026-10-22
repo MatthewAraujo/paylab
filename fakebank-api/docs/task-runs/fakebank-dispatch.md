@@ -8,8 +8,8 @@ Orchestrator: main session. One fresh subagent per task, `task-runner` in lane m
 | T2 | A | done (0311f50) |
 | T3 | A | done (7b0cfb9) |
 | T4 | A | done (15d4464) |
-| T5 | A | dispatched |
-| T6 | A | waiting (T5) |
+| T5 | A | done (e1256b5) |
+| T6 | A | dispatched |
 | T7 | A | waiting (T6) |
 | T8 | A | waiting (T7) |
 | T9 | B | dispatched (alongside T4–T8) |

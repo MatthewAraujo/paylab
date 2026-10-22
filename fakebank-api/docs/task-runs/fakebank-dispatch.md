@@ -10,8 +10,8 @@ Orchestrator: main session. One fresh subagent per task, `task-runner` in lane m
 | T4 | A | done (15d4464) |
 | T5 | A | done (e1256b5) |
 | T6 | A | done (9f8fd29) |
-| T7 | A | dispatched |
-| T8 | A | waiting (T7) |
+| T7 | A | done (298d10d) |
+| T8 | A | dispatched |
 | T9 | B | done (20713ba); re-check live worktree in the workspace stack after T8 |
 
 Lane B path boundary: `fakebank-api/Dockerfile`, `fakebank-api/.dockerignore`, `fakebank-api/docker-compose.yml`, workspace `compose.yaml`, workspace `PROJECT.md`, `fakebank-api/PROJECT.md`, and its own task-run files. While T9 runs, lane A does not edit `fakebank-api/PROJECT.md`; it lists needed changes in its summary instead.

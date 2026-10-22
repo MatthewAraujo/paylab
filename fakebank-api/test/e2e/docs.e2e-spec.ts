@@ -40,7 +40,7 @@ describe('OpenAPI documentation', () => {
 		const create = body.paths['/v1/transactions'].post
 		const read = body.paths['/v1/transactions/{providerTransactionId}'].get
 
-		expect(Object.keys(create.responses).sort()).toEqual(['201', '400', '401', '422'])
+		expect(Object.keys(create.responses).sort()).toEqual(['200', '201', '400', '401', '409', '422'])
 		expect(Object.keys(read.responses).sort()).toEqual(['200', '401', '404'])
 		expect(create.responses['400'].content['application/json'].schema.$ref).toBe(
 			'#/components/schemas/ErrorEnvelopeResponse',
@@ -49,6 +49,11 @@ describe('OpenAPI documentation', () => {
 			expect.arrayContaining([expect.objectContaining({ name: 'Idempotency-Key', in: 'header' })]),
 		)
 		expect(create.security).toEqual([{ bearer: [] }])
+		// AC-4/AC-5: the replay header and the key-reuse conflict are part of the contract.
+		expect(create.responses['200'].headers).toHaveProperty('Idempotent-Replayed')
+		expect(create.responses['409'].content['application/json'].schema.$ref).toBe(
+			'#/components/schemas/ErrorEnvelopeResponse',
+		)
 		expect(body.components.schemas.ProviderTransactionResponse.required).toEqual(
 			expect.arrayContaining(['providerTransactionId', 'status', 'amountMinor', 'completedAt']),
 		)

@@ -11,12 +11,14 @@ import {
 	HttpStatus,
 	Param,
 	Post,
+	Res,
 	UseGuards,
 } from '@nestjs/common'
 import {
 	ApiBadRequestResponse,
 	ApiBearerAuth,
 	ApiBody,
+	ApiConflictResponse,
 	ApiCreatedResponse,
 	ApiHeader,
 	ApiNotFoundResponse,
@@ -25,6 +27,7 @@ import {
 	ApiUnauthorizedResponse,
 	ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger'
+import type { Response } from 'express'
 import { CreateProviderTransactionService } from './create-provider-transaction.service'
 import { ProviderTransactionRepository } from './provider-transaction.repository'
 import {
@@ -38,6 +41,8 @@ import {
 	createProviderTransactionBody,
 	idempotencyKeyHeader,
 } from './transaction.schemas'
+
+const IDEMPOTENT_REPLAYED_HEADER = 'Idempotent-Replayed'
 
 @ApiTags('transactions')
 @ApiBearerAuth()
@@ -65,6 +70,23 @@ export class TransactionsController {
 		description: 'The Provider Transaction was created and decided.',
 		type: ProviderTransactionResponse,
 	})
+	@ApiOkResponse({
+		description:
+			'Idempotent replay: this Client already sent this request with this Idempotency-Key. ' +
+			'Returns that Provider Transaction in its current status.',
+		type: ProviderTransactionResponse,
+		headers: {
+			[IDEMPOTENT_REPLAYED_HEADER]: {
+				description: 'Always `true` on a replay; absent on creation.',
+				schema: { type: 'string', enum: ['true'] },
+			},
+		},
+	})
+	@ApiConflictResponse({
+		description:
+			'The Idempotency-Key was already used with a different request (IDEMPOTENCY_KEY_REUSED).',
+		type: ErrorEnvelopeResponse,
+	})
 	@ApiBadRequestResponse({
 		description: 'Invalid body or Idempotency-Key (VALIDATION_ERROR); nothing is persisted.',
 		type: ErrorEnvelopeResponse,
@@ -78,13 +100,17 @@ export class TransactionsController {
 		@IdempotencyKey(new ZodValidationPipe(idempotencyKeyHeader, 'Idempotency-Key'))
 		idempotencyKey: string,
 		@Body(new ZodValidationPipe(createProviderTransactionBody)) body: CreateProviderTransactionBody,
+		@Res({ passthrough: true }) response: Response,
 	): Promise<ProviderTransactionResponse> {
-		const transaction = await this.createProviderTransaction.execute({
+		const result = await this.createProviderTransaction.execute({
 			...body,
 			clientId: client.clientId,
 			idempotencyKey,
 		})
-		return toProviderTransactionResponse(transaction)
+		if (result.kind === 'replayed') {
+			response.status(HttpStatus.OK).setHeader(IDEMPOTENT_REPLAYED_HEADER, 'true')
+		}
+		return toProviderTransactionResponse(result.transaction)
 	}
 
 	@Get(':providerTransactionId')

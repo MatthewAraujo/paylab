@@ -12,3 +12,41 @@ datasource db {
 // this schema without carrying them over.
 //
 // Amounts are 64-bit integers of the currency's smallest unit (BigInt here), never decimals.
+
+// CHECK constraints (positive amount, valid status/type, failure code iff FAILED, completed_at
+// iff terminal) and the append-only triggers on provider_transaction_event live only in the
+// migration.
+model ProviderTransaction {
+  id                 String                     @id
+  clientId           String                     @map("client_id")
+  externalReference  String                     @map("external_reference") @db.VarChar(128)
+  idempotencyKey     String                     @map("idempotency_key") @db.VarChar(255)
+  requestFingerprint String                     @map("request_fingerprint")
+  amountMinor        BigInt                     @map("amount_minor")
+  currency           String                     @db.Char(3)
+  status             String
+  failureCode        String?                    @map("failure_code")
+  appliedOutcome     String?                    @map("applied_outcome")
+  createdAt          DateTime                   @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime                   @map("updated_at") @db.Timestamptz(3)
+  completedAt        DateTime?                  @map("completed_at") @db.Timestamptz(3)
+  events             ProviderTransactionEvent[]
+
+  @@unique([clientId, idempotencyKey])
+  @@index([clientId, externalReference, createdAt])
+  @@map("provider_transaction")
+}
+
+model ProviderTransactionEvent {
+  id                    String              @id @db.Uuid
+  sequence              BigInt              @unique @default(autoincrement())
+  providerTransactionId String              @map("provider_transaction_id")
+  type                  String
+  status                String
+  failureCode           String?             @map("failure_code")
+  occurredAt            DateTime            @map("occurred_at") @db.Timestamptz(3)
+  providerTransaction   ProviderTransaction @relation(fields: [providerTransactionId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([providerTransactionId, sequence])
+  @@map("provider_transaction_event")
+}

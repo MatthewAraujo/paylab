@@ -32,4 +32,25 @@ describe('OpenAPI documentation', () => {
 			expect.arrayContaining(['code', 'message', 'retryable', 'requestId']),
 		)
 	})
+
+	// AC-12: catches the transaction endpoints missing from the contract, or their error statuses
+	// undocumented.
+	it('documents the transaction endpoints with their status codes and bearer auth', async () => {
+		const { body } = await request(app.getHttpServer()).get('/docs-json')
+		const create = body.paths['/v1/transactions'].post
+		const read = body.paths['/v1/transactions/{providerTransactionId}'].get
+
+		expect(Object.keys(create.responses).sort()).toEqual(['201', '400', '401', '422'])
+		expect(Object.keys(read.responses).sort()).toEqual(['200', '401', '404'])
+		expect(create.responses['400'].content['application/json'].schema.$ref).toBe(
+			'#/components/schemas/ErrorEnvelopeResponse',
+		)
+		expect(create.parameters).toEqual(
+			expect.arrayContaining([expect.objectContaining({ name: 'Idempotency-Key', in: 'header' })]),
+		)
+		expect(create.security).toEqual([{ bearer: [] }])
+		expect(body.components.schemas.ProviderTransactionResponse.required).toEqual(
+			expect.arrayContaining(['providerTransactionId', 'status', 'amountMinor', 'completedAt']),
+		)
+	})
 })

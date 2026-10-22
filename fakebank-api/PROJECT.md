@@ -18,10 +18,14 @@ Domain language and accumulated decisions live in [CONTEXT.md](CONTEXT.md); requ
 | --- | --- |
 | `src/infra/main.ts`, `app.factory.ts`, `app.module.ts` | Bootstrap; `configureApp` holds the HTTP configuration shared with the test app |
 | `src/infra/env` | Zod environment schema (`env.ts`), `EnvModule`, typed `EnvService` |
+| `src/domain` | Pure domain rules with no Nest or Prisma dependency (the Provider Transaction state machine) |
 | `src/infra/database` | `DatabaseModule` and `PrismaService` |
+| `src/infra/auth` | Client API key hashing, `ClientAuthGuard` (Bearer key → Client) and `@CurrentClient()` |
+| `src/infra/transactions` | Public `/v1/transactions` API: controller, Zod schemas, representation, creation service (the attempt pipeline), repository |
 | `src/infra/http` | Controllers, `request-id.ts` (X-Request-Id), `errors/` (error envelope and global filter), `openapi/` (Swagger setup and documentation shapes) |
 | `prisma/` | `schema.prisma` and `migrations/` |
-| `test/` | `infra` (unit), `integration`, `e2e`, `concurrency`, and `support` (Testcontainers setup, `buildTestApp`, database reset) |
+| `scripts/` | Small operator scripts (`hash-client-key.mjs`) |
+| `test/` | `domain`, `infra` (unit), `integration`, `e2e`, `concurrency`, and `support` (Testcontainers setup, `buildTestApp`, database reset, test Clients) |
 | `docs/` | PRD, task plan, task specs, task run records, ADRs |
 
 ## Commands
@@ -39,6 +43,7 @@ Domain language and accumulated decisions live in [CONTEXT.md](CONTEXT.md); requ
 | `pnpm test:concurrency` | Parallel-request suite, run separately from the fast gate |
 | `pnpm prisma:migrate` | Create/apply a migration in development |
 | `pnpm prisma:migrate:deploy` | Apply existing migrations |
+| `pnpm client-key:hash <key>` | Print the SHA-256 of a Client key for `FAKEBANK_CLIENTS` (or pipe the key on stdin to keep it out of shell history) |
 
 Docker is required for every database test layer (integration, e2e, concurrency); each run starts one `postgres:16-alpine` container and applies the migrations with `prisma migrate deploy`. Unit tests need no Docker.
 
@@ -47,7 +52,9 @@ Docker is required for every database test layer (integration, e2e, concurrency)
 - **Errors.** Every error response is `{ code, message, retryable, requestId }`, produced only by `ErrorEnvelopeFilter`. Throw an `HttpException` whose body is `{ code, message }` for business errors; anything that is not an `HttpException` becomes a generic `500 PROVIDER_INTERNAL_ERROR` and is logged, never exposed. `retryable` is decided only in `src/infra/http/errors/error-envelope.ts` (true for 429, 500, 503).
 - **Request id.** `X-Request-Id` is echoed when it is printable ASCII of at most 128 characters, otherwise a UUID is generated; it is on every response header and in every error body.
 - **Migrations** are hand-written SQL; the Prisma schema follows them, never the other way around. Amounts are integer minor units (`BIGINT`), never decimals.
-- **Tests** boot the real `AppModule` through `test/support/app.ts` (`buildTestApp`), which applies the same `configureApp` as production. Test-only routes go in `buildTestApp({ controllers })`; provider overrides in `buildTestApp({ configure })`.
+- **Authentication.** Public routes use `@UseGuards(ClientAuthGuard)` and read the Client with `@CurrentClient()`; every query is scoped by its `clientId`, so another Client's data answers like an unknown id. Keys are never logged.
+- **Validation.** Request parts are parsed with Zod through `ZodValidationPipe` (`src/infra/http/zod-validation.pipe.ts`), which answers `400 VALIDATION_ERROR`.
+- **Tests** authenticate with the plaintext keys in `test/support/clients.ts` (`bearer(TEST_CLIENTS.paylab)`); `setup-env.ts` configures only their hashes. Tests boot the real `AppModule` through `test/support/app.ts` (`buildTestApp`), which applies the same `configureApp` as production. Test-only routes go in `buildTestApp({ controllers })`; provider overrides in `buildTestApp({ configure })`.
 
 ## Local setup
 
@@ -55,6 +62,7 @@ Docker is required for every database test layer (integration, e2e, concurrency)
 2. `cp .env.example .env`
 3. Start a PostgreSQL matching `DATABASE_URL` (the example uses port 5434, so it does not collide with PayLab's 5432/5433), e.g. `docker run -d --name fakebank-postgres -e POSTGRES_USER=fakebank -e POSTGRES_PASSWORD=fakebank -e POSTGRES_DB=fakebank -p 127.0.0.1:5434:5432 postgres:16-alpine`, then `pnpm prisma:migrate:deploy`
 4. `pnpm dev`, then `curl localhost:4000/health` and open http://localhost:4000/docs
+5. Create a transaction with the development key from `.env.example`: `curl -X POST localhost:4000/v1/transactions -H 'Authorization: Bearer fakebank-dev-key-paylab-not-a-secret' -H 'Idempotency-Key: demo-1' -H 'Content-Type: application/json' -d '{"externalReference":"payment-1","amountMinor":1500,"currency":"BRL"}'`
 
 ## Environment variables
 
@@ -66,4 +74,5 @@ Validated at boot by `src/infra/env/env.ts` (the service refuses to start with a
 | `PORT` | Default 4000 |
 | `NODE_ENV` | `development`, `test` or `production` |
 | `APP_NAME` | Default `fakebank-api`; reported by `/health` |
+| `FAKEBANK_CLIENTS` | Required. Comma-separated `clientId:sha256-hex-of-key`; malformed, duplicated ids or duplicated hashes refuse the boot. `.env.example` holds a public, fake development key and its hash |
 | `LOG_ENABLED`, `LOG_LEVEL` | Errors and warnings are always logged; `LOG_ENABLED=true` adds the regular log, `LOG_LEVEL=debug` the debug and verbose levels |

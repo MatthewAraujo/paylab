@@ -1,0 +1,17 @@
+import { ClientAuthGuard } from '@/infra/auth/client-auth.guard'
+import { Module } from '@nestjs/common'
+import { CreateProviderTransactionService } from './create-provider-transaction.service'
+import { DOMAIN_CLOCK, systemClock } from './domain-clock'
+import { ProviderTransactionRepository } from './provider-transaction.repository'
+import { TransactionsController } from './transactions.controller'
+
+@Module({
+	controllers: [TransactionsController],
+	providers: [
+		ClientAuthGuard,
+		CreateProviderTransactionService,
+		ProviderTransactionRepository,
+		{ provide: DOMAIN_CLOCK, useValue: systemClock },
+	],
+})
+export class TransactionsModule {}

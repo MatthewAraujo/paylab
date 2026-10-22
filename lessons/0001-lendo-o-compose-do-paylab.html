@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lendo o Compose do PayLab</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+<header class="lesson">
+  <div class="kicker">Lição 1 · Outubro, semana 1 — Docker fundamental</div>
+  <h1>Lendo o Compose do PayLab</h1>
+  <p class="lede">Um único <code>docker compose up --build</code> sobe quatro containers. Ao final desta lição você consegue explicar, linha por linha, o que cada um faz e como eles se encontram.</p>
+</header>
+
+<p>Os seis tópicos da semana 1 (imagem vs container, Dockerfile, layers, volumes, networks, variáveis de ambiente, Compose) já estão todos no seu código. Em vez de estudar cada um em abstrato, vamos ler o código e dar nome ao que já está lá.</p>
+
+<figure>
+<svg viewBox="0 0 640 300" role="img" aria-label="Diagrama: host com navegador e portas 3000 e 3333; dentro da rede paylab-local_default os containers ui, api, demo-init e postgres; volumes postgres-data e demo-credentials">
+  <style>
+    .b{fill:none;stroke:var(--rule);stroke-width:1.5}
+    .n{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5}
+    .c{fill:var(--surface);stroke:var(--text);stroke-width:1.2}
+    .v{fill:var(--good-soft);stroke:var(--good);stroke-width:1.2}
+    .t{fill:var(--text);font:13px system-ui,sans-serif}
+    .s{fill:var(--muted);font:11px system-ui,sans-serif}
+    .a{stroke:var(--accent);stroke-width:1.5;fill:none;marker-end:url(#h)}
+    .d{stroke:var(--good);stroke-width:1.2;stroke-dasharray:4 3;fill:none}
+  </style>
+  <defs><marker id="h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--accent)"/></marker></defs>
+  <rect class="b" x="4" y="4" width="632" height="292" rx="10"/>
+  <text class="s" x="16" y="22">HOST (sua máquina)</text>
+  <rect class="c" x="16" y="40" width="110" height="44" rx="6"/><text class="t" x="34" y="67">navegador</text>
+  <rect class="n" x="160" y="34" width="464" height="190" rx="10"/>
+  <text class="s" x="172" y="52">rede paylab-local_default (DNS por nome de serviço)</text>
+  <rect class="c" x="176" y="66" width="96" height="40" rx="6"/><text class="t" x="212" y="91">ui</text>
+  <rect class="c" x="330" y="66" width="96" height="40" rx="6"/><text class="t" x="364" y="91">api</text>
+  <rect class="c" x="330" y="160" width="96" height="40" rx="6"/><text class="t" x="347" y="185">demo-init</text>
+  <rect class="c" x="500" y="110" width="104" height="40" rx="6"/><text class="t" x="525" y="135">postgres</text>
+  <path class="a" d="M126,58 L176,80"/><text class="s" x="128" y="48">:3000</text>
+  <path class="a" d="M126,74 C220,130 280,110 330,95"/><text class="s" x="200" y="140">:3333 (fetch do browser)</text>
+  <path class="a" d="M272,80 L330,80"/><text class="s" x="276" y="72">api:3333</text>
+  <path class="a" d="M426,90 L500,122"/><path class="a" d="M426,178 L500,140"/>
+  <text class="s" x="440" y="100">postgres:5432</text>
+  <rect class="v" x="470" y="248" width="140" height="34" rx="6"/><text class="t" x="482" y="270">postgres-data</text>
+  <rect class="v" x="230" y="248" width="160" height="34" rx="6"/><text class="t" x="242" y="270">demo-credentials</text>
+  <path class="d" d="M552,150 L540,248"/><path class="d" d="M370,200 L330,248"/><path class="d" d="M224,106 L290,248"/>
+</svg>
+<figcaption>Setas azuis: tráfego de rede. Tracejado verde: volumes nomeados. O Postgres não tem porta publicada; só quem está na rede o enxerga.</figcaption>
+</figure>
+
+<h2>1. Imagem vs container</h2>
+<p>Uma <strong>imagem</strong> é um pacote imutável (sistema de arquivos + metadados) gerado a partir de um Dockerfile. Um <strong>container</strong> é um processo isolado rodando a partir de uma imagem.<a class="cite" href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/">[1]</a> A prova está no seu Compose: <code>demo-init</code> e <code>api</code> usam a <em>mesma</em> imagem e fazem coisas diferentes.</p>
+<div class="file">compose.yaml</div>
+<pre><code>x-api: &amp;api                 <span># bloco reutilizável (âncora YAML)</span>
+  image: paylab-api-dev       <span># nome dado à imagem construída</span>
+  build: ./paylab-api         <span># Dockerfile que a gera</span>
+  ...
+services:
+  demo-init:
+    &lt;&lt;: *api                  <span># herda tudo de x-api</span>
+    command: ["sh", "-ec", "pnpm prisma:migrate:deploy &amp;&amp; ... docker-demo.ts"]
+  api:
+    &lt;&lt;: *api                  <span># mesma imagem, CMD padrão: pnpm dev</span></code></pre>
+<p>Uma imagem, dois containers: <code>demo-init</code> sobrescreve o <code>CMD</code> com migrações + seed e termina; <code>api</code> roda o <code>CMD ["pnpm", "dev"]</code> do Dockerfile e fica vivo. O <code>x-</code> marca um campo de extensão que o Compose ignora, e <code>&amp;api</code> / <code>*api</code> são âncora e alias do próprio YAML.<a class="cite" href="https://docs.docker.com/reference/compose-file/fragments/">[2]</a></p>
+
+<h2>2. Dockerfile e cache de layers</h2>
+<p>Cada instrução gera uma layer. Se uma layer muda, <em>todas as que vêm depois</em> são refeitas.<a class="cite" href="https://docs.docker.com/build/cache/">[3]</a> Por isso a ordem importa:</p>
+<div class="file">paylab-api/Dockerfile</div>
+<pre><code>FROM node:24-bookworm-slim
+WORKDIR /app
+RUN apt-get install openssl ... &amp;&amp; npm install --global pnpm@11.9.0   <span># muda quase nunca</span>
+<span class="hl">COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./</span>
+<span class="hl">COPY prisma ./prisma</span>                <span># o postinstall roda "prisma generate"</span>
+RUN --mount=type=cache,...  pnpm install --frozen-lockfile   <span># caro: minutos</span>
+COPY . .                            <span># muda a cada edição de código</span>
+CMD ["pnpm", "dev"]</code></pre>
+<p>Copiando só os manifests antes do <code>pnpm install</code>, uma edição em <code>src/</code> invalida apenas o <code>COPY . .</code>; a instalação continua em cache. O <code>prisma</code> entra cedo porque o script <code>postinstall</code> da API é <code>prisma generate</code>, que precisa do schema. O <code>--mount=type=cache</code> mantém o store do pnpm entre builds, mesmo quando a layer precisa ser refeita.<a class="cite" href="https://docs.docker.com/build/cache/optimize/">[4]</a> E o <code>.dockerignore</code> impede que <code>node_modules</code> e <code>.env</code> do host entrem no contexto de build.</p>
+
+<h2>3. Volumes: nomeados e bind mounts</h2>
+<p>Seu Compose usa os dois tipos, para propósitos opostos:</p>
+<div class="table-wrap"><table>
+<tr><th>Tipo</th><th>No PayLab</th><th>Para quê</th></tr>
+<tr><td>Volume nomeado<br><small>gerenciado pelo Docker</small></td><td><code>postgres-data:/var/lib/postgresql/data</code><br><code>demo-credentials:/run/paylab</code></td><td>Dados que precisam sobreviver ao container: o banco e a API key da Demo Store.</td></tr>
+<tr><td>Bind mount<br><small>pasta do host</small></td><td><code>./paylab-api/src:/app/src</code><br><code>./paylab-ui/src:/app/src</code></td><td>Hot reload: você edita no host, o <code>nest --watch</code> / <code>next dev</code> vê na hora.</td></tr>
+</table></div>
+<p>Volumes são "persistent data stores for containers, created and managed by Docker".<a class="cite" href="https://docs.docker.com/engine/storage/volumes/">[5]</a> Um bind mount sobre uma pasta existente do container <em>esconde</em> o que a imagem tinha ali.<a class="cite" href="https://docs.docker.com/engine/storage/bind-mounts/">[6]</a> Repare que só <code>src</code> é montado, nunca a raiz: assim o <code>node_modules</code> instalado na imagem (Linux) continua visível. O sufixo <code>:ro</code> deixa a montagem só leitura: o <code>ui</code> pode ler a credencial, mas não alterá-la.</p>
+
+<h2>4. Rede e DNS</h2>
+<p>O Compose cria uma rede <code>&lt;projeto&gt;_default</code> (aqui, <code>paylab-local_default</code>, por causa do <code>name: paylab-local</code>) e "each service registers its name with an internal DNS server".<a class="cite" href="https://docs.docker.com/compose/how-tos/networking/">[7]</a> Por isso a <code>DATABASE_URL</code> aponta para o host <code>postgres</code>, não <code>localhost</code>.</p>
+<div class="note">
+<p><strong>A pegadinha mais importante do arquivo:</strong> a UI tem duas URLs para a mesma API.</p>
+<p><code>PAYLAB_INTERNAL_API_URL: http://api:3333</code> — usada pelo <em>servidor</em> Next.js, que está dentro da rede.<br>
+<code>NEXT_PUBLIC_PAYLAB_API_URL: http://localhost:3333</code> — usada pelo <em>navegador</em>, que roda no host e não conhece o nome <code>api</code>.</p>
+</div>
+<p><code>ports: "127.0.0.1:3333:3333"</code> é <code>IP_DO_HOST:PORTA_HOST:PORTA_CONTAINER</code>; prefixar com <code>127.0.0.1</code> restringe o acesso à sua própria máquina. O <code>postgres</code> não tem <code>ports</code>: ninguém fora da rede consegue conectar nele.</p>
+
+<h2>5. Variáveis de ambiente e segredos</h2>
+<p><code>environment:</code> injeta configuração no processo. Mas a API key não aparece em nenhum lugar do YAML: o <code>demo-init</code> a grava no volume <code>demo-credentials</code>, e o <code>ui</code> a lê na partida:</p>
+<pre><code>command: ["sh", "-ec", "export PAYLAB_API_KEY=$$(cat /run/paylab/api-key); exec pnpm dev ..."]</code></pre>
+<p>O <code>$$</code> escapa o <code>$</code> para o Compose não tentar interpolar; o <code>$( )</code> chega intacto ao <code>sh</code> do container.<a class="cite" href="https://docs.docker.com/reference/compose-file/interpolation/">[8]</a> O <code>exec</code> faz o <code>pnpm</code> substituir o shell, recebendo os sinais de parada.</p>
+
+<h2>6. Ordem de partida</h2>
+<p><code>depends_on</code> com <code>condition</code> transforma o Compose em uma pequena máquina de estados:<a class="cite" href="https://docs.docker.com/compose/how-tos/startup-order/">[9]</a></p>
+<ol class="steps">
+<li><code>postgres</code> fica <em>healthy</em> quando o <code>healthcheck</code> (<code>pg_isready</code>) passa.</li>
+<li><code>demo-init</code> espera <code>service_healthy</code>, migra, faz o seed e sai com código 0.</li>
+<li><code>api</code> espera <code>service_completed_successfully</code> do <code>demo-init</code>, depois fica healthy via <code>fetch('/health')</code>.</li>
+<li><code>ui</code> espera <code>service_healthy</code> da <code>api</code>.</li>
+</ol>
+<p>Sem isso, a API tentaria conectar num banco ainda subindo, e a UI tentaria ler uma API key que ainda não existe.</p>
+
+<h2>Recupere da memória</h2>
+<p>Sem rolar a página para cima. Errar aqui é parte do treino.</p>
+<div class="quiz">
+  <div class="q" data-answer="0">
+    <p class="prompt">1. Por que <code>demo-init</code> e <code>api</code> têm o mesmo <code>image</code> e fazem coisas diferentes?</p>
+    <ol class="opts">
+      <li>São dois containers da mesma imagem com comandos diferentes</li>
+      <li>São duas imagens distintas que compartilham o mesmo nome</li>
+      <li>São o mesmo container reiniciado com outro comando depois</li>
+    </ol>
+    <p class="why">Imagem é o molde; container é o processo. <code>command</code> sobrescreve o <code>CMD</code> do Dockerfile só para aquele container.</p>
+  </div>
+  <div class="q" data-answer="1">
+    <p class="prompt">2. Por que o Dockerfile copia <code>package.json</code> e o lockfile antes do <code>COPY . .</code>?</p>
+    <ol class="opts">
+      <li>Para o Node achar o package.json antes de todo o código</li>
+      <li>Para o pnpm install não rodar a cada mudança de código</li>
+      <li>Para a imagem final ocupar menos espaço no disco do host</li>
+    </ol>
+    <p class="why">Mudou uma layer, tudo depois dela refaz. Com os manifests isolados, editar <code>src/</code> só invalida o <code>COPY . .</code>.</p>
+  </div>
+  <div class="q" data-answer="2">
+    <p class="prompt">3. Dentro do container <code>api</code>, a <code>DATABASE_URL</code> usa o host <code>postgres</code>. Por que isso funciona?</p>
+    <ol class="opts">
+      <li>O Postgres sempre publica a porta 5432 no host local</li>
+      <li>O arquivo /etc/hosts da imagem Node já contém esse nome</li>
+      <li>O Compose registra cada serviço no DNS da rede padrão</li>
+    </ol>
+    <p class="why">Todo serviço entra em <code>paylab-local_default</code> e é resolvível pelo nome. Aliás, o Postgres aqui nem publica porta.</p>
+  </div>
+  <div class="q" data-answer="0">
+    <p class="prompt">4. Por que a UI usa <code>http://api:3333</code> no servidor, mas <code>http://localhost:3333</code> no navegador?</p>
+    <ol class="opts">
+      <li>O navegador roda no host, fora da rede do Compose</li>
+      <li>O nome api só funciona com HTTPS e certificado válido</li>
+      <li>O Next.js bloqueia nomes curtos em requisições do cliente</li>
+    </ol>
+    <p class="why">O DNS do Compose só existe dentro da rede. O navegador chega na API pela porta publicada no host.</p>
+  </div>
+  <div class="q" data-answer="2">
+    <p class="prompt">5. O que acontece com os dados do banco depois de <code>docker compose down</code> (sem <code>-v</code>)?</p>
+    <ol class="opts">
+      <li>Somem, pois o container que os guardava foi removido</li>
+      <li>Ficam na pasta paylab-api/data do host, via bind mount</li>
+      <li>Ficam no volume nomeado, que vive fora do container</li>
+    </ol>
+    <p class="why"><code>down</code> remove containers e a rede, mas não volumes nomeados; só <code>down -v</code> os apaga.<a class="cite" href="https://docs.docker.com/reference/cli/docker/compose/down/">[10]</a></p>
+  </div>
+  <div class="q" data-answer="1">
+    <p class="prompt">6. Qual é a ordem real de partida da stack?</p>
+    <ol class="opts">
+      <li>postgres saudável → api saudável → demo-init termina → ui</li>
+      <li>postgres saudável → demo-init termina → api saudável → ui</li>
+      <li>demo-init termina → postgres saudável → api saudável → ui</li>
+    </ol>
+    <p class="why">Cada <code>condition</code> espera o estado do anterior: <code>service_healthy</code> → <code>service_completed_successfully</code> → <code>service_healthy</code>.</p>
+  </div>
+</div>
+<p class="quiz-score"></p>
+
+<h2>Prove no terminal</h2>
+<p>Antes de cada comando, <strong>preveja</strong> a saída. Depois rode na raiz do repositório com a stack de pé (<code>docker compose up --build -d</code>).</p>
+<ol class="steps">
+<li><code>docker compose ps -a</code> — qual container aparece como <code>Exited (0)</code>, e por que isso é sucesso?
+  <details><summary>resposta</summary><code>demo-init</code>: é um job de uma vez. Exit 0 é exatamente o que o <code>service_completed_successfully</code> espera.</details></li>
+<li><code>docker compose exec api getent hosts postgres</code> — o que volta?
+  <details><summary>resposta</summary>Um IP privado da rede bridge e o nome <code>postgres</code>: o DNS interno em ação. Rode <code>docker network inspect paylab-local_default</code> para ver os quatro containers ligados a ela.</details></li>
+<li><code>docker history paylab-api-dev</code> — qual layer é a maior?
+  <details><summary>resposta</summary>A do <code>pnpm install</code> (centenas de MB). É exatamente a layer que a ordem do Dockerfile protege do rebuild.</details></li>
+<li>Edite uma string qualquer em <code>paylab-api/src</code> e observe <code>docker compose logs -f api</code>.
+  <details><summary>resposta</summary>O Nest recompila sem rebuild de imagem: bind mount + <code>--watch</code>. Desfaça a edição depois.</details></li>
+<li><code>docker compose down</code> e depois <code>docker compose up -d</code>. Os dados continuam? Leia o log do <code>demo-init</code>.
+  <details><summary>resposta</summary>Sim: <code>Existing demo data and credential preserved.</code> Os volumes <code>paylab-local_postgres-data</code> e <code>paylab-local_demo-credentials</code> sobreviveram (<code>docker volume ls</code>).</details></li>
+</ol>
+
+<footer class="lesson">
+<p><strong>Fonte principal para ler agora:</strong> <a href="https://docs.docker.com/compose/how-tos/networking/">Docker Docs — Networking in Compose</a> (10 min). É o tópico com mais armadilhas da semana, e o que mais aparece em entrevista ("por que meu container não acha o banco?").</p>
+<p><strong>Referência:</strong> <a href="../reference/compose-paylab-cheatsheet.html">Cheat sheet: Compose do PayLab</a> · <strong>Próxima lição:</strong> cache de build na prática (vamos quebrar o cache de propósito e medir).</p>
+<p>Ficou alguma linha sem sentido? Pergunte ao seu professor (o agente) — por exemplo: "por que <code>init: true</code>?" ou "o que mudaria se o postgres publicasse a porta?".</p>
+<p><small>[1] <a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/">What is an image?</a> · [2] <a href="https://docs.docker.com/reference/compose-file/fragments/">Fragments</a> · [3] <a href="https://docs.docker.com/build/cache/">Build cache</a> · [4] <a href="https://docs.docker.com/build/cache/optimize/">Optimize cache usage</a> · [5] <a href="https://docs.docker.com/engine/storage/volumes/">Volumes</a> · [6] <a href="https://docs.docker.com/engine/storage/bind-mounts/">Bind mounts</a> · [7] <a href="https://docs.docker.com/compose/how-tos/networking/">Networking in Compose</a> · [8] <a href="https://docs.docker.com/reference/compose-file/interpolation/">Interpolation</a> · [9] <a href="https://docs.docker.com/compose/how-tos/startup-order/">Startup order</a> · [10] <a href="https://docs.docker.com/reference/cli/docker/compose/down/">docker compose down</a></small></p>
+</footer>
+</main>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

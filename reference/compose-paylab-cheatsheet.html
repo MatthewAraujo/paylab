@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compose do PayLab</title>
+<link rel="stylesheet" href="../assets/course.css">
+</head>
+<body class="reference">
+<main>
+<header class="lesson">
+  <div class="kicker">Referência · Docker fundamental</div>
+  <h1>Compose do PayLab — cheat sheet</h1>
+  <p class="lede">O essencial de <code>compose.yaml</code> e dos Dockerfiles, para consulta rápida. Explicação completa na <a href="../lessons/0001-lendo-o-compose-do-paylab.html">Lição 1</a>.</p>
+</header>
+
+<h2>Os quatro serviços</h2>
+<div class="table-wrap"><table>
+<tr><th>Serviço</th><th>Imagem</th><th>Papel</th><th>Espera</th><th>Porta no host</th></tr>
+<tr><td><code>postgres</code></td><td><code>postgres:16-alpine</code></td><td>Banco; healthcheck <code>pg_isready</code></td><td>—</td><td>nenhuma</td></tr>
+<tr><td><code>demo-init</code></td><td><code>paylab-api-dev</code></td><td>Job único: migrate + seed + grava API key</td><td>postgres <em>healthy</em></td><td>nenhuma</td></tr>
+<tr><td><code>api</code></td><td><code>paylab-api-dev</code></td><td>NestJS em watch; healthcheck <code>/health</code></td><td>demo-init <em>completed</em></td><td><code>127.0.0.1:3333</code></td></tr>
+<tr><td><code>ui</code></td><td>build <code>./paylab-ui</code></td><td>Next.js dev; lê API key do volume</td><td>api <em>healthy</em></td><td><code>127.0.0.1:3000</code></td></tr>
+</table></div>
+
+<div class="grid">
+<section>
+<h2>Imagem vs container</h2>
+<p><strong>Imagem</strong>: molde imutável em layers. <strong>Container</strong>: processo isolado criado a partir de uma imagem. <code>command</code> no Compose sobrescreve o <code>CMD</code> do Dockerfile.</p>
+</section>
+<section>
+<h2>Cache de layers</h2>
+<p>Mudou uma layer → todas as seguintes refazem. Ordem: base → ferramentas → manifests → <code>install</code> → <code>COPY . .</code>. <code>RUN --mount=type=cache</code> preserva o store do pnpm entre builds.</p>
+</section>
+<section>
+<h2>Volumes</h2>
+<p><strong>Nomeado</strong> (<code>postgres-data</code>): gerenciado pelo Docker, sobrevive ao container e a <code>down</code>. <strong>Bind mount</strong> (<code>./src:/app/src</code>): pasta do host, para hot reload; esconde o que havia no destino. <code>:ro</code> = só leitura.</p>
+</section>
+<section>
+<h2>Rede</h2>
+<p>Rede padrão <code>&lt;projeto&gt;_default</code>; serviço = hostname. Dentro da rede: <code>postgres:5432</code>, <code>api:3333</code>. Do host/navegador: só portas publicadas, <code>localhost:3333</code>.</p>
+</section>
+<section>
+<h2>Ports</h2>
+<p><code>"IP_HOST:PORTA_HOST:PORTA_CONTAINER"</code>. <code>127.0.0.1:</code> limita à sua máquina. Sem <code>ports</code> = inacessível de fora da rede.</p>
+</section>
+<section>
+<h2>YAML do Compose</h2>
+<p><code>x-nome:</code> campo ignorado pelo Compose. <code>&amp;ancora</code> define, <code>*ancora</code> reutiliza, <code>&lt;&lt;: *ancora</code> mescla. <code>$$</code> = <code>$</code> literal, sem interpolação.</p>
+</section>
+</div>
+
+<h2>depends_on.condition</h2>
+<div class="table-wrap"><table>
+<tr><th>Condição</th><th>Espera até</th></tr>
+<tr><td><code>service_started</code></td><td>O container ter iniciado (padrão)</td></tr>
+<tr><td><code>service_healthy</code></td><td>O <code>healthcheck</code> da dependência passar</td></tr>
+<tr><td><code>service_completed_successfully</code></td><td>A dependência sair com código 0</td></tr>
+</table></div>
+
+<h2>Comandos de diagnóstico</h2>
+<pre><code>docker compose up --build -d          # sobe em background, rebuildando imagens
+docker compose ps -a                  # estado e health de cada container
+docker compose logs -f api ui         # logs ao vivo
+docker compose exec api sh            # shell dentro do container
+docker compose exec api getent hosts postgres   # testa DNS interno
+docker network inspect paylab-local_default     # quem está na rede
+docker volume ls                      # volumes nomeados
+docker history paylab-api-dev         # layers e tamanhos
+docker compose down                   # remove containers e rede; mantém volumes
+docker compose down -v                # ⚠ também apaga volumes (dados e credencial)</code></pre>
+
+<h2>Quando rebuildar</h2>
+<p>Editou <code>src/</code> → nada (bind mount + watch). Editou <code>package.json</code>, lockfile, Dockerfile ou <code>.dockerignore</code> → <code>docker compose up --build</code>.</p>
+
+<footer class="lesson"><p>Fontes: <a href="https://docs.docker.com/compose/how-tos/networking/">Networking in Compose</a> · <a href="https://docs.docker.com/build/cache/">Build cache</a> · <a href="https://docs.docker.com/engine/storage/volumes/">Volumes</a> · <a href="https://docs.docker.com/compose/how-tos/startup-order/">Startup order</a> · <a href="https://docs.docker.com/reference/compose-file/extension/">Extensions</a> · <a href="https://docs.docker.com/reference/compose-file/interpolation/">Interpolation</a></p></footer>
+</main>
+</body>
+</html>

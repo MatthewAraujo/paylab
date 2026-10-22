@@ -1,0 +1,76 @@
+/* Shared stylesheet for every lesson and reference page. */
+:root {
+  --bg: #fffdf8;
+  --surface: #f5f1e8;
+  --text: #1f1d1a;
+  --muted: #6b655c;
+  --accent: #0b6e99;
+  --accent-soft: #e3f0f6;
+  --good: #2f7a3e;
+  --good-soft: #e5f2e7;
+  --bad: #a3342b;
+  --bad-soft: #f7e4e2;
+  --rule: #ddd6c8;
+  --code-bg: #f1ece1;
+  --measure: 40rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1a1917; --surface: #24221f; --text: #ece7de; --muted: #a39c90;
+    --accent: #6cc0e5; --accent-soft: #1d3440; --good: #7cc98b; --good-soft: #1f3424;
+    --bad: #ee8b82; --bad-soft: #3d2220; --rule: #3a3732; --code-bg: #2a2824;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1a1917; --surface: #24221f; --text: #ece7de; --muted: #a39c90;
+  --accent: #6cc0e5; --accent-soft: #1d3440; --good: #7cc98b; --good-soft: #1f3424;
+  --bad: #ee8b82; --bad-soft: #3d2220; --rule: #3a3732; --code-bg: #2a2824;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 18px/1.6 Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
+}
+main { max-width: var(--measure); margin: 0 auto; padding: 3rem 16px 5rem; }
+header.lesson { border-bottom: 1px solid var(--rule); margin-bottom: 2rem; padding-bottom: 1rem; }
+.kicker { font: 600 .75rem/1 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font-size: 2rem; line-height: 1.2; margin: .4rem 0 .6rem; font-weight: 600; }
+h2 { font-size: 1.3rem; margin: 2.5rem 0 .5rem; font-weight: 600; }
+h3 { font-size: 1.05rem; margin: 1.5rem 0 .3rem; }
+.lede { color: var(--muted); font-style: italic; margin: 0; }
+a { color: var(--accent); }
+p, li { hyphens: auto; }
+code, pre { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .82em; }
+code { background: var(--code-bg); padding: .1em .3em; border-radius: 3px; }
+pre { background: var(--code-bg); padding: .9rem 1rem; border-radius: 6px; overflow-x: auto; line-height: 1.45; }
+pre code { background: none; padding: 0; font-size: 1em; }
+pre .hl { background: var(--accent-soft); display: inline-block; width: 100%; }
+.file { font: 600 .75rem/1 system-ui, sans-serif; color: var(--muted); margin: 1rem 0 -.3rem; }
+.cite { font-size: .8em; vertical-align: super; text-decoration: none; }
+.note { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: .7rem 1rem; margin: 1.2rem 0; border-radius: 0 6px 6px 0; }
+.note p { margin: .3rem 0; }
+table { border-collapse: collapse; width: 100%; font-size: .9em; margin: 1rem 0; }
+th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font: 600 .78rem/1.3 system-ui, sans-serif; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.table-wrap { overflow-x: auto; }
+figure { margin: 1.5rem 0; }
+figcaption { font-size: .85em; color: var(--muted); margin-top: .4rem; }
+figure svg { width: 100%; height: auto; }
+footer.lesson { border-top: 1px solid var(--rule); margin-top: 3rem; padding-top: 1rem; font-size: .9em; color: var(--muted); }
+.steps li { margin-bottom: .9rem; }
+details { background: var(--surface); border-radius: 6px; padding: .5rem .9rem; margin: .4rem 0 0; }
+summary { cursor: pointer; font: 500 .85rem/1.4 system-ui, sans-serif; color: var(--accent); }
+
+/* Reference pages: denser, print-friendly */
+body.reference main { max-width: 52rem; }
+body.reference h2 { margin-top: 1.8rem; border-bottom: 1px solid var(--rule); padding-bottom: .2rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; }
+
+@media print {
+  :root { --bg: #fff; --text: #000; --code-bg: #f3f3f3; }
+  body { font-size: 11pt; }
+  main { padding: 0; max-width: none; }
+  details { display: none; }
+  a { color: inherit; text-decoration: none; }
+}

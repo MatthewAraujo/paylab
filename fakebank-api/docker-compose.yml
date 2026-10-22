@@ -1,0 +1,44 @@
+# Standalone FakeBank development stack: `docker compose up --build` from this directory.
+# Local development only. The Client key below is public and fake
+# (key `fakebank-dev-key-paylab-not-a-secret`); never reuse it in another environment.
+name: fakebank-api
+
+services:
+  fakebank-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fakebank
+      POSTGRES_PASSWORD: fakebank
+      POSTGRES_DB: fakebank
+    volumes:
+      - fakebank-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fakebank -d fakebank"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  fakebank:
+    image: fakebank-api-dev
+    build: .
+    init: true
+    environment:
+      NODE_ENV: development
+      PORT: "4000"
+      DATABASE_URL: postgresql://fakebank:fakebank@fakebank-postgres:5432/fakebank?schema=public
+      FAKEBANK_CLIENTS: paylab:5489e8238a869fd3a7d6c634818fca30656b25435dd903860d123236437a576a
+      FAKEBANK_LAB_ENABLED: "true"
+    ports:
+      - "127.0.0.1:4000:4000"
+    depends_on:
+      fakebank-postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+      start_period: 15s
+
+volumes:
+  fakebank-postgres-data:

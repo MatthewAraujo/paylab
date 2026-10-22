@@ -64,6 +64,15 @@ Docker is required for every database test layer (integration, e2e, concurrency)
 4. `pnpm dev`, then `curl localhost:4000/health` and open http://localhost:4000/docs
 5. Create a transaction with the development key from `.env.example`: `curl -X POST localhost:4000/v1/transactions -H 'Authorization: Bearer fakebank-dev-key-paylab-not-a-secret' -H 'Idempotency-Key: demo-1' -H 'Content-Type: application/json' -d '{"externalReference":"payment-1","amountMinor":1500,"currency":"BRL"}'`
 
+## Docker
+
+The development image (`Dockerfile`, Node 22, pnpm 11.9.0, `procps` for watch-mode restarts) applies the migrations on start, then runs `pnpm dev`. It is not a production image.
+
+- **Standalone** (this directory): `docker compose up --build` starts FakeBank and its own PostgreSQL (Compose project `fakebank-api`, volume `fakebank-postgres-data`, database not published). FakeBank answers on http://localhost:4000 (`/health`, `/docs`), bound to 127.0.0.1. The source is baked into the image, so rerun with `--build` after changes. `docker compose down` keeps the data volume.
+- **Workspace stack** (workspace root): `docker compose up --build` also starts `fakebank` and `fakebank-postgres` with `src` and `prisma` mounted, so edits reload the service; see the workspace [PROJECT.md](../PROJECT.md).
+
+Both stacks publish 127.0.0.1:4000, so run one at a time. Both configure the development Client `paylab` with the public, fake key `fakebank-dev-key-paylab-not-a-secret` (`FAKEBANK_CLIENTS` holds only its hash) and set `FAKEBANK_LAB_ENABLED=true`. These values are for local development only; any other environment needs its own random key, hashed with `pnpm client-key:hash`, and the lab disabled.
+
 ## Environment variables
 
 Validated at boot by `src/infra/env/env.ts` (the service refuses to start with an invalid value and names it); defaults in `.env.example`. Real `.env` files are gitignored, and secrets are never committed.
@@ -75,4 +84,5 @@ Validated at boot by `src/infra/env/env.ts` (the service refuses to start with a
 | `NODE_ENV` | `development`, `test` or `production` |
 | `APP_NAME` | Default `fakebank-api`; reported by `/health` |
 | `FAKEBANK_CLIENTS` | Required. Comma-separated `clientId:sha256-hex-of-key`; malformed, duplicated ids or duplicated hashes refuse the boot. `.env.example` holds a public, fake development key and its hash |
+| `FAKEBANK_LAB_ENABLED` | Lab surface switch (read by the service once T6 lands; ignored before). Default `false`; `true` exposes the lab surface (`/__test/...`). The development Compose files set it to `true`; never enable it outside development |
 | `LOG_ENABLED`, `LOG_LEVEL` | Errors and warnings are always logged; `LOG_ENABLED=true` adds the regular log, `LOG_LEVEL=debug` the debug and verbose levels |

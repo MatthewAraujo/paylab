@@ -1,6 +1,6 @@
 # PayLab workspace
 
-This workspace contains the NestJS API (`paylab-api`) and Next.js Operational Console (`paylab-ui`). Each repository's `PROJECT.md` describes its stack, commands, conventions and CI.
+This workspace contains three applications: the NestJS API (`paylab-api`), the Next.js Operational Console (`paylab-ui`), and FakeBank (`fakebank-api`), a standalone NestJS provider simulator that PayLab will call over HTTP (it does not yet). Each application's `PROJECT.md` describes its stack, commands, conventions and CI.
 
 ## Local Docker development
 
@@ -13,18 +13,33 @@ docker compose up --build
 - Console: http://localhost:3000
 - API health: http://localhost:3333/health
 - API documentation: http://localhost:3333/docs
+- FakeBank health: http://localhost:4000/health
+- FakeBank documentation: http://localhost:4000/docs
 
-First startup installs dependencies inside images, waits for PostgreSQL, applies existing migrations and seeds the demo dataset. The console authenticates automatically as Demo Store. Both applications run in development mode; editing files under their `src` directories triggers reload. API scripts, Prisma files and benchmark evidence are also mounted. Configuration, dependency, or Dockerfile changes require rerunning the command with `--build`.
+First startup installs dependencies inside images, waits for PostgreSQL, applies existing migrations and seeds the demo dataset. The console authenticates automatically as Demo Store. All three applications run in development mode; editing files under their `src` directories triggers reload. API scripts, Prisma files and benchmark evidence are also mounted. Configuration, dependency, or Dockerfile changes require rerunning the command with `--build`.
 
-Use `docker compose up --build -d` for background execution and `docker compose logs -f api ui` for logs. `docker compose stop` stops the stack while preserving containers and volumes. Running the startup command again preserves demo data and credentials.
+Use `docker compose up --build -d` for background execution and `docker compose logs -f api ui fakebank` for logs. `docker compose stop` stops the stack while preserving containers and volumes. Running the startup command again preserves demo data and credentials.
 
-The `paylab-local` Compose project has dedicated PostgreSQL and credential volumes. PostgreSQL has no host port; it does not use the existing API Compose database or host data directory. The host ports 3000 and 3333 must be available. Only the local machine can access the published application ports.
+The `paylab-local` Compose project has dedicated PostgreSQL and credential volumes. PostgreSQL has no host port; it does not use the existing API Compose database or host data directory. The host ports 3000, 3333 and 4000 must be available. Only the local machine can access the published application ports.
 
 The initializer runs once before the API on each Compose startup. Existing demo data is not reseeded. The generated Merchant key stays in a private Docker volume and is mounted read-only in the console. Treat that volume as a credential; retain it with the database volume. If they do not match, initialization fails rather than deleting data. A process interruption after seeding but before saving the key also requires credential recovery; it never triggers an automatic reset.
 
 Financial server requests use `PAYLAB_INTERNAL_API_URL=http://api:3333`; browser health and benchmark requests use `NEXT_PUBLIC_PAYLAB_API_URL=http://localhost:3333`. No host `.env` file is needed or copied into the images. This setup is for local development only.
 
-Benchmark evidence already on disk is visible through bind mounts. The API reads host diagnostic Artifacts through a read-only repository mount, so Docker does not create or change ownership of the host `.benchmark` directory. The stack never starts a benchmark workload or a benchmark database. Existing standalone commands and Compose configuration inside `paylab-api` remain independent.
+Benchmark evidence already on disk is visible through bind mounts. The API reads host diagnostic Artifacts through a read-only repository mount, so Docker does not create or change ownership of the host `.benchmark` directory. The stack never starts a benchmark workload or a benchmark database. Existing standalone commands and Compose configuration inside `paylab-api` and `fakebank-api` remain independent.
+
+### FakeBank in the development stack
+
+`fakebank` and `fakebank-postgres` run next to PayLab without depending on it: FakeBank has its own PostgreSQL (no host port) and its own `fakebank-postgres-data` volume, and the PayLab services receive no FakeBank configuration. On each start the container applies FakeBank's migrations, then runs `pnpm dev`; `fakebank-api/src` and `fakebank-api/prisma` are mounted, so source edits reload the service and new migrations apply on the next start. FakeBank listens on 127.0.0.1:4000 only, the same port as its standalone stack in `fakebank-api` (run one at a time).
+
+The stack configures one development Client, `paylab`, whose key is `fakebank-dev-key-paylab-not-a-secret`. The key is public and fake, it appears only in the development Compose files and `fakebank-api/.env.example`, and it must never be used in another environment (generate a random key there and hash it with `pnpm client-key:hash`). The lab surface is enabled (`FAKEBANK_LAB_ENABLED=true`, development only). Example:
+
+```sh
+curl -X POST localhost:4000/v1/transactions \
+  -H 'Authorization: Bearer fakebank-dev-key-paylab-not-a-secret' \
+  -H 'Idempotency-Key: demo-1' -H 'Content-Type: application/json' \
+  -d '{"externalReference":"payment-1","amountMinor":1500,"currency":"BRL"}'
+```
 
 ## Production-local Docker
 

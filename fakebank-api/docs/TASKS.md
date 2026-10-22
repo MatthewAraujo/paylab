@@ -21,8 +21,8 @@ PayLab consuming FakeBank or any change to PayLab services; webhooks; reconcilia
 | [T1](tasks/T1.md) | Service skeleton | — | done | [context](task-runs/T1-CONTEXT.md) | [summary](task-runs/T1-summary.md) |
 | [T2](tasks/T2.md) | Provider Transaction state machine | — | done | [context](task-runs/T2-CONTEXT.md) | [summary](task-runs/T2-summary.md) |
 | [T3](tasks/T3.md) | Create and read a Provider Transaction (immediate success) | T1, T2 | done | [context](task-runs/T3-CONTEXT.md) | [summary](task-runs/T3-summary.md) |
-| [T4](tasks/T4.md) | Idempotency | T3 | in_progress | — | — |
-| [T5](tasks/T5.md) | Lookup by External Reference | T3 | planned | — | — |
+| [T4](tasks/T4.md) | Idempotency | T3 | done | [context](task-runs/T4-CONTEXT.md) | [summary](task-runs/T4-summary.md) |
+| [T5](tasks/T5.md) | Lookup by External Reference | T3 | in_progress | — | — |
 | [T6](tasks/T6.md) | Lab surface and business Outcomes | T3 | planned | — | — |
 | [T7](tasks/T7.md) | Advance a deferred Provider Transaction | T6 | planned | — | — |
 | [T8](tasks/T8.md) | Transport Outcomes and delay | T4, T6 | planned | — | — |

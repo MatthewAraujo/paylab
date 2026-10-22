@@ -16,6 +16,7 @@ import {
 	UseGuards,
 } from '@nestjs/common'
 import {
+	ApiAcceptedResponse,
 	ApiBadRequestResponse,
 	ApiBearerAuth,
 	ApiBody,
@@ -75,6 +76,12 @@ export class TransactionsController {
 		description: 'The Provider Transaction was created and decided.',
 		type: ProviderTransactionResponse,
 	})
+	@ApiAcceptedResponse({
+		description:
+			'The Provider Transaction was created but not decided yet: it stays PROCESSING ' +
+			'(completedAt null) until the provider decides.',
+		type: ProviderTransactionResponse,
+	})
 	@ApiOkResponse({
 		description:
 			'Idempotent replay: this Client already sent this request with this Idempotency-Key. ' +
@@ -114,6 +121,9 @@ export class TransactionsController {
 		})
 		if (result.kind === 'replayed') {
 			response.status(HttpStatus.OK).setHeader(IDEMPOTENT_REPLAYED_HEADER, 'true')
+		} else if (result.transaction.status === 'PROCESSING') {
+			// AC-15: persisted, but the provider has not decided yet (DEFERRED).
+			response.status(HttpStatus.ACCEPTED)
 		}
 		return toProviderTransactionResponse(result.transaction)
 	}

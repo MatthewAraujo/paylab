@@ -4,6 +4,11 @@ import {
 	createProviderTransaction,
 	transitionProviderTransaction,
 } from '@/domain/provider-transaction'
+import {
+	IMMEDIATE_SUCCESS,
+	NewTransactionDecision,
+	ScenarioAttempts,
+} from '@/infra/scenarios/scenario-attempts.service'
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
 import type { ProviderTransaction } from '@prisma/client'
 import { DOMAIN_CLOCK } from './domain-clock'
@@ -17,7 +22,8 @@ export interface CreateProviderTransactionCommand extends CreateProviderTransact
 }
 
 /**
- * `created`: this attempt persisted a new Provider Transaction (`201`).
+ * `created`: this attempt persisted a new Provider Transaction (`201`, or `202` while it is still
+ * `PROCESSING`: a deferred decision).
  * `replayed`: the Client already had one under this Idempotency Key with the same request; it is
  * returned in its current state (`200`, `Idempotent-Replayed: true`) and nothing else happens.
  */
@@ -29,17 +35,20 @@ export type CreateProviderTransactionResult =
  * The creation attempt pipeline (authentication and schema validation already happened in the
  * HTTP layer), in PRD order:
  *   1. business validation (currency);
- *   2. pre-persistence Outcomes (T6: RATE_LIMIT, ERROR_BEFORE_COMMIT), which apply even when the
+ *   2. pre-persistence Outcomes (T8: RATE_LIMIT, ERROR_BEFORE_COMMIT), which apply even when the
  *      key already has a Provider Transaction, so they belong before step 3;
  *   3. idempotency: insert, and on a (client, key) conflict load the existing row and compare
  *      fingerprints (409 on mismatch, replay on match). A replay returns here and skips every
  *      later step (no scenario consumption, no delay);
- *   4. new row only: post-persistence behavior (T6: delay, ERROR_AFTER_COMMIT).
+ *      For a new row, a scenario attempt is consumed and its Outcome decided (FAIL, DEFERRED, ...)
+ *      inside the insert's database transaction;
+ *   4. new row only: post-persistence behavior (T8: delay, ERROR_AFTER_COMMIT).
  */
 @Injectable()
 export class CreateProviderTransactionService {
 	constructor(
 		private readonly repository: ProviderTransactionRepository,
+		private readonly scenarioAttempts: ScenarioAttempts,
 		@Inject(DOMAIN_CLOCK) private readonly clock: DomainClock,
 	) {}
 
@@ -53,23 +62,51 @@ export class CreateProviderTransactionService {
 			)
 		}
 
-		// Step 2 (T6) hooks here: pre-persistence Outcomes.
+		// Step 2 (T8) hooks here: pre-persistence Outcomes, consumed with
+		// `SimulationScenarioRepository.consumeAttempt` restricted to RATE_LIMIT/ERROR_BEFORE_COMMIT.
 
 		const fingerprint = requestFingerprint(command)
-		const created = createProviderTransaction({ id: newProviderTransactionId() }, this.clock)
-		const succeeded = transitionProviderTransaction(
-			created.transaction,
-			{ to: 'SUCCEEDED' },
-			this.clock,
-		)
-		if (!succeeded.ok) {
-			// Unreachable: a new transaction is PROCESSING, and PROCESSING -> SUCCEEDED is allowed.
-			throw new Error(`Immediate success refused: ${succeeded.error.code}`)
+		let decision: NewTransactionDecision = IMMEDIATE_SUCCESS
+		const inserted = await this.repository.insertWithEvents(async (db) => {
+			// Step 3 consumes the scenario attempt in the insert's database transaction: a key
+			// conflict rolls it back, so a replay never consumes one.
+			decision = await this.scenarioAttempts.decideNewTransaction(
+				db,
+				command.clientId,
+				command.externalReference,
+			)
+			return this.decidedTransaction(command, fingerprint, decision)
+		})
+		if (inserted) {
+			// Step 4 (T8) hooks here: post-persistence behavior of a new row only
+			// (`decision.delayMs`, `decision.appliedOutcome === 'ERROR_AFTER_COMMIT'`).
+			return { kind: 'created', transaction: inserted }
 		}
-		const final = succeeded.value.transaction
 
-		const inserted = await this.repository.insertWithEvents(
-			{
+		return this.replay(command, fingerprint)
+	}
+
+	/** A new Provider Transaction (always created PROCESSING) after the decided transition. */
+	private decidedTransaction(
+		command: CreateProviderTransactionCommand,
+		fingerprint: string,
+		decision: NewTransactionDecision,
+	) {
+		const created = createProviderTransaction({ id: newProviderTransactionId() }, this.clock)
+		let final = created.transaction
+		const events = [created.event]
+		if (decision.transition) {
+			const transitioned = transitionProviderTransaction(final, decision.transition, this.clock)
+			if (!transitioned.ok) {
+				// Unreachable: a new transaction is PROCESSING, and the scenario schema and a CHECK
+				// constraint guarantee FAIL's Failure Code.
+				throw new Error(`Decided transition refused: ${transitioned.error.code}`)
+			}
+			final = transitioned.value.transaction
+			events.push(transitioned.value.event)
+		}
+		return {
+			transaction: {
 				id: final.id,
 				clientId: command.clientId,
 				externalReference: command.externalReference,
@@ -79,18 +116,13 @@ export class CreateProviderTransactionService {
 				currency: command.currency,
 				status: final.status,
 				failureCode: final.failureCode,
+				appliedOutcome: decision.appliedOutcome,
 				createdAt: final.createdAt,
 				updatedAt: final.completedAt ?? final.createdAt,
 				completedAt: final.completedAt,
 			},
-			[created.event, succeeded.value.event],
-		)
-		if (inserted) {
-			// Step 4 (T6) hooks here: post-persistence behavior of a new row only.
-			return { kind: 'created', transaction: inserted }
+			events,
 		}
-
-		return this.replay(command, fingerprint)
 	}
 
 	// Built from the current row, never from a stored response: the first attempt may never

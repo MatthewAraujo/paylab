@@ -14,8 +14,8 @@ datasource db {
 // Amounts are 64-bit integers of the currency's smallest unit (BigInt here), never decimals.
 
 // CHECK constraints (positive amount, valid status/type, failure code iff FAILED, completed_at
-// iff terminal) and the append-only triggers on provider_transaction_event live only in the
-// migration.
+// iff terminal, known applied Outcome) and the append-only triggers on provider_transaction_event
+// live only in the migrations. appliedOutcome is diagnostic only.
 model ProviderTransaction {
   id                 String                     @id
   clientId           String                     @map("client_id")
@@ -49,4 +49,22 @@ model ProviderTransactionEvent {
 
   @@index([providerTransactionId, sequence])
   @@map("provider_transaction_event")
+}
+
+// One per (Client, External Reference). CHECK constraints (known Outcome, delay 0–120000,
+// failure code iff FAIL, retry-after only for RATE_LIMIT and 1–3600, remaining 0–100) live only
+// in the migration. Attempts are consumed with one conditional decrement (raw SQL).
+model SimulationScenario {
+  clientId          String   @map("client_id")
+  externalReference String   @map("external_reference") @db.VarChar(128)
+  outcome           String
+  delayMs           Int      @map("delay_ms")
+  failureCode       String?  @map("failure_code")
+  retryAfterSeconds Int?     @map("retry_after_seconds")
+  remainingAttempts Int      @map("remaining_attempts")
+  createdAt         DateTime @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime @map("updated_at") @db.Timestamptz(3)
+
+  @@id([clientId, externalReference])
+  @@map("simulation_scenario")
 }

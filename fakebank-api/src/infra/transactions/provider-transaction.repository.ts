@@ -5,6 +5,11 @@ import { Prisma, type ProviderTransaction } from '@prisma/client'
 
 export type NewProviderTransaction = Prisma.ProviderTransactionUncheckedCreateInput
 
+export type BuildNewProviderTransaction = (db: Prisma.TransactionClient) => Promise<{
+	transaction: NewProviderTransaction
+	events: ProviderTransactionEvent[]
+}>
+
 const IDEMPOTENCY_KEY_COLUMN = 'idempotency_key'
 
 @Injectable()
@@ -12,20 +17,19 @@ export class ProviderTransactionRepository {
 	constructor(private readonly prisma: PrismaService) {}
 
 	/**
-	 * AC-27: the transaction (in its final state) and every event it produced, in one database
-	 * transaction; events are inserted one by one so their sequence keeps the given order.
+	 * AC-27: `build` decides the transaction (in its final state) and every event it produced
+	 * inside one database transaction, which then inserts them; events are inserted one by one so
+	 * their sequence keeps the given order. `build` receives the database transaction, so what it
+	 * writes there (a consumed scenario attempt) commits or rolls back with the insert.
 	 *
 	 * AC-4/AC-31: the unique (client id, Idempotency Key) index is the only arbiter of duplicates.
 	 * When the Client already has a Provider Transaction under this key (committed, or committed
 	 * by a concurrent insert this one waited for), the whole database transaction rolls back and
 	 * this returns `null`; nothing of this attempt is persisted.
 	 */
-	async insertWithEvents(
-		transaction: NewProviderTransaction,
-		events: ProviderTransactionEvent[],
-	): Promise<ProviderTransaction | null> {
+	async insertWithEvents(build: BuildNewProviderTransaction): Promise<ProviderTransaction | null> {
 		try {
-			return await this.insertAtomically(transaction, events)
+			return await this.insertAtomically(build)
 		} catch (error) {
 			if (isIdempotencyKeyViolation(error)) {
 				return null
@@ -43,11 +47,9 @@ export class ProviderTransactionRepository {
 		})
 	}
 
-	private insertAtomically(
-		transaction: NewProviderTransaction,
-		events: ProviderTransactionEvent[],
-	): Promise<ProviderTransaction> {
+	private insertAtomically(build: BuildNewProviderTransaction): Promise<ProviderTransaction> {
 		return this.prisma.$transaction(async (tx) => {
+			const { transaction, events } = await build(tx)
 			const created = await tx.providerTransaction.create({ data: transaction })
 			for (const event of events) {
 				await tx.providerTransactionEvent.create({

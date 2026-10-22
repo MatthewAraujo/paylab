@@ -51,15 +51,28 @@ export const clientCredentials = z
 		return credentials
 	})
 
-export const envSchema = z.object({
-	APP_NAME: z.string().default('fakebank-api'),
-	LOG_ENABLED: booleanFromString,
-	LOG_LEVEL: z.enum(['basic', 'debug']).default('basic'),
-	DATABASE_URL: z.string().url(),
-	NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-	PORT: z.coerce.number().int().positive().default(4000),
-	FAKEBANK_CLIENTS: clientCredentials,
-})
+export const envSchema = z
+	.object({
+		APP_NAME: z.string().default('fakebank-api'),
+		LOG_ENABLED: booleanFromString,
+		LOG_LEVEL: z.enum(['basic', 'debug']).default('basic'),
+		DATABASE_URL: z.string().url(),
+		NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+		PORT: z.coerce.number().int().positive().default(4000),
+		FAKEBANK_CLIENTS: clientCredentials,
+		// AC-29: the lab surface (scenario injection, `/__test/...`) exists only when explicitly on.
+		FAKEBANK_LAB_ENABLED: booleanFromString,
+	})
+	// AC-30: the lab flag is the only barrier against scenario injection; production never boots with it.
+	.superRefine((env, context) => {
+		if (env.NODE_ENV === 'production' && env.FAKEBANK_LAB_ENABLED) {
+			context.addIssue({
+				code: 'custom',
+				path: ['FAKEBANK_LAB_ENABLED'],
+				message: 'Must not be true when NODE_ENV is production',
+			})
+		}
+	})
 
 export type Env = z.infer<typeof envSchema>
 

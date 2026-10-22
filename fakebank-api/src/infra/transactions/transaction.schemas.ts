@@ -4,7 +4,7 @@ import { z } from 'zod'
 export const SUPPORTED_CURRENCY = 'BRL'
 
 // Stored and matched exactly as sent (no trimming), but never blank.
-const externalReference = z
+export const externalReference = z
 	.string({ required_error: 'Required', invalid_type_error: 'Must be a single string' })
 	.min(1)
 	.max(128)

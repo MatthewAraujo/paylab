@@ -40,4 +40,31 @@ describe('environment configuration', () => {
 	])('refuses to boot with %s FAKEBANK_CLIENTS', (_case, value) => {
 		expect(() => buildEnv({ DATABASE_URL, FAKEBANK_CLIENTS: value })).toThrow(/FAKEBANK_CLIENTS/)
 	})
+
+	// AC-29: catches the lab surface (scenario injection) being on unless explicitly enabled.
+	it.each([
+		['unset', undefined, false],
+		['false', 'false', false],
+		['true', 'true', true],
+	])('reads FAKEBANK_LAB_ENABLED %s as %s', (_case, value, expected) => {
+		const env = buildEnv({
+			DATABASE_URL,
+			FAKEBANK_CLIENTS: `paylab:${HASH_A}`,
+			FAKEBANK_LAB_ENABLED: value,
+		})
+
+		expect(env.FAKEBANK_LAB_ENABLED).toBe(expected)
+	})
+
+	// AC-30: catches a production deployment that exposes scenario injection.
+	it('refuses to boot with FAKEBANK_LAB_ENABLED=true in production', () => {
+		expect(() =>
+			buildEnv({
+				DATABASE_URL,
+				FAKEBANK_CLIENTS: `paylab:${HASH_A}`,
+				NODE_ENV: 'production',
+				FAKEBANK_LAB_ENABLED: 'true',
+			}),
+		).toThrow(/FAKEBANK_LAB_ENABLED/)
+	})
 })

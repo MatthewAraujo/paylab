@@ -40,7 +40,15 @@ describe('OpenAPI documentation', () => {
 		const create = body.paths['/v1/transactions'].post
 		const read = body.paths['/v1/transactions/{providerTransactionId}'].get
 
-		expect(Object.keys(create.responses).sort()).toEqual(['200', '201', '400', '401', '409', '422'])
+		expect(Object.keys(create.responses).sort()).toEqual([
+			'200',
+			'201',
+			'202',
+			'400',
+			'401',
+			'409',
+			'422',
+		])
 		expect(Object.keys(read.responses).sort()).toEqual(['200', '401', '404'])
 		expect(create.responses['400'].content['application/json'].schema.$ref).toBe(
 			'#/components/schemas/ErrorEnvelopeResponse',
@@ -82,5 +90,26 @@ describe('OpenAPI documentation', () => {
 			type: 'array',
 			items: { $ref: '#/components/schemas/ProviderTransactionResponse' },
 		})
+	})
+
+	// AC-12/AC-13: with the lab on (the test layers' setting), catches the scenario registration
+	// missing from the contract or documented without its errors and bearer auth.
+	it('documents the lab scenario registration when the lab is enabled', async () => {
+		const { body } = await request(app.getHttpServer()).get('/docs-json')
+		const register = body.paths['/__test/scenarios'].post
+
+		expect(Object.keys(register.responses).sort()).toEqual(['201', '400', '401'])
+		expect(register.security).toEqual([{ bearer: [] }])
+		expect(register.responses['400'].content['application/json'].schema.$ref).toBe(
+			'#/components/schemas/ErrorEnvelopeResponse',
+		)
+		expect(body.components.schemas.RegisterScenarioRequest.properties.outcome.enum).toEqual([
+			'SUCCEED',
+			'FAIL',
+			'DEFERRED',
+			'RATE_LIMIT',
+			'ERROR_BEFORE_COMMIT',
+			'ERROR_AFTER_COMMIT',
+		])
 	})
 })

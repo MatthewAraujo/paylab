@@ -32,40 +32,40 @@ PayLab consuming FakeBank or any change to PayLab services; webhooks; reconcilia
 
 | Acceptance Criterion | Task(s) | Test(s) | Status |
 | --- | --- | --- | --- |
-| AC-1 | T3 | e2e | planned |
-| AC-2 | T4 | e2e | planned |
-| AC-3 | T3 | e2e | planned |
-| AC-4 | T4, T7 | e2e | planned |
-| AC-5 | T4 | e2e | planned |
-| AC-6 | T4 | e2e | planned |
-| AC-7 | T3 | e2e | planned |
-| AC-8 | T5 | e2e | planned |
-| AC-9 | T3, T5 | e2e | planned |
-| AC-10 | T1 (and every task's error codes) | e2e | planned |
-| AC-11 | T1 | e2e | planned |
-| AC-12 | T1, T3, T4, T5, T6, T7, T8 | e2e | planned |
-| AC-13 | T6 | e2e | planned |
-| AC-14 | T6 | e2e | planned |
-| AC-15 | T6 | e2e | planned |
-| AC-16 | T8 | e2e | planned |
-| AC-17 | T8 | e2e | planned |
-| AC-18 | T8 | e2e | planned |
-| AC-19 | T8 | e2e | planned |
-| AC-20 | T6, T8 | e2e | planned |
-| AC-21 | T8 | e2e | planned |
-| AC-22 | T8 | concurrency | planned |
-| AC-23 | T6 | e2e | planned |
-| AC-24 | T7 | e2e | planned |
-| AC-25 | T7 | e2e | planned |
-| AC-26 | T2 | unit | planned |
-| AC-27 | T2, T3, T6, T7 | unit, e2e | planned |
-| AC-28 | T3 | integration | planned |
-| AC-29 | T6, T7 | e2e | planned |
-| AC-30 | T6 | e2e | planned |
-| AC-31 | T4 | concurrency | planned |
-| AC-32 | T9 | manual (documented commands) | planned |
-| AC-33 | T9 | manual (documented commands) | planned |
-| AC-34 | T3, T9 | unit, e2e, manual | planned |
+| AC-1 | T3 | e2e | done |
+| AC-2 | T4 | e2e | done |
+| AC-3 | T3 | e2e | done |
+| AC-4 | T4, T7 | e2e | done |
+| AC-5 | T4 | e2e | done |
+| AC-6 | T4 | e2e | done |
+| AC-7 | T3 | e2e | done |
+| AC-8 | T5 | e2e | done |
+| AC-9 | T3, T5 | e2e | done |
+| AC-10 | T1 (and every task's error codes) | e2e | done |
+| AC-11 | T1 | e2e | done |
+| AC-12 | T1, T3, T4, T5, T6, T7, T8 | e2e | done |
+| AC-13 | T6 | e2e | done |
+| AC-14 | T6 | e2e | done |
+| AC-15 | T6 | e2e | done |
+| AC-16 | T8 | e2e | done |
+| AC-17 | T8 | e2e | done |
+| AC-18 | T8 | e2e | done |
+| AC-19 | T8 | e2e | done |
+| AC-20 | T6, T8 | e2e | done |
+| AC-21 | T8 | e2e | done |
+| AC-22 | T8 | concurrency | done |
+| AC-23 | T6 | e2e | done |
+| AC-24 | T7 | e2e | done |
+| AC-25 | T7 | e2e | done |
+| AC-26 | T2 | unit | done |
+| AC-27 | T2, T3, T6, T7 | unit, e2e | done |
+| AC-28 | T3 | integration | done |
+| AC-29 | T6, T7 | e2e | done |
+| AC-30 | T6 | e2e | done |
+| AC-31 | T4 | concurrency | done |
+| AC-32 | T9 | manual (documented commands) | done |
+| AC-33 | T9 | manual (documented commands) | done |
+| AC-34 | T3, T9 | unit, e2e, manual | done |
 
 ## Test Strategy
 

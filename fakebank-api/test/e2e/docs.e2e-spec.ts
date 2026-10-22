@@ -58,4 +58,29 @@ describe('OpenAPI documentation', () => {
 			expect.arrayContaining(['providerTransactionId', 'status', 'amountMinor', 'completedAt']),
 		)
 	})
+
+	// AC-8/AC-12: catches the lookup by External Reference missing from the contract, its required
+	// query parameter undocumented, or its list shape left untyped.
+	it('documents the lookup by External Reference', async () => {
+		const { body } = await request(app.getHttpServer()).get('/docs-json')
+		const list = body.paths['/v1/transactions'].get
+
+		expect(Object.keys(list.responses).sort()).toEqual(['200', '400', '401'])
+		expect(list.parameters).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({ name: 'externalReference', in: 'query', required: true }),
+			]),
+		)
+		expect(list.security).toEqual([{ bearer: [] }])
+		expect(list.responses['400'].content['application/json'].schema.$ref).toBe(
+			'#/components/schemas/ErrorEnvelopeResponse',
+		)
+		expect(list.responses['200'].content['application/json'].schema.$ref).toBe(
+			'#/components/schemas/ProviderTransactionListResponse',
+		)
+		expect(body.components.schemas.ProviderTransactionListResponse.properties.data).toEqual({
+			type: 'array',
+			items: { $ref: '#/components/schemas/ProviderTransactionResponse' },
+		})
+	})
 })

@@ -48,6 +48,12 @@ export function toProviderTransactionResponse(
 	}
 }
 
+/** AC-8: the lookup by External Reference; oldest first, empty when nothing matches. */
+export class ProviderTransactionListResponse {
+	@ApiProperty({ type: [ProviderTransactionResponse] })
+	data!: ProviderTransactionResponse[]
+}
+
 /** Documentation-only shape of the creation request; runtime validation is the Zod schema. */
 export class CreateProviderTransactionRequest {
 	@ApiProperty({ minLength: 1, maxLength: 128, example: 'payment-123' })

@@ -11,6 +11,7 @@ import {
 	HttpStatus,
 	Param,
 	Post,
+	Query,
 	Res,
 	UseGuards,
 } from '@nestjs/common'
@@ -23,6 +24,7 @@ import {
 	ApiHeader,
 	ApiNotFoundResponse,
 	ApiOkResponse,
+	ApiQuery,
 	ApiTags,
 	ApiUnauthorizedResponse,
 	ApiUnprocessableEntityResponse,
@@ -32,14 +34,17 @@ import { CreateProviderTransactionService } from './create-provider-transaction.
 import { ProviderTransactionRepository } from './provider-transaction.repository'
 import {
 	CreateProviderTransactionRequest,
+	ProviderTransactionListResponse,
 	ProviderTransactionResponse,
 	toProviderTransactionResponse,
 } from './provider-transaction.representation'
 import {
 	CreateProviderTransactionBody,
 	IdempotencyKey,
+	ListByExternalReferenceQuery,
 	createProviderTransactionBody,
 	idempotencyKeyHeader,
+	listByExternalReferenceQuery,
 } from './transaction.schemas'
 
 const IDEMPOTENT_REPLAYED_HEADER = 'Idempotent-Replayed'
@@ -111,6 +116,36 @@ export class TransactionsController {
 			response.status(HttpStatus.OK).setHeader(IDEMPOTENT_REPLAYED_HEADER, 'true')
 		}
 		return toProviderTransactionResponse(result.transaction)
+	}
+
+	@Get()
+	@ApiQuery({
+		name: 'externalReference',
+		required: true,
+		description:
+			"The Client's own reference (1–128 characters, matched exactly). Not unique: every " +
+			'Provider Transaction of this Client carrying it is returned.',
+		schema: { type: 'string', minLength: 1, maxLength: 128 },
+	})
+	@ApiOkResponse({
+		description:
+			"This Client's Provider Transactions carrying the External Reference, oldest first; " +
+			'`data` is empty when none match.',
+		type: ProviderTransactionListResponse,
+	})
+	@ApiBadRequestResponse({
+		description: 'Missing, blank or invalid externalReference (VALIDATION_ERROR).',
+		type: ErrorEnvelopeResponse,
+	})
+	async listByExternalReference(
+		@CurrentClient() client: AuthenticatedClient,
+		@Query(new ZodValidationPipe(listByExternalReferenceQuery)) query: ListByExternalReferenceQuery,
+	): Promise<ProviderTransactionListResponse> {
+		const transactions = await this.repository.listByExternalReference(
+			client.clientId,
+			query.externalReference,
+		)
+		return { data: transactions.map(toProviderTransactionResponse) }
 	}
 
 	@Get(':providerTransactionId')

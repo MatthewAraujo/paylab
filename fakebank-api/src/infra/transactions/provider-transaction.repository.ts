@@ -69,6 +69,22 @@ export class ProviderTransactionRepository {
 	findForClient(clientId: string, id: string): Promise<ProviderTransaction | null> {
 		return this.prisma.providerTransaction.findFirst({ where: { id, clientId } })
 	}
+
+	/**
+	 * AC-8: every Provider Transaction of the Client carrying the External Reference, oldest first
+	 * (served by the (client_id, external_reference, created_at) index). External References are
+	 * not unique, so nothing is deduplicated. Ties within one millisecond are broken by id, which
+	 * keeps the order stable across reads.
+	 */
+	listByExternalReference(
+		clientId: string,
+		externalReference: string,
+	): Promise<ProviderTransaction[]> {
+		return this.prisma.providerTransaction.findMany({
+			where: { clientId, externalReference },
+			orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+		})
+	}
 }
 
 function isIdempotencyKeyViolation(error: unknown): boolean {

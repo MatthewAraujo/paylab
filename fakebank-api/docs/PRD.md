@@ -132,9 +132,9 @@ Concurrency and operations
 ## Testing Decisions
 
 - Good tests exercise external behavior through the highest seam: HTTP requests in, status codes, bodies and persisted rows out. They never assert on internal calls or module structure.
-- **E2E (main seam):** the real application module against a Testcontainers PostgreSQL, driven with Supertest, mirroring `paylab-api`'s `buildTestApp` and e2e layout. Covers AC-1 to AC-21, AC-23 to AC-25, AC-27, AC-29, AC-30, AC-34. Event assertions read the event table directly since no endpoint exposes it. The timeout case (AC-19) uses a Supertest client timeout shorter than `delayMs`, then verifies through the API. Boot refusal (AC-30) follows `benchmarks-production.e2e-spec.ts`.
+- **E2E (main seam):** the real application module against a Testcontainers PostgreSQL, driven with Supertest, mirroring `paylab-api`'s `buildTestApp` and e2e layout. Covers AC-1 to AC-21, AC-23 to AC-25, AC-27, AC-29, AC-34. Event assertions read the event table directly since no endpoint exposes it. The timeout case (AC-19) uses a Supertest client timeout shorter than `delayMs`, then verifies through the API.
 - **Concurrency suite**, run separately like `paylab-api`'s: AC-22 and AC-31, with parallel HTTP requests against a real server; prior art `test/concurrency/idempotency.spec.ts` in `paylab-api`.
-- **Unit:** the pure state machine (AC-26): every allowed and refused transition and the events it produces.
+- **Unit:** the pure state machine (AC-26): every allowed and refused transition and the events it produces. Boot refusal with the lab on in production (AC-30) is tested on the environment schema, because Nest's configuration validation fails during module import, which Vitest cannot catch cleanly; it is also checked manually against the built app (revised after T6).
 - **Integration (database):** the event immutability triggers (AC-28), via direct SQL, like `paylab-api`'s schema and trigger tests.
 - **Manual, documented:** the standalone and workspace Compose stacks (AC-32, AC-33), checked with the documented commands, as in the existing Docker specifications.
 

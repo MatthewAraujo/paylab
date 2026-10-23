@@ -18,7 +18,7 @@ Domain language and accumulated decisions live in [CONTEXT.md](CONTEXT.md); requ
 | --- | --- |
 | `src/infra/main.ts`, `app.factory.ts`, `app.module.ts` | Bootstrap; `configureApp` holds the HTTP configuration shared with the test app |
 | `src/infra/env` | Zod environment schema (`env.ts`), `EnvModule`, typed `EnvService` |
-| `src/domain` | Pure domain rules with no Nest or Prisma dependency (the Provider Transaction state machine) |
+| `src/domain` | Pure domain rules with no Nest or Prisma dependency (the Provider Transaction state machine). Only rules that need no I/O live here; use cases (services) and repositories live with their Nest module under `src/infra`, which keeps the service small and is intentional |
 | `src/infra/database` | `DatabaseModule` and `PrismaService` |
 | `src/infra/auth` | Client API key hashing, `ClientAuthGuard` (Bearer key → Client) and `@CurrentClient()` |
 | `src/infra/transactions` | Public `/v1/transactions` API: controller, Zod schemas, representation, creation service (the full attempt pipeline: pre-persistence Outcomes, idempotency, scenario decision, post-commit delay and error), repository (`applyDecision` is the only path that changes an existing transaction) |

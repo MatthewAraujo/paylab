@@ -23,7 +23,7 @@ PayLab consuming FakeBank or any change to PayLab services; webhooks; reconcilia
 | [T3](tasks/T3.md) | Create and read a Provider Transaction (immediate success) | T1, T2 | done | [context](task-runs/T3-CONTEXT.md) | [summary](task-runs/T3-summary.md) |
 | [T4](tasks/T4.md) | Idempotency | T3 | done | [context](task-runs/T4-CONTEXT.md) | [summary](task-runs/T4-summary.md) |
 | [T5](tasks/T5.md) | Lookup by External Reference | T3 | done | [context](task-runs/T5-CONTEXT.md) | [summary](task-runs/T5-summary.md) |
-| [T6](tasks/T6.md) | Lab surface and business Outcomes | T3 | done | [context](task-runs/T9-CONTEXT.md) | [summary](task-runs/T9-summary.md) |
+| [T6](tasks/T6.md) | Lab surface and business Outcomes | T3 | done | [context](task-runs/T6-CONTEXT.md) | [summary](task-runs/T6-summary.md) |
 | [T7](tasks/T7.md) | Advance a deferred Provider Transaction | T6 | done | [context](task-runs/T7-CONTEXT.md) | [summary](task-runs/T7-summary.md) |
 | [T8](tasks/T8.md) | Transport Outcomes and delay | T4, T6 | done | [context](task-runs/T8-CONTEXT.md) | [summary](task-runs/T8-summary.md) |
 | [T9](tasks/T9.md) | Docker Compose (standalone and workspace) and documentation | T3 | done | [context](task-runs/T9-CONTEXT.md) | [summary](task-runs/T9-summary.md) |
@@ -61,7 +61,7 @@ PayLab consuming FakeBank or any change to PayLab services; webhooks; reconcilia
 | AC-27 | T2, T3, T6, T7 | unit, e2e | done |
 | AC-28 | T3 | integration | done |
 | AC-29 | T6, T7 | e2e | done |
-| AC-30 | T6 | e2e | done |
+| AC-30 | T6 | unit (env schema), manual | done |
 | AC-31 | T4 | concurrency | done |
 | AC-32 | T9 | manual (documented commands) | done |
 | AC-33 | T9 | manual (documented commands) | done |

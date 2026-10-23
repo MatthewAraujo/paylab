@@ -100,3 +100,10 @@ Limitation: the live worktree could not boot FakeBank while lane A's `src` had a
 - Standalone: `cd fakebank-api && docker compose up --build`. Workspace: `docker compose up --build` at the root. Either gives FakeBank on `localhost:4000` with Client key `fakebank-dev-key-paylab-not-a-secret`.
 - New environment variables must be added to both `fakebank-api/docker-compose.yml` and the `fakebank` service in the root `compose.yaml`.
 - New migrations under `prisma/migrations` apply automatically on container start.
+
+## Re-check on HEAD after the review (2026-10-23)
+
+The original checks ran before T6–T8, so both stacks were re-run on `90aab59` (with T6–T8 and the review fixes) under throwaway Compose projects, then removed with their volumes.
+
+- **Standalone** (`fakebank-api`, project `fakebank-s1`): built and started; all migrations, including the scenario one, applied. `/health` 200, `/docs` 200 and lists both lab routes (lab on). A `FAIL` scenario gave `201 FAILED` with `INSUFFICIENT_FUNDS`; a `DEFERRED` one gave a pending transaction that `advance` moved to `SUCCEEDED` (200); advancing again gave 409.
+- **Workspace** (root, project `paylab-s1`): `postgres`, `api`, `fakebank` and `fakebank-postgres` healthy, `ui` running. PayLab answered as before (`3000` 200, `3333/health` ok) and FakeBank on 4000. `ERROR_AFTER_COMMIT` gave 500 and its replay 200; after stopping and starting FakeBank, the transaction was still listed as `SUCCEEDED` (volume kept). The PayLab services in `compose.yaml` have no removed lines since `e93777b`.

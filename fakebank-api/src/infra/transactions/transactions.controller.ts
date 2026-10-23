@@ -1,5 +1,5 @@
 import { AuthenticatedClient, CurrentClient } from '@/infra/auth/authenticated-client'
-import { ClientAuthGuard } from '@/infra/auth/client-auth.guard'
+import { ClientAuthenticated } from '@/infra/auth/client-authenticated.decorator'
 import { ErrorEnvelopeResponse } from '@/infra/http/openapi/error-envelope.response'
 import { ZodValidationPipe } from '@/infra/http/zod-validation.pipe'
 import {
@@ -7,18 +7,15 @@ import {
 	Controller,
 	Get,
 	HttpCode,
-	HttpException,
 	HttpStatus,
 	Param,
 	Post,
 	Query,
 	Res,
-	UseGuards,
 } from '@nestjs/common'
 import {
 	ApiAcceptedResponse,
 	ApiBadRequestResponse,
-	ApiBearerAuth,
 	ApiBody,
 	ApiConflictResponse,
 	ApiCreatedResponse,
@@ -30,7 +27,6 @@ import {
 	ApiServiceUnavailableResponse,
 	ApiTags,
 	ApiTooManyRequestsResponse,
-	ApiUnauthorizedResponse,
 	ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger'
 import type { Response } from 'express'
@@ -42,6 +38,7 @@ import {
 	ProviderTransactionResponse,
 	toProviderTransactionResponse,
 } from './provider-transaction.representation'
+import { transactionNotFound } from './transaction-not-found'
 import {
 	CreateProviderTransactionBody,
 	IdempotencyKey,
@@ -54,12 +51,7 @@ import {
 const IDEMPOTENT_REPLAYED_HEADER = 'Idempotent-Replayed'
 
 @ApiTags('transactions')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse({
-	description: 'Missing or unknown API key (UNAUTHORIZED).',
-	type: ErrorEnvelopeResponse,
-})
-@UseGuards(ClientAuthGuard)
+@ClientAuthenticated()
 @Controller('v1/transactions')
 export class TransactionsController {
 	constructor(
@@ -201,10 +193,7 @@ export class TransactionsController {
 	): Promise<ProviderTransactionResponse> {
 		const transaction = await this.repository.findForClient(client.clientId, providerTransactionId)
 		if (!transaction) {
-			throw new HttpException(
-				{ code: 'TRANSACTION_NOT_FOUND', message: 'The Provider Transaction was not found.' },
-				HttpStatus.NOT_FOUND,
-			)
+			throw transactionNotFound()
 		}
 		return toProviderTransactionResponse(transaction)
 	}

@@ -1,15 +1,14 @@
 import { AuthenticatedClient, CurrentClient } from '@/infra/auth/authenticated-client'
-import { ClientAuthGuard } from '@/infra/auth/client-auth.guard'
+import { ClientAuthenticated } from '@/infra/auth/client-authenticated.decorator'
 import { ErrorEnvelopeResponse } from '@/infra/http/openapi/error-envelope.response'
 import { ZodValidationPipe } from '@/infra/http/zod-validation.pipe'
 import {
 	ProviderTransactionResponse,
 	toProviderTransactionResponse,
 } from '@/infra/transactions/provider-transaction.representation'
-import { Body, Controller, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common'
+import { Body, Controller, HttpCode, HttpStatus, Param, Post } from '@nestjs/common'
 import {
 	ApiBadRequestResponse,
-	ApiBearerAuth,
 	ApiBody,
 	ApiConflictResponse,
 	ApiNotFoundResponse,
@@ -17,7 +16,6 @@ import {
 	ApiProperty,
 	ApiPropertyOptional,
 	ApiTags,
-	ApiUnauthorizedResponse,
 } from '@nestjs/swagger'
 import { AdvanceProviderTransactionService } from './advance-provider-transaction.service'
 import { ADVANCE_STATUSES, AdvanceBody, advanceBody } from './advance.schemas'
@@ -36,12 +34,7 @@ export class AdvanceProviderTransactionRequest {
 }
 
 @ApiTags('lab')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse({
-	description: 'Missing or unknown API key (UNAUTHORIZED).',
-	type: ErrorEnvelopeResponse,
-})
-@UseGuards(ClientAuthGuard)
+@ClientAuthenticated()
 @Controller('__test/transactions')
 export class AdvanceController {
 	constructor(private readonly advanceProviderTransaction: AdvanceProviderTransactionService) {}

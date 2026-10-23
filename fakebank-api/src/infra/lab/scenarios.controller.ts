@@ -1,18 +1,11 @@
 import { AuthenticatedClient, CurrentClient } from '@/infra/auth/authenticated-client'
-import { ClientAuthGuard } from '@/infra/auth/client-auth.guard'
+import { ClientAuthenticated } from '@/infra/auth/client-authenticated.decorator'
 import { ErrorEnvelopeResponse } from '@/infra/http/openapi/error-envelope.response'
 import { ZodValidationPipe } from '@/infra/http/zod-validation.pipe'
 import { RegisterScenarioBody, registerScenarioBody } from '@/infra/scenarios/scenario.schemas'
 import { SimulationScenarioRepository } from '@/infra/scenarios/simulation-scenario.repository'
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common'
-import {
-	ApiBadRequestResponse,
-	ApiBearerAuth,
-	ApiBody,
-	ApiCreatedResponse,
-	ApiTags,
-	ApiUnauthorizedResponse,
-} from '@nestjs/swagger'
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common'
+import { ApiBadRequestResponse, ApiBody, ApiCreatedResponse, ApiTags } from '@nestjs/swagger'
 import {
 	RegisterScenarioRequest,
 	ScenarioResponse,
@@ -20,12 +13,7 @@ import {
 } from './scenario.representation'
 
 @ApiTags('lab')
-@ApiBearerAuth()
-@ApiUnauthorizedResponse({
-	description: 'Missing or unknown API key (UNAUTHORIZED).',
-	type: ErrorEnvelopeResponse,
-})
-@UseGuards(ClientAuthGuard)
+@ClientAuthenticated()
 @Controller('__test/scenarios')
 export class ScenariosController {
 	constructor(private readonly scenarios: SimulationScenarioRepository) {}

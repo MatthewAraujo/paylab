@@ -6,6 +6,7 @@ import {
 } from '@/domain/provider-transaction'
 import { DOMAIN_CLOCK } from '@/infra/transactions/domain-clock'
 import { ProviderTransactionRepository } from '@/infra/transactions/provider-transaction.repository'
+import { transactionNotFound } from '@/infra/transactions/transaction-not-found'
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
 import type { ProviderTransaction } from '@prisma/client'
 import { AdvanceBody } from './advance.schemas'
@@ -34,10 +35,7 @@ export class AdvanceProviderTransactionService {
 			command.providerTransactionId,
 		)
 		if (!current) {
-			throw new HttpException(
-				{ code: 'TRANSACTION_NOT_FOUND', message: 'The Provider Transaction was not found.' },
-				HttpStatus.NOT_FOUND,
-			)
+			throw transactionNotFound()
 		}
 
 		const transition = toTransition(command.decision)

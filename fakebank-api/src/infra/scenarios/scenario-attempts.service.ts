@@ -1,3 +1,4 @@
+import type { ProviderTransactionTransition } from '@/domain/provider-transaction'
 import { PrismaService } from '@/infra/database/prisma.service'
 import { EnvService } from '@/infra/env/env.service'
 import { Injectable } from '@nestjs/common'
@@ -14,7 +15,7 @@ import {
 } from './simulation-scenario.repository'
 
 /** The terminal status a new Provider Transaction takes in its creation database transaction. */
-export type NewTransactionTransition = { to: 'SUCCEEDED' } | { to: 'FAILED'; failureCode: string }
+export type NewTransactionTransition = Exclude<ProviderTransactionTransition, { to: 'PROCESSING' }>
 
 /** What an attempt that persists a new Provider Transaction does. */
 export interface NewTransactionDecision {

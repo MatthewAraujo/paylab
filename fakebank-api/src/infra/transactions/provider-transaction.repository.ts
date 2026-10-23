@@ -4,6 +4,7 @@ import {
 	ProviderTransactionEvent,
 	ProviderTransactionState,
 	ProviderTransactionStatus,
+	lastChangedAt,
 } from '@/domain/provider-transaction'
 import { PrismaService } from '@/infra/database/prisma.service'
 import { Injectable } from '@nestjs/common'
@@ -95,7 +96,7 @@ export class ProviderTransactionRepository {
 					status: transaction.status,
 					failureCode: transaction.failureCode,
 					completedAt: transaction.completedAt,
-					updatedAt: transaction.completedAt ?? event.occurredAt,
+					updatedAt: lastChangedAt(transaction),
 				},
 			})
 			if (count === 0) {

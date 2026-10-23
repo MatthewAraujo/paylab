@@ -74,6 +74,11 @@ export function createProviderTransaction(
 	return { transaction, event: eventFor(transaction, createdAt, clock) }
 }
 
+/** When the Provider Transaction last changed: its completion, or its creation while PROCESSING. */
+export function lastChangedAt(transaction: ProviderTransactionState): Date {
+	return transaction.completedAt ?? transaction.createdAt
+}
+
 /** A requested status change. PROCESSING is accepted as input only so it can be refused. */
 export type ProviderTransactionTransition =
 	| { to: 'PROCESSING' }

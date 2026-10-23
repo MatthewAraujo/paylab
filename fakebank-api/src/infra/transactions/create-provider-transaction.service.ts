@@ -3,6 +3,7 @@ import { setTimeout as sleep } from 'node:timers/promises'
 import {
 	DomainClock,
 	createProviderTransaction,
+	lastChangedAt,
 	transitionProviderTransaction,
 } from '@/domain/provider-transaction'
 import { HttpExceptionWithHeaders } from '@/infra/http/errors/http-exception-with-headers'
@@ -139,7 +140,7 @@ export class CreateProviderTransactionService {
 				failureCode: final.failureCode,
 				appliedOutcome: decision.appliedOutcome,
 				createdAt: final.createdAt,
-				updatedAt: final.completedAt ?? final.createdAt,
+				updatedAt: lastChangedAt(final),
 				completedAt: final.completedAt,
 			},
 			events,

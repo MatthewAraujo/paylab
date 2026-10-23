@@ -159,12 +159,12 @@ describe('Provider Transactions: create and read', () => {
 			expect(response.status).toBe(201)
 		})
 
-		// Catches a missing, empty or oversized Idempotency-Key being accepted.
+		// AC-2/AC-3: catches a missing, empty or oversized Idempotency-Key being accepted.
 		it.each([
 			['a missing', undefined],
 			['an empty', ''],
 			['an oversized', 'k'.repeat(256)],
-		])('answers 400 VALIDATION_ERROR for %s Idempotency-Key', async (_case, key) => {
+		])('answers 400 VALIDATION_ERROR for %s Idempotency-Key (AC-2)', async (_case, key) => {
 			const call = request(app.getHttpServer())
 				.post('/v1/transactions')
 				.set('Authorization', bearer(TEST_CLIENTS.paylab))

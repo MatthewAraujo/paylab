@@ -198,13 +198,19 @@ describe('advancing a Provider Transaction (lab)', () => {
 			expect(response.body.code).toBe('TRANSACTION_NOT_FOUND')
 		})
 
-		// AC-9: catches the lab decision being reachable without authentication.
-		it('answers 401 UNAUTHORIZED without an API key and leaves it pending', async () => {
+		// AC-9: catches the lab decision being reachable without a valid API key.
+		it.each<[string, string | undefined]>([
+			['no Authorization header', undefined],
+			['an unknown key', 'Bearer test-key-nobody'],
+			['a malformed Authorization header', `Basic ${TEST_CLIENTS.paylab.apiKey}`],
+		])('answers 401 UNAUTHORIZED with %s and leaves it pending', async (_case, authorization) => {
 			const pending = await deferred()
+			const call = request(app.getHttpServer()).post(
+				`/__test/transactions/${pending.providerTransactionId}/advance`,
+			)
+			if (authorization !== undefined) call.set('Authorization', authorization)
 
-			const response = await request(app.getHttpServer())
-				.post(`/__test/transactions/${pending.providerTransactionId}/advance`)
-				.send({ status: 'SUCCEEDED' })
+			const response = await call.send({ status: 'SUCCEEDED' })
 
 			expect(response.status).toBe(401)
 			expect(response.body.code).toBe('UNAUTHORIZED')

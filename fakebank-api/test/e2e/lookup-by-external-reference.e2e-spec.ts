@@ -98,11 +98,17 @@ describe('Provider Transactions: lookup by External Reference (AC-8)', () => {
 		expect(response.body.message).toContain('externalReference')
 	})
 
-	// AC-9: catches an unauthenticated listing.
-	it('answers 401 UNAUTHORIZED without an API key', async () => {
-		const response = await request(app.getHttpServer()).get(
-			'/v1/transactions?externalReference=PAY-1',
-		)
+	// AC-9: catches an unauthenticated listing, or one that accepts any Bearer-looking header.
+	it.each<[string, string | undefined]>([
+		['no Authorization header', undefined],
+		['an unknown key', 'Bearer test-key-nobody'],
+		['a malformed Authorization header', `Basic ${TEST_CLIENTS.paylab.apiKey}`],
+	])('answers 401 UNAUTHORIZED with %s', async (_case, authorization) => {
+		await create('PAY-1')
+		const call = request(app.getHttpServer()).get('/v1/transactions?externalReference=PAY-1')
+		if (authorization !== undefined) call.set('Authorization', authorization)
+
+		const response = await call
 
 		expect(response.status).toBe(401)
 		expect(response.body).toMatchObject({ code: 'UNAUTHORIZED' })

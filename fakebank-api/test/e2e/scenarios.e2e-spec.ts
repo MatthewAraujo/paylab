@@ -119,14 +119,20 @@ describe('Simulation Scenarios', () => {
 			expect(await prisma.simulationScenario.count()).toBe(0)
 		})
 
-		// AC-9: catches the lab surface being reachable without a Client.
-		it('answers 401 without an API key', async () => {
-			const response = await request(app.getHttpServer())
-				.post('/__test/scenarios')
-				.send({ externalReference: 'PAY-1', outcome: 'SUCCEED' })
+		// AC-9: catches the lab surface being reachable without a Client, and nothing stored.
+		it.each<[string, string | undefined]>([
+			['no Authorization header', undefined],
+			['an unknown key', 'Bearer test-key-nobody'],
+			['a malformed Authorization header', `Basic ${TEST_CLIENTS.paylab.apiKey}`],
+		])('answers 401 with %s and stores nothing', async (_case, authorization) => {
+			const call = request(app.getHttpServer()).post('/__test/scenarios')
+			if (authorization !== undefined) call.set('Authorization', authorization)
+
+			const response = await call.send({ externalReference: 'PAY-1', outcome: 'SUCCEED' })
 
 			expect(response.status).toBe(401)
 			expect(response.body).toMatchObject({ code: 'UNAUTHORIZED' })
+			expect(await prisma.simulationScenario.count()).toBe(0)
 		})
 	})
 

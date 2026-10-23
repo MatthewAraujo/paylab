@@ -252,6 +252,7 @@ describe('Transport Outcomes and delay', () => {
 			{ outcome: 'FAIL', failureCode: 'INSUFFICIENT_FUNDS', delayMs: 2000 },
 			{ outcome: 'SUCCEED', delayMs: 2000 },
 			{ outcome: 'ERROR_AFTER_COMMIT', delayMs: 2000 },
+			{ outcome: 'DEFERRED', delayMs: 2000 },
 		])('a $outcome scenario neither applies to nor delays the replay', async (scenario) => {
 			const key = randomUUID()
 			const created = await attempt('PAY-RP', key)

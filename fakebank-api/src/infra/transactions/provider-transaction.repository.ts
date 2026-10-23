@@ -1,11 +1,18 @@
 import {
+	PROVIDER_TRANSACTION_STATUSES,
 	ProviderTransactionChange,
 	ProviderTransactionEvent,
 	ProviderTransactionState,
+	ProviderTransactionStatus,
 } from '@/domain/provider-transaction'
 import { PrismaService } from '@/infra/database/prisma.service'
 import { Injectable } from '@nestjs/common'
 import { Prisma, type ProviderTransaction } from '@prisma/client'
+
+/** A stored Provider Transaction, with the columns Prisma models as strings narrowed. */
+export type ProviderTransactionRecord = Omit<ProviderTransaction, 'status'> & {
+	status: ProviderTransactionStatus
+}
 
 export type NewProviderTransaction = Prisma.ProviderTransactionUncheckedCreateInput
 
@@ -31,7 +38,9 @@ export class ProviderTransactionRepository {
 	 * by a concurrent insert this one waited for), the whole database transaction rolls back and
 	 * this returns `null`; nothing of this attempt is persisted.
 	 */
-	async insertWithEvents(build: BuildNewProviderTransaction): Promise<ProviderTransaction | null> {
+	async insertWithEvents(
+		build: BuildNewProviderTransaction,
+	): Promise<ProviderTransactionRecord | null> {
 		try {
 			return await this.insertAtomically(build)
 		} catch (error) {
@@ -42,17 +51,20 @@ export class ProviderTransactionRepository {
 		}
 	}
 
-	findByIdempotencyKey(
+	async findByIdempotencyKey(
 		clientId: string,
 		idempotencyKey: string,
-	): Promise<ProviderTransaction | null> {
-		return this.prisma.providerTransaction.findUnique({
+	): Promise<ProviderTransactionRecord | null> {
+		const row = await this.prisma.providerTransaction.findUnique({
 			where: { clientId_idempotencyKey: { clientId, idempotencyKey } },
 		})
+		return row && toRecord(row)
 	}
 
-	private insertAtomically(build: BuildNewProviderTransaction): Promise<ProviderTransaction> {
-		return this.prisma.$transaction(async (tx) => {
+	private async insertAtomically(
+		build: BuildNewProviderTransaction,
+	): Promise<ProviderTransactionRecord> {
+		const created = await this.prisma.$transaction(async (tx) => {
 			const { transaction, events } = await build(tx)
 			const created = await tx.providerTransaction.create({ data: transaction })
 			for (const event of events) {
@@ -60,6 +72,7 @@ export class ProviderTransactionRepository {
 			}
 			return created
 		})
+		return toRecord(created)
 	}
 
 	/**
@@ -73,9 +86,9 @@ export class ProviderTransactionRepository {
 	async applyDecision(
 		clientId: string,
 		change: ProviderTransactionChange<ProviderTransactionState>,
-	): Promise<ProviderTransaction | null> {
+	): Promise<ProviderTransactionRecord | null> {
 		const { transaction, event } = change
-		return this.prisma.$transaction(async (tx) => {
+		const advanced = await this.prisma.$transaction(async (tx) => {
 			const { count } = await tx.providerTransaction.updateMany({
 				where: { id: transaction.id, clientId, status: 'PROCESSING' },
 				data: {
@@ -91,11 +104,13 @@ export class ProviderTransactionRepository {
 			await tx.providerTransactionEvent.create({ data: eventData(event) })
 			return tx.providerTransaction.findUniqueOrThrow({ where: { id: transaction.id } })
 		})
+		return advanced && toRecord(advanced)
 	}
 
 	/** Scoped to the Client: another Client's id is indistinguishable from an unknown one. */
-	findForClient(clientId: string, id: string): Promise<ProviderTransaction | null> {
-		return this.prisma.providerTransaction.findFirst({ where: { id, clientId } })
+	async findForClient(clientId: string, id: string): Promise<ProviderTransactionRecord | null> {
+		const row = await this.prisma.providerTransaction.findFirst({ where: { id, clientId } })
+		return row && toRecord(row)
 	}
 
 	/**
@@ -104,15 +119,25 @@ export class ProviderTransactionRepository {
 	 * not unique, so nothing is deduplicated. Ties within one millisecond are broken by id, which
 	 * keeps the order stable across reads.
 	 */
-	listByExternalReference(
+	async listByExternalReference(
 		clientId: string,
 		externalReference: string,
-	): Promise<ProviderTransaction[]> {
-		return this.prisma.providerTransaction.findMany({
+	): Promise<ProviderTransactionRecord[]> {
+		const rows = await this.prisma.providerTransaction.findMany({
 			where: { clientId, externalReference },
 			orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
 		})
+		return rows.map(toRecord)
 	}
+}
+
+/** Narrows a row's status; a CHECK constraint already restricts it to the known ones. */
+function toRecord(row: ProviderTransaction): ProviderTransactionRecord {
+	const status = PROVIDER_TRANSACTION_STATUSES.find((known) => known === row.status)
+	if (!status) {
+		throw new Error(`Unknown Provider Transaction status: ${row.status}`)
+	}
+	return { ...row, status }
 }
 
 function eventData(

@@ -78,7 +78,7 @@ export class ScenarioAttempts {
 			return null
 		}
 		return {
-			outcome: consumed.outcome as PrePersistenceOutcome,
+			outcome: consumed.outcome,
 			delayMs: consumed.delayMs,
 			retryAfterSeconds: consumed.retryAfterSeconds ?? DEFAULT_RETRY_AFTER_SECONDS,
 		}
@@ -107,8 +107,7 @@ function decide(scenario: ConsumedScenario): NewTransactionDecision {
 	const base = { appliedOutcome: scenario.outcome, delayMs: scenario.delayMs }
 	switch (scenario.outcome) {
 		case 'FAIL':
-			// The registration schema and a CHECK constraint guarantee the Failure Code for FAIL.
-			return { ...base, transition: { to: 'FAILED', failureCode: scenario.failureCode ?? '' } }
+			return { ...base, transition: { to: 'FAILED', failureCode: scenario.failureCode } }
 		case 'DEFERRED':
 			return { ...base, transition: null }
 		default:

@@ -13,10 +13,12 @@ import {
 	ScenarioAttempts,
 } from '@/infra/scenarios/scenario-attempts.service'
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
-import type { ProviderTransaction } from '@prisma/client'
 import { DOMAIN_CLOCK } from './domain-clock'
 import { newProviderTransactionId } from './provider-transaction-id'
-import { ProviderTransactionRepository } from './provider-transaction.repository'
+import {
+	ProviderTransactionRecord,
+	ProviderTransactionRepository,
+} from './provider-transaction.repository'
 import { CreateProviderTransactionBody, SUPPORTED_CURRENCY } from './transaction.schemas'
 
 export interface CreateProviderTransactionCommand extends CreateProviderTransactionBody {
@@ -31,8 +33,8 @@ export interface CreateProviderTransactionCommand extends CreateProviderTransact
  * returned in its current state (`200`, `Idempotent-Replayed: true`) and nothing else happens.
  */
 export type CreateProviderTransactionResult =
-	| { kind: 'created'; transaction: ProviderTransaction }
-	| { kind: 'replayed'; transaction: ProviderTransaction }
+	| { kind: 'created'; transaction: ProviderTransactionRecord }
+	| { kind: 'replayed'; transaction: ProviderTransactionRecord }
 
 /**
  * The creation attempt pipeline (authentication and schema validation already happened in the

@@ -5,10 +5,12 @@ import {
 	transitionProviderTransaction,
 } from '@/domain/provider-transaction'
 import { DOMAIN_CLOCK } from '@/infra/transactions/domain-clock'
-import { ProviderTransactionRepository } from '@/infra/transactions/provider-transaction.repository'
+import {
+	ProviderTransactionRecord,
+	ProviderTransactionRepository,
+} from '@/infra/transactions/provider-transaction.repository'
 import { transactionNotFound } from '@/infra/transactions/transaction-not-found'
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
-import type { ProviderTransaction } from '@prisma/client'
 import { AdvanceBody } from './advance.schemas'
 
 export interface AdvanceProviderTransactionCommand {
@@ -29,7 +31,7 @@ export class AdvanceProviderTransactionService {
 		@Inject(DOMAIN_CLOCK) private readonly clock: DomainClock,
 	) {}
 
-	async execute(command: AdvanceProviderTransactionCommand): Promise<ProviderTransaction> {
+	async execute(command: AdvanceProviderTransactionCommand): Promise<ProviderTransactionRecord> {
 		const current = await this.repository.findForClient(
 			command.clientId,
 			command.providerTransactionId,
@@ -39,11 +41,7 @@ export class AdvanceProviderTransactionService {
 		}
 
 		const transition = toTransition(command.decision)
-		const decided = transitionProviderTransaction(
-			{ ...current, status: current.status as ProviderTransactionStatus },
-			transition,
-			this.clock,
-		)
+		const decided = transitionProviderTransaction(current, transition, this.clock)
 		if (!decided.ok) {
 			if (decided.error.code === 'INVALID_TRANSITION') {
 				throw invalidTransition(decided.error.from, transition.to)
@@ -66,7 +64,7 @@ export class AdvanceProviderTransactionService {
 
 function toTransition(decision: AdvanceBody): ProviderTransactionTransition {
 	if (decision.status === 'FAILED') {
-		return { to: 'FAILED', failureCode: decision.failureCode ?? '' }
+		return { to: 'FAILED', failureCode: decision.failureCode }
 	}
 	return { to: 'SUCCEEDED' }
 }

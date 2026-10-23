@@ -1,6 +1,8 @@
 // Provider Transaction state machine: pure domain rules, no framework or persistence.
 
-export type ProviderTransactionStatus = 'PROCESSING' | 'SUCCEEDED' | 'FAILED'
+export const PROVIDER_TRANSACTION_STATUSES = ['PROCESSING', 'SUCCEEDED', 'FAILED'] as const
+
+export type ProviderTransactionStatus = (typeof PROVIDER_TRANSACTION_STATUSES)[number]
 
 export type ProviderTransactionEventType =
 	| 'transaction.processing'

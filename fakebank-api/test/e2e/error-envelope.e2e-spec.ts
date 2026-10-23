@@ -1,4 +1,4 @@
-import { Controller, Get, INestApplication } from '@nestjs/common'
+import { Controller, Get, INestApplication, ServiceUnavailableException } from '@nestjs/common'
 import request from 'supertest'
 import { buildTestApp } from '../support/app'
 
@@ -8,6 +8,12 @@ class ExplodingController {
 	@Get('boom')
 	boom() {
 		throw new Error('connection to db-internal-7 refused: secret detail')
+	}
+
+	// A 5xx HttpException without a business code, as a library might throw.
+	@Get('unavailable')
+	unavailable() {
+		throw new ServiceUnavailableException('pool db-internal-7 exhausted: secret detail')
 	}
 }
 
@@ -62,5 +68,17 @@ describe('error envelope and request id', () => {
 		})
 		expect(response.text).not.toContain('secret detail')
 		expect(response.text).not.toContain('at ')
+	})
+
+	it('hides the message of a 5xx HttpException that carries no business code', async () => {
+		const response = await request(app.getHttpServer()).get('/__e2e/unavailable')
+
+		expect(response.status).toBe(503)
+		expect(response.body).toMatchObject({
+			code: 'PROVIDER_UNAVAILABLE',
+			message: 'An unexpected error occurred.',
+			retryable: true,
+		})
+		expect(response.text).not.toContain('secret detail')
 	})
 })

@@ -121,7 +121,11 @@ describe('Transport Outcomes and delay', () => {
 			const response = await attempt('PAY-BC', key)
 
 			expect(response.status).toBe(503)
-			expect(response.body).toMatchObject({ code: 'PROVIDER_UNAVAILABLE', retryable: true })
+			expect(response.body).toMatchObject({
+				code: 'PROVIDER_UNAVAILABLE',
+				message: 'The provider is temporarily unavailable.',
+				retryable: true,
+			})
 			expect(response.headers['retry-after']).toBeUndefined()
 			await expectNothingPersisted()
 
@@ -139,7 +143,11 @@ describe('Transport Outcomes and delay', () => {
 			const response = await attempt('PAY-AC')
 
 			expect(response.status).toBe(500)
-			expect(response.body).toMatchObject({ code: 'PROVIDER_INTERNAL_ERROR', retryable: true })
+			expect(response.body).toMatchObject({
+				code: 'PROVIDER_INTERNAL_ERROR',
+				message: 'The provider failed to respond.',
+				retryable: true,
+			})
 			const [persisted] = (await lookup('PAY-AC')).body.data
 			expect(persisted.status).toBe('SUCCEEDED')
 			expect(await eventStatuses(persisted.providerTransactionId)).toEqual([

@@ -8,9 +8,9 @@ const INTERNAL_ERROR_MESSAGE = 'An unexpected error occurred.'
 
 /**
  * Global filter: every error leaves FakeBank as an ErrorEnvelope. An `HttpException` keeps
- * its status, and its body may carry `{ code, message }` (later tasks throw those for business
- * errors). Anything else is an unexpected failure: logged here, answered as a generic 500
- * that never exposes the original message or stack.
+ * its status, and its body may carry `{ code, message }` for business errors. Anything else is
+ * an unexpected failure: logged here, answered as a generic 500 that never exposes the original
+ * message or stack.
  */
 @Catch()
 export class ErrorEnvelopeFilter implements ExceptionFilter {
@@ -44,7 +44,8 @@ export class ErrorEnvelopeFilter implements ExceptionFilter {
 		const payload = exception.getResponse()
 		const fields =
 			typeof payload === 'object' && payload !== null ? (payload as Record<string, unknown>) : {}
-		const code = typeof fields.code === 'string' ? fields.code : defaultCodeFor(status)
+		const hasBusinessCode = typeof fields.code === 'string'
+		const code = hasBusinessCode ? (fields.code as string) : defaultCodeFor(status)
 		const rawMessage = fields.message ?? payload
 		const message = Array.isArray(rawMessage)
 			? rawMessage.join('; ')
@@ -52,6 +53,9 @@ export class ErrorEnvelopeFilter implements ExceptionFilter {
 				? rawMessage
 				: exception.message
 
-		return { status, code, message: status >= 500 ? INTERNAL_ERROR_MESSAGE : message }
+		// A 5xx thrown with its own { code, message } is a simulated provider failure whose message
+		// is part of the contract; any other 5xx may carry internal details, so it is hidden.
+		const exposed = status < 500 || hasBusinessCode
+		return { status, code, message: exposed ? message : INTERNAL_ERROR_MESSAGE }
 	}
 }

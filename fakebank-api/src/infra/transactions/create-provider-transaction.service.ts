@@ -191,7 +191,7 @@ function transportError(decision: PrePersistenceDecision): HttpException {
 }
 
 /** What an idempotent retry must repeat exactly: External Reference, Amount and currency. */
-export function requestFingerprint(body: CreateProviderTransactionBody): string {
+function requestFingerprint(body: CreateProviderTransactionBody): string {
 	const canonical = JSON.stringify([body.externalReference, body.amountMinor, body.currency])
 	return createHash('sha256').update(canonical).digest('hex')
 }

@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto'
 
-export const PROVIDER_TRANSACTION_ID_PREFIX = 'FBK-'
+const PROVIDER_TRANSACTION_ID_PREFIX = 'FBK-'
 
 /** FakeBank's own identifier: `FBK-` + a UUID v7 (time-ordered, so ids sort by creation). */
 export function newProviderTransactionId(now: number = Date.now()): string {
